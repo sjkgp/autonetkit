@@ -1,5 +1,5 @@
 AutoNetkit.
-This is the current development alpha.
+This is the current development beta.
 For more information, including installation instructions and a how-to guide, please see www.autonetkit.org
 
 [![PyPi version](https://pypip.in/v/autonetkit/badge.png)](https://crate.io/packages/autonetkit/)
