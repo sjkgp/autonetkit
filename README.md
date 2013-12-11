@@ -13,3 +13,4 @@ More information on AutoNetkit:
 *  [CoNext 2013 Conference Paper](http://conferences.sigcomm.org/co-next/2013/program/p235.pdf)
 *  [Twitter](https://twitter.com/autonetkit)
 *  [Mailing list](https://groups.google.com/group/autonetkit)
+*  [CoNEXT 2013 Slides](https://db.tt/JkRrU5q5)
