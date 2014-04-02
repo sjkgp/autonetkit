@@ -337,6 +337,12 @@ def build_ip(anm):
 
     #TODO: add these from layer2 graph - and scrap g_ip: clone g_layer2 to g_ipv4 and g_ipv6
     g_ip.add_nodes_from(g_phy)
+    # remove external_connector-s
+    external_connectors = [n for n in g_ip
+    if n['phy'].device_type == "external_connector"]
+    for n in external_connectors:
+        g_ip.remove_node(n)
+
     g_ip.add_edges_from(g_phy.edges())
 
     ank_utils.aggregate_nodes(g_ip, g_ip.switches())
