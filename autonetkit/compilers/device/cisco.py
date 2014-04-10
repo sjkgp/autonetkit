@@ -429,6 +429,7 @@ class IosClassicCompiler(IosBaseCompiler):
 
             # only copy across for certain reference platforms
 
+            node.use_onepk = phy_node.use_onepk
             node.transport_input_ssh_telnet = True
             node.include_csr = True
 
