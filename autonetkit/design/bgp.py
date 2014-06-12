@@ -120,7 +120,7 @@ def build_ibgp(anm):
         log.warning("Some routers are set as RR but have no rr_cluster: %s. Please specify an rr_cluster for peering."
             % ", ".join(str(n) for n in rr_mismatch))
 
-    hrr_mismatch = [n for n in ibgp_nodes if n.ibgp_role == "HRR" and n.hrr_mismatch is None]
+    hrr_mismatch = [n for n in ibgp_nodes if n.ibgp_role == "HRR" and n.hrr_cluster is None]
     if len(hrr_mismatch):
         log.warning("Some routers are set as HRR but have no hrr_cluster: %s. Please specify an hrr_cluster for peering."
             % ", ".join(str(n) for n in hrr_mismatch))
