@@ -7,6 +7,7 @@ import autonetkit.ank_json as ank_json
 import autonetkit.config as config
 import autonetkit.log as log
 import autonetkit.render as render
+import autonetkit.build_network as build_network
 from autonetkit.nidb import DeviceModel
 
 
@@ -42,107 +43,115 @@ def file_monitor(filename):
         yield False
 
 
-#@do_cprofile
-def manage_network(input_graph_string, timestamp, build=True,
-                   visualise=True, compile=True, validate=True, render=True,
-                   monitor=False, deploy=False, measure=False, diff=False,
-                   archive=False, grid=None, ):
-    """Build, compile, render network as appropriate"""
+class Network(object):
+    def __init__(self, graph_string, timestamp, **kwargs):
+        self.graph_def = graph_string
+        self.should_build = kwargs.get('build', True)
+        self.should_visualise = kwargs.get('visualise', True)
+        self.should_compile = kwargs.get('compile', True)
+        self.should_validate = kwargs.get('validate', True)
+        self.should_render = kwargs.get('render', True)
+        self.should_monitor = kwargs.get('monitor', True)
+        self.should_deploy = kwargs.get('deploy', True)
+        self.should_measure = kwargs.get('measure', True)
+        self.should_diff = kwargs.get('diff', True)
+        self.should_archive = kwargs.get('archive', True)
 
-    # import build_network_simple as build_network
+    def load(self):
+        self.graph = build_network.load(self.graph_def)
 
-    import autonetkit.build_network as build_network
-
-    if build:
-        if input_graph_string:
-            graph = build_network.load(input_graph_string)
-        elif grid:
-            graph = build_network.grid_2d(grid)
-
-        # TODO: integrate the code to visualise on error (enable in config)
-        anm = None
-        try:
-            anm = build_network.build(graph)
-        except Exception, e:
-            # Send the visualisation to help debugging
+    def configure(self):
+        if self.should_build:
+            self.load()
+            # TODO: integrate the code to visualise on error (enable in config)
+            anm = None
             try:
-                if visualise:
+                anm = build_network.build(self.graph)
+            except Exception, e:
+                # Send the visualisation to help debugging
+                try:
+                    if self.should_visualise:
+                        import autonetkit
+                        autonetkit.update_vis(anm)
+                except Exception, e:
+                    # problem with vis -> could be coupled with original exception -
+                    # raise original
+                    log.warning("Unable to visualise: %s" % e)
+                raise  # raise the original exception
+            else:
+                if self.should_visualise:
+                    # log.info("Visualising network")
                     import autonetkit
                     autonetkit.update_vis(anm)
-            except Exception, e:
-                # problem with vis -> could be coupled with original exception -
-                # raise original
-                log.warning("Unable to visualise: %s" % e)
-            raise  # raise the original exception
-        else:
-            if visualise:
-                # log.info("Visualising network")
-                import autonetkit
-                autonetkit.update_vis(anm)
 
-        if not compile:
-            # autonetkit.update_vis(anm)
-            pass
+            if not compile:
+                # autonetkit.update_vis(anm)
+                pass
 
-        if validate:
-            import autonetkit.ank_validate
-            try:
-                autonetkit.ank_validate.validate(anm)
-            except Exception, e:
-                log.warning('Unable to validate topologies: %s' % e)
-                log.debug('Unable to validate topologies',
-                          exc_info=True)
+            if self.should_validate:
+                import autonetkit.ank_validate
+                try:
+                    autonetkit.ank_validate.validate(anm)
+                except Exception, e:
+                    log.warning('Unable to validate topologies: %s' % e)
+                    log.debug('Unable to validate topologies',
+                              exc_info=True)
 
-    if compile:
-        if archive:
-            anm.save()
-        nidb = compile_network(anm)
-        autonetkit.update_vis(anm, nidb)
+        if compile:
+            if self.should_archive:
+                anm.save()
+            nidb = compile_network(anm)
+            autonetkit.update_vis(anm, nidb)
 
-        #autonetkit.update_vis(anm, nidb)
-        log.debug('Sent ANM to web server')
-        if archive:
-            nidb.save()
+            #autonetkit.update_vis(anm, nidb)
+            log.debug('Sent ANM to web server')
+            if self.should_archive:
+                nidb.save()
 
-        # render.remove_dirs(["rendered"])
+            # render.remove_dirs(["rendered"])
 
-        if render:
-            import time
-            #start = time.clock()
-            autonetkit.render.render(nidb)
-            # print time.clock() - start
-            #import autonetkit.render2
-            #start = time.clock()
-            # autonetkit.render2.render(nidb)
-            # print time.clock() - start
+            if render:
+                #import time
+                #start = time.clock()
+                autonetkit.render.render(nidb)
+                # print time.clock() - start
+                #import autonetkit.render2
+                #start = time.clock()
+                # autonetkit.render2.render(nidb)
+                # print time.clock() - start
 
-    if not (build or compile):
+        if not (self.should_build or compile):
 
-        # Load from last run
+            # Load from last run
 
-        import autonetkit.anm
-        anm = autonetkit.anm.NetworkModel()
-        anm.restore_latest()
-        nidb = DeviceModel()
-        nidb.restore_latest()
-        #autonetkit.update_vis(anm, nidb)
+            import autonetkit.anm
+            anm = autonetkit.anm.NetworkModel()
+            anm.restore_latest()
+            nidb = DeviceModel()
+            nidb.restore_latest()
+            #autonetkit.update_vis(anm, nidb)
 
-    if diff:
-        import autonetkit.diff
-        nidb_diff = autonetkit.diff.nidb_diff()
-        import json
-        data = json.dumps(nidb_diff, cls=ank_json.AnkEncoder, indent=4)
-        # log.info('Wrote diff to diff.json')
+        if self.should_diff:
+            import autonetkit.diff
+            nidb_diff = autonetkit.diff.nidb_diff()
+            import json
+            data = json.dumps(nidb_diff, cls=ank_json.AnkEncoder, indent=4)
+            # log.info('Wrote diff to diff.json')
 
-        # TODO: make file specified in config
+            # TODO: make file specified in config
 
-        with open('diff.json', 'w') as fh:
-            fh.write(data)
+            with open('diff.json', 'w') as fh:
+                fh.write(data)
 
-    if deploy:
-        deploy_network(anm, nidb, input_graph_string)
+        if self.should_deploy:
+            deploy_network(anm, nidb, self.graph_def)
 
-    log.info('Configuration engine completed')  # TODO: finished what?
+        log.info('Configuration engine completed')  # TODO: finished what?
+
+
+class GridNetwork(Network):
+    def load(self):
+        self.graph = build_network.grid_2d(self.graph_def)
 
 
 #@do_cprofile

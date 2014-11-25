@@ -124,8 +124,12 @@ def main(options):
         return
 
     try:
-        workflow.manage_network(input_string, timestamp,
-                       grid=options.grid, **build_options)
+        if input_string:
+            network = workflow.Network(input_string, timestamp, **build_options)
+        elif options.grid:
+            network = workflow.GridNetwork(options.grid, timestamp,
+                                           **build_options)
+        network.configure()
     except Exception, err:
         log.error(
             "Error generating network configurations: %s. More information may be available in the debug log." % err)
