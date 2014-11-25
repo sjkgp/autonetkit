@@ -59,7 +59,7 @@ def parse_options(argument_string=None):
         '--webserver', action="store_true", default=False, help="Webserver")
     parser.add_argument('--grid', type=int, help="Grid Size (n * n)")
     parser.add_argument(
-        '--target', choices=['netkit', 'cisco'], default=None)
+        '--target', choices=['netkit'], default=None)
     parser.add_argument(
         '--vis_uuid', default=None, help="UUID for multi-user visualisation")
     if argument_string:
@@ -89,17 +89,6 @@ def main(options):
         log.info("%s" % version_banner)
 
     log.info("AutoNetkit %s" % ANK_VERSION)
-
-    if options.target == "cisco":
-        # output target is Cisco
-        log.info("Setting output target as Cisco")
-        settings['Graphml']['Node Defaults']['platform'] = "VIRL"
-        settings['Graphml']['Node Defaults']['host'] = "internal"
-        settings['Graphml']['Node Defaults']['syntax'] = "ios_xr"
-        settings['Compiler']['Cisco']['to memory'] = 1
-        settings['General']['deploy'] = 1
-        settings['Deploy Hosts']['internal'] = {'VIRL':
-                                                {'deploy': 1}}
 
     if options.debug or settings['General']['debug']:
         # TODO: fix this
