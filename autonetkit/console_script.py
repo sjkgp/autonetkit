@@ -77,17 +77,6 @@ def main(options):
     if options.vis_uuid:
         config.settings['Http Post']['uuid'] = options.vis_uuid
 
-    try:
-        # test if can import, if not present will fail and not add to template
-        # path
-        import autonetkit_cisco
-    except ImportError:
-        pass
-    else:
-        import autonetkit_cisco.version
-        version_banner = autonetkit_cisco.version.banner()
-        log.info("%s" % version_banner)
-
     log.info("AutoNetkit %s" % ANK_VERSION)
 
     if options.debug or settings['General']['debug']:
