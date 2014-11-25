@@ -168,13 +168,6 @@ def compile_network(anm):
             import autonetkit.compilers.platform.netkit as pl_netkit
             platform_compiler = pl_netkit.NetkitCompiler(nidb, anm,
                                                          host)
-        elif platform == 'VIRL':
-            try:
-                import autonetkit_cisco.compilers.platform.cisco as pl_cisco
-                platform_compiler = pl_cisco.CiscoCompiler(nidb, anm,
-                                                           host)
-            except ImportError:
-                log.debug('Unable to load VIRL platform compiler')
         elif platform == 'dynagen':
             import autonetkit.compilers.platform.dynagen as pl_dynagen
             platform_compiler = pl_dynagen.DynagenCompiler(nidb, anm,
@@ -224,27 +217,6 @@ def deploy_network(anm, nidb, input_graph_string=None):
                 continue
 
             config_path = os.path.join('rendered', hostname, platform)
-
-            if hostname == 'internal':
-                try:
-                    from autonetkit_cisco import deploy as cisco_deploy
-                except ImportError:
-                    pass  # development module, may not be available
-                if platform == 'VIRL':
-                    create_new_xml = False
-                    if not input_graph_string:
-                        create_new_xml = True  # no input, eg if came from grid
-                    elif anm['input'].data['file_type'] == 'graphml':
-                        create_new_xml = True  # input from graphml, create XML
-
-                    if create_new_xml:
-                        cisco_deploy.create_xml(anm, nidb,
-                                                input_graph_string)
-                    else:
-                        cisco_deploy.package(nidb, config_path,
-                                             input_graph_string)
-                continue
-
             username = platform_data['username']
             key_file = platform_data['key_file']
             host = platform_data['host']
@@ -263,8 +235,3 @@ def deploy_network(anm, nidb, input_graph_string=None):
                     key_filename=key_file,
                     parallel_count=10,
                 )
-                if platform == 'VIRL':
-
-                    # TODO: check why using nklab here
-
-                    cisco_deploy.package(config_path, 'nklab')
