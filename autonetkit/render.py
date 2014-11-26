@@ -32,14 +32,6 @@ def initialise_lookup():
                             cache_enabled=True,
                             )
 
-    try:
-        cisco_templates = pkg_resources.resource_filename(
-            "autonetkit_cisco", "")
-        retval.directories.append(cisco_templates)
-    except ImportError:
-        pass  # Cisco ANK not present
-
-    # and cwd
     retval.directories.append(os.getcwd())
 
     return retval
@@ -47,12 +39,6 @@ def initialise_lookup():
 # TODO: make lookup initialised once rather than global for module import
 # and allow users to append to the lookup
 TEMPLATE_LOOKUP = initialise_lookup()
-
-try:
-    from autonetkit_cisco.template_wrapper import inject_templates
-    inject_templates(TEMPLATE_LOOKUP)
-except ImportError:
-    pass
 
 
 def format_version_banner():
