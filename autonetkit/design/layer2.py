@@ -18,13 +18,6 @@ def build_layer2_base(anm):
                           if n.device_subtype != "managed"]
     ank_utils.aggregate_nodes(g_l2, unmanaged_switches)
 
-    try:
-        from autonetkit_cisco import build_network as cisco_build_network
-    except ImportError:
-        pass
-    else:
-        cisco_build_network.post_layer2(anm)
-
 def check_layer2(anm):
     """Sanity checks on topology"""
     from collections import defaultdict
