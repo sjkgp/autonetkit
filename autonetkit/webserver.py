@@ -133,15 +133,9 @@ class AnkAccessor():
         self.anm = {}
         self.ip_allocation = {}
         self.simplified_overlays = simplified_overlays
-# try loading from vis directory
-        try:
-            import autonetkit_cisco_webui
-            default_file = pkg_resources.resource_filename(
-                "autonetkit_cisco_webui", "cisco.json.gz")
-        except ImportError:
-            vis_content = pkg_resources.resource_filename(
-                "autonetkit_vis", "web_content")
-            default_file = os.path.join(vis_content, "default.json.gz")
+        vis_content = pkg_resources.resource_filename(
+            "autonetkit_vis", "web_content")
+        default_file = os.path.join(vis_content, "default.json.gz")
 
         try:
             import gzip
@@ -193,6 +187,8 @@ class AnkAccessor():
 
             # DIsable until all web engines are verified to support format (eg
             # ank_cisco_webui)
+            # FIXME should this be deleted, since autonetkit no longer use
+            # ank_cisco_webui?
             labels = {}
 
             # Check if new uuid or updating previous uuid
@@ -346,16 +342,6 @@ def main():
     # arguments.ank_vis = False # manually force for now
 
     simplified_overlays = False
-    if not arguments.ank_vis:
-        try:
-            import autonetkit_cisco_webui
-            simplified_overlays = True
-        except ImportError:
-            pass  # use AutoNetkit internal web content
-        else:
-            # use web content from autonetkit_cisco module
-            content_path = pkg_resources.resource_filename(
-                "autonetkit_cisco_webui", "web_content")
 
     if not content_path:
         logging.warning(
