@@ -127,9 +127,7 @@ class CiscoCompiler(PlatformCompiler):
     # TODO: look for unused code paths here - especially for interface
     # allocation
 
-        # store autonetkit_cisco version
         log.debug("Generating device configurations")
-        from pkg_resources import get_distribution
 
         # Copy across indices for external connectors (e.g may want to copy
         # configs)
@@ -164,9 +162,7 @@ class CiscoCompiler(PlatformCompiler):
                 if phy_specified_id is not None:
                     interface.id = phy_specified_id
 
-        #from autonetkit.compilers.device.ubuntu import UbuntuCompiler
-        from autonetkit_cisco.compilers.device.ubuntu import UbuntuCompiler
-
+        from autonetkit.compilers.device.ubuntu import UbuntuCompiler
         ubuntu_compiler = UbuntuCompiler(self.nidb, self.anm)
         for phy_node in g_phy.servers(host=self.host):
             DmNode = self.nidb.node(phy_node)
@@ -277,12 +273,7 @@ class CiscoCompiler(PlatformCompiler):
                 mgmt_int = DmNode.add_interface(management=True)
                 mgmt_int.id = mgmt_int_id
 
-        try:
-            from autonetkit_cisco.compilers.device.cisco import IosXrCompiler
-            ios_xr_compiler = IosXrCompiler(self.nidb, self.anm)
-        except ImportError:
-            ios_xr_compiler = IosXrCompiler(self.nidb, self.anm)
-
+        ios_xr_compiler = IosXrCompiler(self.nidb, self.anm)
         for phy_node in g_phy.routers(host=self.host, syntax='ios_xr'):
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
