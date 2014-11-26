@@ -136,13 +136,6 @@ def apply_design_rules(anm):
 
     build_phy(anm)
 
-    try:
-        from autonetkit_cisco import build_network as cisco_build_network
-    except ImportError, e:
-        log.debug("Unable to load autonetkit_cisco %s", e)
-    else:
-        cisco_build_network.post_phy(anm)
-
     g_phy = anm['phy']
     from autonetkit.design.osi_layers import build_layer2, build_layer3
     # log.info("Building layer2")
@@ -196,13 +189,6 @@ def apply_design_rules(anm):
 
     ank_utils.copy_attr_from(g_in, g_phy, "include_csr")
 
-    try:
-        from autonetkit_cisco import build_network as cisco_build_network
-    except ImportError, error:
-        log.debug("Unable to load autonetkit_cisco %s" % error)
-    else:
-        cisco_build_network.pre_design(anm)
-
     # log.info("Building IGP")
     from autonetkit.design.igp import build_igp
     build_igp(anm)
@@ -223,13 +209,6 @@ def apply_design_rules(anm):
         mark_ebgp_vrf(anm)
         build_ibgp_vpn_v4(anm)  # build after bgp as is based on
     # autonetkit.update_vis(anm)
-
-    try:
-        from autonetkit_cisco import build_network as cisco_build_network
-    except ImportError, error:
-        log.debug("Unable to load autonetkit_cisco %s", error)
-    else:
-        cisco_build_network.post_design(anm)
 
     # log.info("Finished building network")
     return anm
