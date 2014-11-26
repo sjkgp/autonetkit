@@ -23,24 +23,7 @@ def load(input_graph_string, defaults = True):
     try:
         input_graph = graphml.load_graphml(input_graph_string, defaults=defaults)
     except autonetkit.exception.AnkIncorrectFileFormat:
-        try:
-            input_graph = load_json.load_json(input_graph_string, defaults=defaults)
-        except (ValueError, autonetkit.exception.AnkIncorrectFileFormat):
-            # try a different reader
-            try:
-                from autonetkit_cisco import load as cisco_load
-            except ImportError, error:
-                log.debug("Unable to load autonetkit_cisco %s", error)
-                return  # module not present (development module)
-            else:
-                input_graph = cisco_load.load(input_graph_string)
-                # add local deployment host
-                SETTINGS['General']['deploy'] = True
-                SETTINGS['Deploy Hosts']['internal'] = {
-                    'VIRL': {
-                        'deploy': True,
-                    },
-                }
+        input_graph = load_json.load_json(input_graph_string, defaults=defaults)
 
     return input_graph
 
