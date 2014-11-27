@@ -43,6 +43,14 @@ def file_monitor(filename):
         yield False
 
 
+class NoneCompiler:
+    def __init__(self, platform):
+        self.platform = platform
+    def compile(self):
+        raise Exception('No compiler for platform "%s"' %
+                        self.platform)
+
+
 class Network(object):
     def __init__(self, graph_string, timestamp, **kwargs):
         self.graph_def = graph_string
@@ -60,19 +68,57 @@ class Network(object):
     def load(self):
         self.graph = build_network.load(self.graph_def)
 
+    def select_platform_compiler(self, host, platform, print_log=True):
+        if platform == 'netkit':
+            import autonetkit.compilers.platform.netkit as pl_netkit
+            platform_compiler = pl_netkit.NetkitCompiler(self.nidb, self.anm,
+                                                         host)
+        elif platform == 'dynagen':
+            import autonetkit.compilers.platform.dynagen as pl_dynagen
+            platform_compiler = pl_dynagen.DynagenCompiler(self.nidb, self.anm,
+                                                           host)
+        elif platform == 'junosphere':
+            import autonetkit.compilers.platform.junosphere as pl_junosphere
+            platform_compiler = pl_junosphere.JunosphereCompiler(
+                self.nidb, self.anm, host)
+        else:
+            platform_compiler = NoneCompiler(platform)
+            if print_log:
+                log.warning('Unknown platform "%s"' % platform)
+        return platform_compiler
+
+    #@do_cprofile
+    def compile_network(self):
+        # log.info("Creating base network model")
+        self.nidb = create_nidb(self.anm)
+        g_phy = self.anm['phy']
+        # log.info("Compiling to targets")
+
+        for target_data in config.settings['Compile Targets'].values():
+            host, platform = target_data['host'], target_data['platform']
+            platform_compiler = self.select_platform_compiler(host, platform)
+
+            if any(g_phy.nodes(host=host, platform=platform)):
+                # log.info('Compiling configurations for %s on %s'
+                         # % (platform, host))
+                platform_compiler.compile()  # only compile if hosts set
+            else:
+                log.debug('No devices set for %s on %s' % (platform, host))
+        return self.nidb
+
     def configure(self):
         if self.should_build:
             self.load()
             # TODO: integrate the code to visualise on error (enable in config)
-            anm = None
+            self.anm = None
             try:
-                anm = build_network.build(self.graph)
+                self.anm = build_network.build(self.graph)
             except Exception, e:
                 # Send the visualisation to help debugging
                 try:
                     if self.should_visualise:
                         import autonetkit
-                        autonetkit.update_vis(anm)
+                        autonetkit.update_vis(self.anm)
                 except Exception, e:
                     # problem with vis -> could be coupled with original exception -
                     # raise original
@@ -82,16 +128,16 @@ class Network(object):
                 if self.should_visualise:
                     # log.info("Visualising network")
                     import autonetkit
-                    autonetkit.update_vis(anm)
+                    autonetkit.update_vis(self.anm)
 
             if not compile:
-                # autonetkit.update_vis(anm)
+                # autonetkit.update_vis(self.anm)
                 pass
 
             if self.should_validate:
                 import autonetkit.ank_validate
                 try:
-                    autonetkit.ank_validate.validate(anm)
+                    autonetkit.ank_validate.validate(self.anm)
                 except Exception, e:
                     log.warning('Unable to validate topologies: %s' % e)
                     log.debug('Unable to validate topologies',
@@ -99,25 +145,25 @@ class Network(object):
 
         if compile:
             if self.should_archive:
-                anm.save()
-            nidb = compile_network(anm)
-            autonetkit.update_vis(anm, nidb)
+                self.anm.save()
+            self.nidb = self.compile_network()
+            autonetkit.update_vis(self.anm, self.nidb)
 
-            #autonetkit.update_vis(anm, nidb)
+            #autonetkit.update_vis(self.anm, self.nidb)
             log.debug('Sent ANM to web server')
             if self.should_archive:
-                nidb.save()
+                self.nidb.save()
 
             # render.remove_dirs(["rendered"])
 
             if render:
                 #import time
                 #start = time.clock()
-                autonetkit.render.render(nidb)
+                autonetkit.render.render(self.nidb)
                 # print time.clock() - start
                 #import autonetkit.render2
                 #start = time.clock()
-                # autonetkit.render2.render(nidb)
+                # autonetkit.render2.render(self.nidb)
                 # print time.clock() - start
 
         if not (self.should_build or compile):
@@ -125,11 +171,11 @@ class Network(object):
             # Load from last run
 
             import autonetkit.anm
-            anm = autonetkit.anm.NetworkModel()
-            anm.restore_latest()
-            nidb = DeviceModel()
-            nidb.restore_latest()
-            #autonetkit.update_vis(anm, nidb)
+            self.anm = autonetkit.anm.NetworkModel()
+            self.anm.restore_latest()
+            self.nidb = DeviceModel()
+            self.nidb.restore_latest()
+            #autonetkit.update_vis(self.anm, self.nidb)
 
         if self.should_diff:
             import autonetkit.diff
@@ -144,7 +190,7 @@ class Network(object):
                 fh.write(data)
 
         if self.should_deploy:
-            deploy_network(anm, nidb, self.graph_def)
+            deploy_network(self.anm, self.nidb, self.graph_def)
 
         log.info('Configuration engine completed')  # TODO: finished what?
 
@@ -152,39 +198,6 @@ class Network(object):
 class GridNetwork(Network):
     def load(self):
         self.graph = build_network.grid_2d(self.graph_def)
-
-
-#@do_cprofile
-def compile_network(anm):
-    # log.info("Creating base network model")
-    nidb = create_nidb(anm)
-    g_phy = anm['phy']
-    # log.info("Compiling to targets")
-
-    for target_data in config.settings['Compile Targets'].values():
-        host = target_data['host']
-        platform = target_data['platform']
-        if platform == 'netkit':
-            import autonetkit.compilers.platform.netkit as pl_netkit
-            platform_compiler = pl_netkit.NetkitCompiler(nidb, anm,
-                                                         host)
-        elif platform == 'dynagen':
-            import autonetkit.compilers.platform.dynagen as pl_dynagen
-            platform_compiler = pl_dynagen.DynagenCompiler(nidb, anm,
-                                                           host)
-        elif platform == 'junosphere':
-            import autonetkit.compilers.platform.junosphere as pl_junosphere
-            platform_compiler = pl_junosphere.JunosphereCompiler(nidb,
-                                                                 anm, host)
-
-        if any(g_phy.nodes(host=host, platform=platform)):
-            # log.info('Compiling configurations for %s on %s'
-                     # % (platform, host))
-            platform_compiler.compile()  # only compile if hosts set
-        else:
-            log.debug('No devices set for %s on %s' % (platform, host))
-
-    return nidb
 
 
 def create_nidb(anm):
