@@ -33,6 +33,21 @@ def test_ospf_no_routing():
     anm = build_layer3()
     autonetkit.design.igp.build_ospf(anm)
 
+def test_rip():
+    anm = build_layer3()
+    anm['phy'].data.enable_routing = True
+
+    for node in anm['phy']:
+        node.igp = "rip"
+
+    autonetkit.design.igp.build_rip(anm)
+
+    g_rip = anm['rip']
+    assert(len(g_rip) == 5)
+    edges = {(e.src, e.dst) for e in g_rip.edges()}
+    expected = {("r4", "r5"), ("r1", "r2"), ("r1", "r3"), ("r2", "r3")}
+    assert edges == expected
+
 def test_ospf_no_isis_set():
     anm = build_layer3()
     anm['phy'].data.enable_routing = True
