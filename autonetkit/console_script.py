@@ -78,7 +78,7 @@ class Runner(object):
         if options.vis_uuid:
             config.settings['Http Post']['uuid'] = options.vis_uuid
 
-        log.info("AutoNetkit %s" % ANK_VERSION)
+        self.print_version()
 
         if options.debug or self.settings['General']['debug']:
             # TODO: fix this
@@ -97,6 +97,9 @@ class Runner(object):
             log.info("Webserver not yet supported, please run as seperate module")
 
         self.load_input()
+
+    def print_version(self):
+        log.info("AutoNetkit %s" % ANK_VERSION)
 
     def init_build_options(self):
         self.build_options = {
