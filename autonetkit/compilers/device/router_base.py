@@ -434,7 +434,7 @@ class RouterCompiler(DeviceCompiler):
         ipv4_networks = set()
         for interface in node.physical_interfaces():
             if interface.exclude_igp:
-                continue  # discontinue configuring IGP for this interface. 
+                continue  # discontinue configuring IGP for this interface.
             ipv4_int = g_ipv4.interface(interface)
             rip_int = g_rip.interface(interface)
             if not rip_int.is_bound:

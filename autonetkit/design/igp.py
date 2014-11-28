@@ -257,10 +257,10 @@ def build_rip(anm):
         g_rip.log.info("Routing disabled, not configuring rip")
         return
 
-    if not any(n.igp == "rip" for n in g_phy):
+    if not any(n.igp == "rip-v2" for n in g_phy):
         log.debug("No rip nodes")
         return
-    rip_nodes = [n for n in g_l3 if n['phy'].igp == "rip"]
+    rip_nodes = [n for n in g_l3 if n['phy'].igp == "rip-v2"]
     g_rip.add_nodes_from(rip_nodes)
     g_rip.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_rip, "multipoint")

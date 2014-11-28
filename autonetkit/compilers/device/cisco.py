@@ -53,7 +53,7 @@ class IosBaseCompiler(RouterCompiler):
         if node in self.anm['rip']:
             node.add_stanza("rip")
             node.rip.use_ipv4 = phy_node.use_ipv4
-            node.rip.use_ipv6 = phy_node.use_ipv6            
+            node.rip.use_ipv6 = phy_node.use_ipv6
 
         super(IosBaseCompiler, self).compile(node)
         if node in self.anm['isis']:
@@ -353,7 +353,7 @@ class IosBaseCompiler(RouterCompiler):
             rip_int = phy_int['rip']
             if rip_int and rip_int.is_bound:
                 if interface.exclude_igp:
-                    continue  
+                    continue
 
                 interface.rip = {
                     'cost': rip_int.cost,
@@ -749,7 +749,7 @@ class IosXrCompiler(IosBaseCompiler):
         node.add_stanza("rsvp")
         node.rsvp.interfaces = rsvp_interfaces
         node.mpls.te_interfaces = mpls_te_interfaces
-   
+
     def rip(self, node):
         super(IosXrCompiler, self).rip(node)
 
@@ -880,7 +880,7 @@ class NxOsCompiler(IosBaseCompiler):
         super(NxOsCompiler, self).rip(node)
         loopback_zero = node.loopback_zero
         loopback_zero.rip = {'use_ipv4': node.ip.use_ipv4,
-                            'process_id': node.rip.process_id}     
+                            'process_id': node.rip.process_id}
 
 
     def ospf(self, node):

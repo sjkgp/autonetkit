@@ -38,7 +38,7 @@ def test_rip():
     anm['phy'].data.enable_routing = True
 
     for node in anm['phy']:
-        node.igp = "rip"
+        node.igp = "rip-v2"
 
     autonetkit.design.igp.build_rip(anm)
 
