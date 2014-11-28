@@ -106,6 +106,43 @@ class Network(object):
                 log.debug('No devices set for %s on %s' % (platform, host))
         return self.nidb
 
+    def _deploy(self, hostname, platform, platform_data):
+        config_path = os.path.join('rendered', hostname, platform)
+        username = platform_data['username']
+        key_file = platform_data['key_file']
+        host = platform_data['host']
+
+        if platform == 'netkit':
+            import autonetkit.deploy.netkit as netkit_deploy
+            tar_file = netkit_deploy.package(config_path, 'nklab')
+            netkit_deploy.transfer(host, username, tar_file,
+                                   tar_file, key_file)
+            netkit_deploy.extract(
+                host,
+                username,
+                tar_file,
+                config_path,
+                timeout=60,
+                key_filename=key_file,
+                parallel_count=10,
+            )
+
+    def deploy_network(self):
+        deploy_hosts = config.settings['Deploy Hosts']
+        for (hostname, host_data) in deploy_hosts.items():
+            for (platform, platform_data) in host_data.items():
+                if not any(self.nidb.nodes(host=hostname, platform=platform)):
+                    log.debug('No hosts for (host, platform) (%s, %s), '
+                              'skipping deployment' % (hostname, platform))
+                    continue
+
+                if not platform_data['deploy']:
+                    log.debug('Not deploying to %s on %s' % (platform,
+                                                             hostname))
+                    continue
+
+                self.deploy(hostname, platform, platform_data)
+
     def configure(self):
         if self.should_build:
             self.load()
@@ -190,7 +227,7 @@ class Network(object):
                 fh.write(data)
 
         if self.should_deploy:
-            deploy_network(self.anm, self.nidb, self.graph_def)
+            self.deploy_network()
 
         log.info('Configuration engine completed')  # TODO: finished what?
 
@@ -210,41 +247,3 @@ def create_nidb(anm):
 
 
     return nidb
-
-
-def deploy_network(anm, nidb, input_graph_string=None):
-
-    # log.info('Deploying Network')
-
-    deploy_hosts = config.settings['Deploy Hosts']
-    for (hostname, host_data) in deploy_hosts.items():
-        for (platform, platform_data) in host_data.items():
-            if not any(nidb.nodes(host=hostname, platform=platform)):
-                log.debug('No hosts for (host, platform) (%s, %s), skipping deployment'
-                          % (hostname, platform))
-                continue
-
-            if not platform_data['deploy']:
-                log.debug('Not deploying to %s on %s' % (platform,
-                                                         hostname))
-                continue
-
-            config_path = os.path.join('rendered', hostname, platform)
-            username = platform_data['username']
-            key_file = platform_data['key_file']
-            host = platform_data['host']
-
-            if platform == 'netkit':
-                import autonetkit.deploy.netkit as netkit_deploy
-                tar_file = netkit_deploy.package(config_path, 'nklab')
-                netkit_deploy.transfer(host, username, tar_file,
-                                       tar_file, key_file)
-                netkit_deploy.extract(
-                    host,
-                    username,
-                    tar_file,
-                    config_path,
-                    timeout=60,
-                    key_filename=key_file,
-                    parallel_count=10,
-                )
