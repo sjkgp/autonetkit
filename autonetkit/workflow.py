@@ -143,6 +143,15 @@ class Network(object):
 
                 self.deploy(hostname, platform, platform_data)
 
+    def validate(self):
+        import autonetkit.ank_validate
+        try:
+            autonetkit.ank_validate.validate(self.anm)
+        except Exception, e:
+            log.warning('Unable to validate topologies: %s' % e)
+            log.debug('Unable to validate topologies',
+                      exc_info=True)
+
     def configure(self):
         if self.should_build:
             self.load()
@@ -172,13 +181,7 @@ class Network(object):
                 pass
 
             if self.should_validate:
-                import autonetkit.ank_validate
-                try:
-                    autonetkit.ank_validate.validate(self.anm)
-                except Exception, e:
-                    log.warning('Unable to validate topologies: %s' % e)
-                    log.debug('Unable to validate topologies',
-                              exc_info=True)
+                self.validate()
 
         if compile:
             if self.should_archive:
