@@ -135,7 +135,7 @@ interface ${interface.id}
   %endif
   % if interface.rip:
     %if interface.rip.use_ipv6:
-    ipv6 rip {node.rip.process_id} enable
+    ipv6 rip ${node.rip.process_id} enable
     %endif
   %endif
   % if interface.ospf:
