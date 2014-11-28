@@ -249,17 +249,22 @@ router ospfv3 ${node.ospf.process_id}
 % endif
 ## RIP
 % if node.rip:
+% if node.rip.use_ipv4:
 router rip
   version 2
   no auto-summary
   % if node.rip.custom_config:
   ${node.rip.custom_config}
   % endif
-  % if node.rip.use_ipv4:
   % for subnet in node.rip.ipv4_networks:
   network ${subnet.network}
   %endfor
-  %endif
+  % for interface in node.interfaces:
+  %if interface.mgmt:
+  passive-interface ${interface.id}
+  % endif
+  % endfor
+%endif
   % if node.rip.use_ipv6:
 ipv6 router rip ${node.rip.process_id}
 !
