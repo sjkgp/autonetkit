@@ -311,6 +311,17 @@ class IndexHandler(tornado.web.RequestHandler):
         template = os.path.join(self.content_path, "index.html")
         self.render(template, uuid=uuid)
 
+class ThreeDHandler(tornado.web.RequestHandler):
+    def initialize(self, path):
+        self.content_path = path
+
+    def get(self):
+        # if not set, use default uuid of "singleuser"
+        uuid = self.get_argument("uuid", "singleuser")
+
+        logging.info("Rendering template with uuid %s" % uuid)
+        template = os.path.join(self.content_path, "3d", "index.html")
+        self.render(template, uuid=uuid)
 
 def main():
 
@@ -391,6 +402,7 @@ def main():
         # cases
         (r'/', IndexHandler, {"path": settings['static_path']}),
         (r'/index.html', IndexHandler, {"path": settings['static_path']}),
+        (r'/3d/index.html', ThreeDHandler, {"path": settings['static_path']}),
         ("/(.*)", tornado.web.StaticFileHandler,
          {"path": settings['static_path']})
     ], **settings)
