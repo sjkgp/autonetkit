@@ -54,7 +54,8 @@ def build_anm(topology_name):
 
     import autonetkit.build_network as build_network
     anm = build_network.initialise(input_graph)
-    anm = build_network.apply_design_rules(anm)
+    aplicator = build_network.DesignRulesAplicator(anm)
+    anm = aplicator.design()
     return anm
 
 def test():

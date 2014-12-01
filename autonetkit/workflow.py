@@ -152,13 +152,16 @@ class Network(object):
             log.debug('Unable to validate topologies',
                       exc_info=True)
 
+    def build(self):
+        self.anm = None
+        self.anm = build_network.build(self.graph)
+
     def configure(self):
         if self.should_build:
             self.load()
             # TODO: integrate the code to visualise on error (enable in config)
-            self.anm = None
             try:
-                self.anm = build_network.build(self.graph)
+                self.build()
             except Exception, e:
                 # Send the visualisation to help debugging
                 try:

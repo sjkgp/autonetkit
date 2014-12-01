@@ -129,96 +129,108 @@ def check_server_asns(anm):
                              "not auto-correcting", server, server.asn)
 
 
-def apply_design_rules(anm):
-    """Applies appropriate design rules to ANM"""
-    # log.info("Building overlay topologies")
-    g_in = anm['input']
+class DesignRulesAplicator(object):
+    def __init__(self, anm):
+        self.anm = anm
 
-    build_phy(anm)
+    def build_layer_2(self):
+        from autonetkit.design.layer2 import Layer2Builder
+        builder = Layer2Builder(self.anm)
+        builder.build_layer2()
 
-    g_phy = anm['phy']
-    from autonetkit.design.osi_layers import build_layer2, build_layer3
-    # log.info("Building layer2")
-    build_layer2(anm)
+    def build_layer_3(self):
+        from autonetkit.design.osi_layers import build_layer3
+        build_layer3(self.anm)
 
-    # log.info("Building layer3")
-    build_layer3(anm)
+    def design(self):
+        """Applies appropriate design rules to ANM"""
+        # log.info("Building overlay topologies")
+        anm = self.anm
+        g_in = anm['input']
 
-    check_server_asns(anm)
+        build_phy(anm)
 
-    from autonetkit.design.mpls import build_vrf
-    build_vrf(anm)  # do before to add loopbacks before ip allocations
-    from autonetkit.design.ip import build_ip, build_ipv4, build_ipv6
-    # TODO: replace this with layer2 overlay topology creation
-    # log.info("Allocating IP addresses")
-    build_ip(anm)  # ip infrastructure topology
+        g_phy = anm['phy']
 
-    address_family = g_in.data.address_family or "v4"  # default is v4
-# TODO: can remove the infrastructure now create g_ip seperately
-    if address_family == "None":
-        log.info("IP addressing disabled, disabling routing protocol ",
-                 "configuration")
-        anm['phy'].data.enable_routing = False
+        self.build_layer_2()
+        self.build_layer_3()
 
-    if address_family == "None":
-        log.info("IP addressing disabled, skipping IPv4")
-        anm.add_overlay("ipv4")  # create empty so rest of code follows
-        g_phy.update(g_phy, use_ipv4=False)
-    elif address_family in ("v4", "dual_stack"):
-        build_ipv4(anm, infrastructure=True)
-        g_phy.update(g_phy, use_ipv4=True)
-    elif address_family == "v6":
-        # Allocate v4 loopbacks for router ids
-        build_ipv4(anm, infrastructure=False)
-        g_phy.update(g_phy, use_ipv4=False)
+        check_server_asns(anm)
 
-    # TODO: Create collision domain overlay for ip addressing - l2 overlay?
-    if address_family == "None":
-        log.info("IP addressing disabled, not allocating IPv6")
-        anm.add_overlay("ipv6")  # create empty so rest of code follows
-        g_phy.update(g_phy, use_ipv6=False)
-    elif address_family in ("v6", "dual_stack"):
-        build_ipv6(anm)
-        g_phy.update(g_phy, use_ipv6=True)
-    else:
-        anm.add_overlay("ipv6")  # placeholder for compiler logic
+        from autonetkit.design.mpls import build_vrf
+        build_vrf(anm)  # do before to add loopbacks before ip allocations
+        from autonetkit.design.ip import build_ip, build_ipv4, build_ipv6
+        # TODO: replace this with layer2 overlay topology creation
+        # log.info("Allocating IP addresses")
+        build_ip(anm)  # ip infrastructure topology
 
-    default_igp = g_in.data.igp or "ospf"
-    ank_utils.set_node_default(g_in, igp=default_igp)
-    ank_utils.copy_attr_from(g_in, g_phy, "igp")
+        address_family = g_in.data.address_family or "v4"  # default is v4
+        # TODO: can remove the infrastructure now create g_ip seperately
+        if address_family == "None":
+            log.info("IP addressing disabled, disabling routing protocol ",
+                     "configuration")
+            anm['phy'].data.enable_routing = False
 
-    ank_utils.copy_attr_from(g_in, g_phy, "include_csr")
+        if address_family == "None":
+            log.info("IP addressing disabled, skipping IPv4")
+            anm.add_overlay("ipv4")  # create empty so rest of code follows
+            g_phy.update(g_phy, use_ipv4=False)
+        elif address_family in ("v4", "dual_stack"):
+            build_ipv4(anm, infrastructure=True)
+            g_phy.update(g_phy, use_ipv4=True)
+        elif address_family == "v6":
+            # Allocate v4 loopbacks for router ids
+            build_ipv4(anm, infrastructure=False)
+            g_phy.update(g_phy, use_ipv4=False)
 
-    # log.info("Building IGP")
-    from autonetkit.design.igp import build_igp
-    build_igp(anm)
+        # TODO: Create collision domain overlay for ip addressing - l2 overlay?
+        if address_family == "None":
+            log.info("IP addressing disabled, not allocating IPv6")
+            anm.add_overlay("ipv6")  # create empty so rest of code follows
+            g_phy.update(g_phy, use_ipv6=False)
+        elif address_family in ("v6", "dual_stack"):
+            build_ipv6(anm)
+            g_phy.update(g_phy, use_ipv6=True)
+        else:
+            anm.add_overlay("ipv6")  # placeholder for compiler logic
 
-    # log.info("Building BGP")
-    from autonetkit.design.bgp import build_bgp
-    build_bgp(anm)
-    # autonetkit.update_vis(anm)
+        default_igp = g_in.data.igp or "ospf"
+        ank_utils.set_node_default(g_in, igp=default_igp)
+        ank_utils.copy_attr_from(g_in, g_phy, "igp")
 
-    from autonetkit.design.mpls import mpls_te, mpls_oam
-    mpls_te(anm)
-    mpls_oam(anm)
+        ank_utils.copy_attr_from(g_in, g_phy, "include_csr")
 
-# post-processing
-    if anm['phy'].data.enable_routing:
-        from autonetkit.design.mpls import (mark_ebgp_vrf,
-                                            build_ibgp_vpn_v4)
-        mark_ebgp_vrf(anm)
-        build_ibgp_vpn_v4(anm)  # build after bgp as is based on
-    # autonetkit.update_vis(anm)
+        # log.info("Building IGP")
+        from autonetkit.design.igp import build_igp
+        build_igp(anm)
 
-    # log.info("Finished building network")
-    return anm
+        # log.info("Building BGP")
+        from autonetkit.design.bgp import build_bgp
+        build_bgp(anm)
+        # autonetkit.update_vis(anm)
+
+        from autonetkit.design.mpls import mpls_te, mpls_oam
+        mpls_te(anm)
+        mpls_oam(anm)
+
+        # post-processing
+        if anm['phy'].data.enable_routing:
+            from autonetkit.design.mpls import (mark_ebgp_vrf,
+                                                build_ibgp_vpn_v4)
+            mark_ebgp_vrf(anm)
+            build_ibgp_vpn_v4(anm)  # build after bgp as is based on
+        # autonetkit.update_vis(anm)
+
+        # log.info("Finished building network")
+        return anm
 
 
 def build(input_graph):
     """Main function to build network overlay topologies"""
     anm = None
     anm = initialise(input_graph)
-    anm = apply_design_rules(anm)
+    aplicator = DesignRulesAplicator(anm)
+    anm = aplicator.design()
     return anm
 
 def build_phy(anm):
