@@ -46,6 +46,7 @@ def file_monitor(filename):
 class NoneCompiler:
     def __init__(self, platform):
         self.platform = platform
+
     def compile(self):
         raise Exception('No compiler for platform "%s"' %
                         self.platform)
@@ -141,7 +142,7 @@ class Network(object):
                                                              hostname))
                     continue
 
-                self.deploy(hostname, platform, platform_data)
+                self._deploy(hostname, platform, platform_data)
 
     def validate(self):
         import autonetkit.ank_validate
