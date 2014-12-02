@@ -12,34 +12,56 @@ validator = validate.Validator()
 # from http://stackoverflow.com/questions/4028904
 ank_user_dir = os.path.join(os.path.expanduser("~"),  ".autonetkit")
 
-def load_config():
-    retval = ConfigParser.RawConfigParser()
-    spec_file = pkg_resources.resource_filename(__name__,"/config/configspec.cfg")
-    retval = ConfigObj(configspec=spec_file, encoding='UTF8')
-# User's ANK retval
-    user_config_file = os.path.join(ank_user_dir, "autonetkit.cfg")
-    retval.merge(ConfigObj(user_config_file))
-# ANK retval in current directory
-    retval.merge(ConfigObj("autonetkit.cfg"))
-# ANK retval specified by environment variable
-    try:
-        ankcfg = os.environ['AUTONETKIT_CFG']
-        retval.merge(ConfigObj(ankcfg))
-    except KeyError:
-        pass
 
-    results = retval.validate(validator)
-    if results != True:
-        for (section_list, key, _) in flatten_errors(retval, results):
-            if key is not None:
-                print "Error loading configuration file:"
-                print 'Invalid key "%s" in section "%s"' % (key, ', '.join(section_list))
-                raise AutoNetkitException
-            else:
-# ignore missing sections - use defaults
-                #print 'The following section was missing:%s ' % ', '.join(section_list)
-                pass
-    return retval
+class ConfigLoader(object):
+    def __init__(self):
+        self.load_pkg_cfg()
+
+    def load_pkg_cfg(self):
+        spec_file = pkg_resources.resource_filename('autonetkit',
+                                                    '/config/configspec.cfg')
+        self.config = ConfigObj(configspec=spec_file, encoding='UTF8')
+
+    def load_configs(self):
+        self.load_user_cfg()
+        self.load_env_cfg()
+        self.load_dir_cfg()
+
+    def load_user_cfg(self):
+        user_cfg_file = os.path.join(ank_user_dir, 'autonetkit.cfg')
+        self.config.merge(ConfigObj(user_cfg_file))
+
+    def load_env_cfg(self):
+        self.config.merge(ConfigObj(os.environ.get('AUTONETKIT_CFG', '')))
+
+    def load_dir_cfg(self):
+        self.config.merge(ConfigObj('autonetkit.cfg'))
+
+    @property
+    def validator(self):
+        return validator
+
+    def validate(self):
+        results = self.config.validate(self.validator)
+        if results != True:
+            for (section_list, key, _) in flatten_errors(self.config, results):
+                if key is not None:
+                    print "Error loading configuration file:"
+                    print 'Invalid key "%s" in section "%s"' % \
+                        (key, ', '.join(section_list))
+                    raise AutoNetkitException
+                else:
+                    # ignore missing sections - use defaults
+                    #print 'The following section was missing:%s ' % \
+                    #    ', '.join(section_list)
+                    pass
+
+
+def load_config(config_loader_class=ConfigLoader):
+    config_loader = config_loader_class()
+    config_loader.load_configs()
+    config_loader.validate()
+    return config_loader.config
 
 #NOTE: this only gets loaded once package-wide if imported as import autonetkit.config
 settings = load_config()
