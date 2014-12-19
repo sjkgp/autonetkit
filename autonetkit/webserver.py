@@ -147,7 +147,7 @@ class AnkAccessor():
             import gzip
             fh = gzip.open(default_file, "r")
             data = json.load(fh)
-            #data = json.loads(loaded)
+            # data = json.loads(loaded)
             self.anm_index['singleuser'] = data
         except IOError, e:
             logging.warning(e)
@@ -311,17 +311,21 @@ class IndexHandler(tornado.web.RequestHandler):
         template = os.path.join(self.content_path, "index.html")
         self.render(template, uuid=uuid)
 
+
 class ThreeDHandler(tornado.web.RequestHandler):
+
     def initialize(self, path):
         self.content_path = path
 
     def get(self):
         # if not set, use default uuid of "singleuser"
+        overlays_to_load = ['phy', 'layer1', 'layer2', "igp"]
+
         uuid = self.get_argument("uuid", "singleuser")
 
         logging.info("Rendering template with uuid %s" % uuid)
         template = os.path.join(self.content_path, "3d", "index.html")
-        self.render(template, uuid=uuid)
+        self.render(template, uuid=uuid, overlays_to_load = overlays_to_load)
 
 def main():
 
@@ -375,7 +379,7 @@ def main():
 
     settings = {
         "static_path": content_path,
-        'debug': False,
+        'debug': True,
         # otherwise content with folder /static won't get mapped
         "static_url_prefix": "unused",
     }

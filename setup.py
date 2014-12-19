@@ -34,8 +34,6 @@ setup (
          'networkx==1.7',
          'configobj==4.7.1',
          'tornado>=3.0.1',
-         #'textfsm', 'pika',
-         # 'exscript==0.0.1'
          ],
 
      #Note: exscript disabled in default install: requires pycrypto which requires compilation (can cause installation issues)

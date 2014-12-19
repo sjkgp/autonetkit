@@ -4,6 +4,10 @@ import autonetkit.ank_json
 import autonetkit.config as config
 import autonetkit.log as log
 from autonetkit.ank_utils import call_log
+from collections import namedtuple
+
+# heavily inspired by requests
+UrlData = namedtuple('UrlData', ['host', 'port'])
 
 use_http_post = config.settings['Http Post']['active']
 if use_http_post:
@@ -16,6 +20,8 @@ def format_http_url(host=None, port=None, route='publish'):
     if not host and not port:
         host = config.settings['Http Post']['server']
         port = config.settings['Http Post']['port']
+
+    port = 8000
     return 'http://%s:%s/%s' % (host, port, route)
 
 
@@ -24,7 +30,11 @@ default_http_url = format_http_url()
 #@call_log
 
 
-def update_vis(anm=None, nidb=None, http_url=None, uuid=None):
+def update_vis(anm=None, nidb=None, http_url=None, uuid=None, host = None, port = None):
+    #TODO: warn if both http_url and host, port set as conflict
+    if host is not None and port is not None:
+        http_url = format_http_url(host, port)
+
     if http_url is None:
         http_url = default_http_url
 
