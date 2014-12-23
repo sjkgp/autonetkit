@@ -654,7 +654,6 @@ def allocate_single_as_ptp_infra(g_ip, address_block=None):
             hosts = subnet.iter_hosts()
             # drop .0 as a host address (valid but can be confusing)
             bc.subnet = subnet
-            print "suvnet is", subnet
             # TODO: check: should sort by default on dst as tie-breaker
             for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
                 ip_address = hosts.next()
@@ -672,7 +671,7 @@ def allocate_infra(g_ip, address_block=None):
     log.debug('Allocating v4 Infrastructure IPs')
     try:
         allocate_single_as_ptp_infra(g_ip, address_block)
-    except MultipleASNs, NonPtpSubnets:
+    except (MultipleASNs, NonPtpSubnets):
         pass # fallback to more advanced allocation algorithm
     else:
         return
