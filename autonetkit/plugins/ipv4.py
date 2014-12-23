@@ -329,11 +329,7 @@ class IpTree(object):
 # FOrce to be a /16 block
 # TODO: document this
 
-            per_group_prefixlen = 16
-            if group_count == 1 and self.root_ip_block.prefixlen >= per_group_prefixlen:
-                subgraph.node[root_node]['prefixlen'] = self.root_ip_block.prefixlen
-            else:
-                subgraph.node[root_node]['prefixlen'] = per_group_prefixlen
+            subgraph.node[root_node]['prefixlen'] = 16
             subgraph.node[root_node]['group_attr'] = attr_value
             prefixes_by_attr[attr_value] = subgraph.node[
                 root_node]['prefixlen']
@@ -419,7 +415,6 @@ class IpTree(object):
             children = sorted(node.children())
             prefixlen = node.prefixlen + 1
 
-            print "chioldren", len(children)
 
             # workaround for clobbering attr subgraph root node with /16 if was
             # a /28
@@ -678,7 +673,7 @@ def allocate_infra(g_ip, address_block=None):
     try:
         allocate_single_as_ptp_infra(g_ip, address_block)
     except MultipleASNs, NonPtpSubnets:
-        print "non simple"
+        pass # fallback to more advanced allocation algorithm
     else:
         return
 
