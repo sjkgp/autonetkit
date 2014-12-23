@@ -46,7 +46,7 @@ def file_monitor(filename):
 def manage_network(input_graph_string, timestamp, build=True,
                    visualise=True, compile=True, validate=True, render=True,
                    monitor=False, deploy=False, measure=False, diff=False,
-                   archive=False, grid=None, ):
+                   archive=False, grid=None, vis_uuid = None, deploy_to_stdout = True):
     """Build, compile, render network as appropriate"""
 
     # import build_network_simple as build_network
@@ -68,7 +68,7 @@ def manage_network(input_graph_string, timestamp, build=True,
             try:
                 # if visualise:
                     # import autonetkit
-                    # autonetkit.update_vis(anm)
+                    # autonetkit.update_vis(anm, uuid = vis_uuid)
                     #TODO: refactor so only update if config or compile not both
                     pass
             except Exception, e:
@@ -80,11 +80,11 @@ def manage_network(input_graph_string, timestamp, build=True,
             if visualise:
                 # log.info("Visualising network")
                 # import autonetkit
-                # autonetkit.update_vis(anm)
+                # autonetkit.update_vis(anm, uuid = vis_uuid)
                 pass
 
         if not compile and visualise:
-            autonetkit.update_vis(anm)
+            autonetkit.update_vis(anm, uuid = vis_uuid)
             pass
 
         if validate:
@@ -100,9 +100,10 @@ def manage_network(input_graph_string, timestamp, build=True,
         if archive:
             anm.save()
         nidb = compile_network(anm)
-        autonetkit.update_vis(anm, nidb)
+        if visualise:
+            autonetkit.update_vis(anm, nidb, uuid = vis_uuid)
 
-        #autonetkit.update_vis(anm, nidb)
+        #autonetkit.update_vis(anm, nidb, uuid = vis_uuid)
         log.debug('Sent ANM to web server')
         if archive:
             nidb.save()
@@ -128,7 +129,7 @@ def manage_network(input_graph_string, timestamp, build=True,
         anm.restore_latest()
         nidb = DeviceModel()
         nidb.restore_latest()
-        #autonetkit.update_vis(anm, nidb)
+        #autonetkit.update_vis(anm, nidb, uuid = vis_uuid)
 
     if diff:
         import autonetkit.diff
@@ -143,9 +144,14 @@ def manage_network(input_graph_string, timestamp, build=True,
             fh.write(data)
 
     if deploy:
-        deploy_network(anm, nidb, input_graph_string)
+        result = deploy_network(anm, nidb, input_graph_string, deploy_to_stdout=deploy_to_stdout)
+    else:
+        result = None
+
+    #TODO: allow deploy to be called programatically
 
     log.info('Configuration engine completed')  # TODO: finished what?
+    return result
 
 
 #@do_cprofile
@@ -200,7 +206,7 @@ def create_nidb(anm):
     return nidb
 
 
-def deploy_network(anm, nidb, input_graph_string=None):
+def deploy_network(anm, nidb, input_graph_string=None, deploy_to_stdout = True):
 
     # log.info('Deploying Network')
 
@@ -235,8 +241,15 @@ def deploy_network(anm, nidb, input_graph_string=None):
                         cisco_deploy.create_xml(anm, nidb,
                                                 input_graph_string)
                     else:
-                        cisco_deploy.package(nidb, config_path,
-                                             input_graph_string)
+                        result = cisco_deploy.package(nidb, config_path, input_graph_string)
+                        if deploy_to_stdout:
+                            import sys
+                            #TODO: move this into autonetkit-cisco,
+                            # note only supports single deploy target - warn if more than one deploy target set
+                            sys.stdout.write(result)
+
+                        else:
+                            return result
                 continue
 
             username = platform_data['username']
