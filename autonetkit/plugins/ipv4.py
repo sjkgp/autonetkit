@@ -639,27 +639,25 @@ def allocate_single_as_ptp_infra(g_ip, address_block=None):
     if any(bc.degree() > 2 for bc in all_bcs):
         raise NonPtpSubnets
 
+    asn = unique_asns.pop()
+    infra_blocks[asn] = address_block
     infra_pool = address_block.subnet(30)
 
     # consume the first address as it is the network address
 
     _ = infra_pool.next()  # network address
 
-    for (asn, devices) in sorted(g_ip.groupby('asn').items()):
-        all_bcs = set(d for d in devices if d.broadcast_domain
-            and d.allocate)
-
-        for bc in sorted(all_bcs):
-            subnet = infra_pool.next()
-            hosts = subnet.iter_hosts()
-            # drop .0 as a host address (valid but can be confusing)
-            bc.subnet = subnet
-            # TODO: check: should sort by default on dst as tie-breaker
-            for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
-                ip_address = hosts.next()
-                interface = edge.dst_int
-                interface.ip_address = ip_address
-                interface.subnet = subnet
+    for bc in sorted(all_bcs):
+        subnet = infra_pool.next()
+        hosts = subnet.iter_hosts()
+        # drop .0 as a host address (valid but can be confusing)
+        bc.subnet = subnet
+        # TODO: check: should sort by default on dst as tie-breaker
+        for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
+            ip_address = hosts.next()
+            interface = edge.dst_int
+            interface.ip_address = ip_address
+            interface.subnet = subnet
 
     g_ip.data.infra_blocks = dict((asn, [subnet]) for (asn, subnet) in
                                   infra_blocks.items())
