@@ -21,7 +21,6 @@ def format_http_url(host=None, port=None, route='publish'):
         host = config.settings['Http Post']['server']
         port = config.settings['Http Post']['port']
 
-    port = 8000
     return 'http://%s:%s/%s' % (host, port, route)
 
 
