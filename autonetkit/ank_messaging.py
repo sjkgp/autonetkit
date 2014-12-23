@@ -31,6 +31,8 @@ default_http_url = format_http_url()
 
 
 def update_vis(anm=None, nidb=None, http_url=None, uuid=None, host = None, port = None):
+    #TODO: put this into a background worker thread - but need to clone the ANM?
+    #TODO: allow global config to disable all update calls
     #TODO: warn if both http_url and host, port set as conflict
     if host is not None and port is not None:
         http_url = format_http_url(host, port)
@@ -47,6 +49,7 @@ def update_vis(anm=None, nidb=None, http_url=None, uuid=None, host = None, port 
         body = json.dumps({})  # blank to test visualisation server running
 
     if uuid is None:
+        # try from config
         uuid = get_uuid(anm)
 
     params = urllib.urlencode({'body': body, 'type': 'anm',
