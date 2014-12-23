@@ -179,6 +179,7 @@ class IpTree(object):
     def build(self, group_attr='asn'):
         """Builds tree from unallocated_nodes,
         groupby is the attribute to build subtrees from"""
+        #TODO: split to be different for interface and for loopback
 
         subgraphs = []
 
@@ -201,6 +202,7 @@ class IpTree(object):
 
         unallocated_nodes = sorted(unallocated_nodes, key=key_func)
         groupings = itertools.groupby(unallocated_nodes, key=key_func)
+        group_count = len(set(map(key_func, unallocated_nodes)))
         prefixes_by_attr = {}
 
         for (attr_value, items) in groupings:
@@ -327,7 +329,11 @@ class IpTree(object):
 # FOrce to be a /16 block
 # TODO: document this
 
-            subgraph.node[root_node]['prefixlen'] = 16
+            per_group_prefixlen = 16
+            if group_count == 1 and self.root_ip_block.prefixlen >= per_group_prefixlen:
+                subgraph.node[root_node]['prefixlen'] = self.root_ip_block.prefixlen
+            else:
+                subgraph.node[root_node]['prefixlen'] = per_group_prefixlen
             subgraph.node[root_node]['group_attr'] = attr_value
             prefixes_by_attr[attr_value] = subgraph.node[
                 root_node]['prefixlen']
@@ -412,6 +418,8 @@ class IpTree(object):
 
             children = sorted(node.children())
             prefixlen = node.prefixlen + 1
+
+            print "chioldren", len(children)
 
             # workaround for clobbering attr subgraph root node with /16 if was
             # a /28
@@ -619,11 +627,61 @@ def assign_asn_to_interasn_cds(g_ip, address_block=None):
 
     return
 
+class MultipleASNs(AutoNetkitException):
+    """Wrong file format"""
+
+class NonPtpSubnets(AutoNetkitException):
+    """Wrong file format"""
+
+def allocate_single_as_ptp_infra(g_ip, address_block=None):
+    infra_blocks = {}
+
+    unique_asns = set(n.asn for n in g_ip)
+    if len(unique_asns) > 1:
+        raise MultipleASNs
+
+    all_bcs = set(d for d in g_ip if d.broadcast_domain and d.allocate)
+    if any(bc.degree() > 2 for bc in all_bcs):
+        raise NonPtpSubnets
+
+    infra_pool = address_block.subnet(30)
+
+    # consume the first address as it is the network address
+
+    _ = infra_pool.next()  # network address
+
+    for (asn, devices) in sorted(g_ip.groupby('asn').items()):
+        all_bcs = set(d for d in devices if d.broadcast_domain
+            and d.allocate)
+
+        for bc in sorted(all_bcs):
+            subnet = infra_pool.next()
+            hosts = subnet.iter_hosts()
+            # drop .0 as a host address (valid but can be confusing)
+            bc.subnet = subnet
+            print "suvnet is", subnet
+            # TODO: check: should sort by default on dst as tie-breaker
+            for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
+                ip_address = hosts.next()
+                interface = edge.dst_int
+                interface.ip_address = ip_address
+                interface.subnet = subnet
+
+    g_ip.data.infra_blocks = dict((asn, [subnet]) for (asn, subnet) in
+                                  infra_blocks.items())
+
 
 def allocate_infra(g_ip, address_block=None):
     if not address_block:
         address_block = netaddr.IPNetwork('10.0.0.0/8')
     log.debug('Allocating v4 Infrastructure IPs')
+    try:
+        allocate_single_as_ptp_infra(g_ip, address_block)
+    except MultipleASNs, NonPtpSubnets:
+        print "non simple"
+    else:
+        return
+
     ip_tree = IpTree(address_block)
     assign_asn_to_interasn_cds(g_ip)
     nodes_to_allocate = sorted(n for n in g_ip.nodes('broadcast_domain')
