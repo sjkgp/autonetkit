@@ -379,7 +379,7 @@ def main():
 
     settings = {
         "static_path": content_path,
-        'debug': True,
+        'debug': False,
         # otherwise content with folder /static won't get mapped
         "static_url_prefix": "unused",
     }
