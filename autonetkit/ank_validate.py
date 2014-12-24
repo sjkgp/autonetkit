@@ -79,10 +79,21 @@ def validate_igp(anm):
             continue
         asn_subgraph = g_igp.subgraph(devices)
         graph = asn_subgraph._graph
-        # get subgraph
+        sub_graphs = nx.connected_component_subgraphs(graph)
+        connected_sub_graphs = nx.connected_components(graph)
+        n = len(sub_graphs)
+        max_sublist_length = len(max(connected_sub_graphs, key=len))
+        sum_sublist_length = sum(map(len, connected_sub_graphs)) 
+        total = float(max_sublist_length) / float(sum_sublist_length)
+        # Warn the user if node of size 1 is not connected
+        # Warn the user if 5% of nodes are not connected
         if not nx.is_connected(graph):
-            g_igp.log.warning("IGP topology for ASN%s is disconnected" % asn)
-            # TODO: list connected components - but not the primary?
+            for i in range(n):  
+                 # to test -> print "Subraph:", i, "consists of ", sub_graphs[i].nodes()
+                if len(sub_graphs[i].nodes()) == 1: 
+                    g_igp.log.warning("IGP topology for ASN%s is disconnected" % asn)
+            if total >= .95:     
+                g_igp.log.warning("IGP topology for ASN%s is disconnected" % asn)
         else:
             g_igp.log.debug("IGP topology for ASN%s is connected" % asn)
 
