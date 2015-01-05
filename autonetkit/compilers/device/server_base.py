@@ -8,6 +8,7 @@ from autonetkit.nidb import ConfigStanza
 class ServerCompiler(DeviceCompiler):
 
     def compile(self, node):
+        #TODO: call this from parent
         node.do_render = True  # turn on rendering
         phy_node = self.anm['phy'].node(node)
         ipv4_node = self.anm['ipv4'].node(node)
