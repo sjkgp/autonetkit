@@ -407,6 +407,27 @@ class NmNode(AnkElement):
         return self.device_type == 'router' or self['phy'].device_type \
             == 'router'
 
+    def is_firewall(self):
+        """Either from this graph or the physical graph
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.is_router()
+        True
+        >>> s1 = anm['phy'].node("s1")
+        >>> s1.is_router()
+        False
+        >>> sw1 = anm['phy'].node("sw1")
+        >>> sw1.is_router()
+        False
+
+        """
+        #self.log_info("add int")
+        #TODO: tidy this logic up to not auto fallback to phy being hard-coded
+
+        return self.device_type == 'firewall' or self['phy'].device_type \
+            == 'firewall'
+
     def is_hub(self):
         """Either from this graph or the physical graph
 
@@ -477,7 +498,7 @@ class NmNode(AnkElement):
         False
 
         """
-        return self.is_router() or self.is_server()
+        return self.is_router() or self.is_server() or self.is_firewall()
 
     def __getitem__(self, key):
         """Get item key"""
