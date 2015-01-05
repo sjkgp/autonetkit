@@ -35,6 +35,8 @@ def update_vis(anm=None, nidb=None, http_url=None, uuid=None, host = None, port 
     #TODO: warn if both http_url and host, port set as conflict
     if host is not None and port is not None:
         http_url = format_http_url(host, port)
+    elif port is not None:
+        http_url = format_http_url(port = port)
 
     if http_url is None:
         http_url = default_http_url
@@ -79,7 +81,15 @@ def get_uuid(anm):
 
 #@call_log
 def highlight(nodes=None, edges=None, paths=None, path=None,
-              uuid='singleuser', http_url=None):
+              uuid='singleuser', http_url=None, host = None, port = None):
+
+    #TODO: combine this shared logic with above, refactor to be cleaner
+    if host is not None and port is not None:
+        http_url = format_http_url(host, port)
+    elif port is not None:
+        http_url = format_http_url(port = port)
+
+
     if http_url is None:
         http_url = default_http_url
     if not paths:
