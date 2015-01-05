@@ -4,7 +4,7 @@ import sys
 
 setup (
      name = "autonetkit",
-     version = "0.12.0",
+     version = "0.12.1",
      description = 'Automatic configuration generation for emulated networks',
      long_description = 'Automatic configuration generation for emulated networks',
 
@@ -34,6 +34,8 @@ setup (
          'networkx==1.7',
          'configobj==4.7.1',
          'tornado>=3.0.1',
+         #'textfsm', 'pika',
+         # 'exscript==0.0.1'
          ],
 
      #Note: exscript disabled in default install: requires pycrypto which requires compilation (can cause installation issues)
