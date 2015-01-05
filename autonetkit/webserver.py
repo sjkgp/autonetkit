@@ -318,10 +318,13 @@ class ThreeDHandler(tornado.web.RequestHandler):
     def get(self):
         # if not set, use default uuid of "singleuser"
         uuid = self.get_argument("uuid", "singleuser")
+        overlays_to_load = ["phy", "layer1", "layer2", "igp","ibgp_v4", "ebgp_v4"];
+
 
         logging.info("Rendering template with uuid %s" % uuid)
         template = os.path.join(self.content_path, "3d", "index.html")
-        self.render(template, uuid=uuid)
+        self.render(template, uuid=uuid, overlays_to_load=overlays_to_load)
+
 
 def main():
 
