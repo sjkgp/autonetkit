@@ -7,12 +7,19 @@ settings = autonetkit.config.settings
 
 def nx_to_simple(graph):
     j_data = json_graph.node_link_data(graph)
+    return nx_node_link_data_to_simple(j_data)
 
+def nx_node_link_data_to_simple(j_data, node_identifier="id"):
     # map ports to their named list
     port_index_mapping = defaultdict(dict)
     for node in j_data['nodes']:
         node_id = node['id']
-        _ports = node['_ports']
+        try:
+            _ports = node['_ports']
+        except KeyError:
+            node["ports"] = {}
+            continue
+
         ports = []
         for index, port in _ports.items():
             try:
@@ -36,19 +43,29 @@ def nx_to_simple(graph):
     nodes = j_data['nodes']
     mapped_links = []
     for link in j_data['links']:
-        src_node = nodes[link['source']]['id']
-        dst_node = nodes[link['target']]['id']
-        src_int_index = link['_ports'][src_node]
-        dst_int_index = link['_ports'][dst_node]
-        src_int = port_index_mapping[src_node][src_int_index]
-        dst_int = port_index_mapping[dst_node][dst_int_index]
+        src_node = nodes[link['source']][node_identifier]
+        dst_node = nodes[link['target']][node_identifier]
+        try:
+            src_int_index = link['_ports'][src_node]
+            src_int = port_index_mapping[src_node][src_int_index]
+        except KeyError:
+            src_int = None
+
+        try:
+            dst_int_index = link['_ports'][dst_node]
+            dst_int = port_index_mapping[dst_node][dst_int_index]
+        except KeyError:
+            dst_int = None
         # link['ports'] = {'src': src_node, 'src_port': src_int,
         #                     'dst': dst_node, 'dst_port': dst_int}
         link['src'] = src_node
         link['src_port'] = src_int
         link['dst'] = dst_node
         link['dst_port'] = dst_int
-        del link['_ports']
+        try:
+            del link['_ports']
+        except KeyError:
+            pass #TODO: work out where these are coming from?
         try:
             del link['raw_interfaces']
         except KeyError:
