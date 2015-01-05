@@ -1,5 +1,3 @@
-# based on
-# http://reminiscential.wordpress.com/2012/04/07/realtime-notification-delivery-using-rabbitmq-tornado-and-websocket/
 import json
 import logging
 import os
@@ -9,6 +7,14 @@ import autonetkit.config as config
 import pkg_resources
 import tornado
 import tornado.websocket as websocket
+from autonetkit.load.load_json import nx_node_link_data_to_simple
+
+from autonetkit.exception import AutoNetkitException
+
+
+class OverlayNotFound(AutoNetkitException):
+
+    """Exception for overlay not found"""
 
 
 class MyWebHandler(tornado.web.RequestHandler):
@@ -71,6 +77,7 @@ class MyWebSocketHandler(websocket.WebSocketHandler):
 
     def allow_draft76(self):
         # for iOS 5.0 Safari
+        # TODO: remove this now
         return True
 
     def open(self, *args, **kwargs):
@@ -82,44 +89,52 @@ class MyWebSocketHandler(websocket.WebSocketHandler):
             uuid = self.get_argument("uuid", "singleuser")
 
         self.uuid = uuid
-
         self.uuid_socket_listeners = self.application.socket_listeners[uuid]
-
         logging.info("Client connected from %s" % self.request.remote_ip)
         self.uuid_socket_listeners.add(self)
 
     def on_close(self):
         self.uuid_socket_listeners.remove(self)
         logging.info("Client disconnected from %s" % self.request.remote_ip)
-        try:
-            self.application.pc.remove_event_listener(self)
-        except AttributeError:
-            pass  # no RabbitMQ server
-        try:
-            self.application.echo_server.remove_event_listener(self)
-        except AttributeError:
-            pass  # no echo_server
 
     def on_message(self, message):
         logging.info("Received message %s from websocket client" % message)
+        # TODO: switch to a (key, data) format for messages
         if "overlay_id" in message:
             # TODO: form JSON on client side, use loads here
             _, overlay_id = message.split("=")
             self.overlay_id = overlay_id
             self.update_overlay()
         elif "overlay_list" in message:
-            body = json.dumps(
-                {'overlay_list': self.ank_accessor.overlay_list(self.uuid)})
-            self.write_message(body)
+            try:
+                body = json.dumps(
+                    {'overlay_list': self.ank_accessor.overlay_list(self.uuid)})
+            except OverlayNotFound:
+                pass  # TODO: send error code to websocket
+            else:
+                self.write_message(body)
         elif "ip_allocations" in message:
             pass
 
     def update_overlay(self):
-        body = self.ank_accessor.get_overlay(self.uuid, self.overlay_id)
-        self.write_message(body)
-        body = json.dumps(
-            {'overlay_list': self.ank_accessor.overlay_list(self.uuid)})
-        self.write_message(body)
+        try:
+            body = self.ank_accessor.get_overlay(self.uuid, self.overlay_id)
+        except OverlayNotFound:
+            body = {"nodes": [],
+            "links": [],
+            "directed": False,
+            "graph": [ ], }
+        finally:
+            self.write_message(body)
+
+        # TODO: remove automatically sending overlay ID too
+        try:
+            body = json.dumps(
+                {'overlay_list': self.ank_accessor.overlay_list(self.uuid)})
+        except OverlayNotFound:
+            pass  # TODO: send error code to websocket
+        else:
+            self.write_message(body)
 
 
 class AnkAccessor():
@@ -232,7 +247,7 @@ class AnkAccessor():
             anm = self.anm_index[uuid]
         except KeyError:
             logging.warning("Unable to find topology with UUID %s" % uuid)
-            return ""
+            raise OverlayNotFound
         else:
             try:
                 if overlay_id == "*":
@@ -244,17 +259,20 @@ class AnkAccessor():
                     return anm[overlay_id]
             except KeyError:
                 logging.warning(
-                    "Unable to find overlay %s in topoplogy with UUID %s" % (overlay_id, uuid))
+                    "Unable to find overlay %s in topoplogy with UUID %s", overlay_id, uuid)
+                raise OverlayNotFound
 
     def overlay_list(self, uuid):
         logging.info("Trying for anm list with UUID %s" % uuid)
         try:
             anm = self.anm_index[uuid]
         except KeyError:
-            logging.warning("Unable to find topology with UUID %s" % uuid)
-            return [""]
+            logging.warning("Unable to find topology with UUID %s", uuid)
+            raise OverlayNotFound
 
         if not len(anm):
+            # TODO: create exception for this case
+            logging.warning("Empty ANM for UUID %s ", uuid)
             return [""]
 
         return sorted(anm.keys(), key=lambda x: str(x[0]).lower())
@@ -325,7 +343,23 @@ class ThreeDHandler(tornado.web.RequestHandler):
 
         logging.info("Rendering template with uuid %s" % uuid)
         template = os.path.join(self.content_path, "3d", "index.html")
-        self.render(template, uuid=uuid, overlays_to_load = overlays_to_load)
+        self.render(template, uuid=uuid, overlays_to_load=overlays_to_load)
+
+
+class BackboneHandler(tornado.web.RequestHandler):
+
+    def initialize(self, path):
+        self.content_path = path
+
+    def get(self):
+        # if not set, use default uuid of "singleuser"
+        uuid = self.get_argument("uuid", "singleuser")
+
+        print "backbone"
+        logging.info("Rendering template with uuid %s" % uuid)
+        template = os.path.join(self.content_path, "backbone.html")
+        self.render(template, uuid=uuid)
+
 
 def main():
 
@@ -379,7 +413,7 @@ def main():
 
     settings = {
         "static_path": content_path,
-        'debug': False,
+        'debug': True,
         # otherwise content with folder /static won't get mapped
         "static_url_prefix": "unused",
     }
@@ -407,6 +441,8 @@ def main():
         (r'/', IndexHandler, {"path": settings['static_path']}),
         (r'/index.html', IndexHandler, {"path": settings['static_path']}),
         (r'/3d/index.html', ThreeDHandler, {"path": settings['static_path']}),
+        # for backbone
+        (r'/backbone', BackboneHandler, {"path": settings['static_path']}),
         ("/(.*)", tornado.web.StaticFileHandler,
          {"path": settings['static_path']})
     ], **settings)
