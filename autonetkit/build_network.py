@@ -130,9 +130,14 @@ def check_server_asns(anm):
                              "not auto-correcting", server, server.asn)
 
 
-class DesignRulesAplicator(object):
+class DesignRulesApplicator(object):
     def __init__(self, anm):
         self.anm = anm
+
+    def build_layer_1(self):
+        from autonetkit.design.layer1 import Layer1Builder
+        builder = Layer1Builder(self.anm)
+        builder.build_layer1()
 
     def build_layer_2(self):
         from autonetkit.design.layer2 import Layer2Builder
@@ -154,6 +159,7 @@ class DesignRulesAplicator(object):
 
         g_phy = anm['phy']
 
+        self.build_layer_1()
         self.build_layer_2()
         self.build_layer_3()
 
