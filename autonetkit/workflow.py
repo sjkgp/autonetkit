@@ -129,6 +129,7 @@ class Network(object):
             )
 
     def deploy_network(self):
+        #TODO: add option to print to stdout
         deploy_hosts = config.settings['Deploy Hosts']
         for (hostname, host_data) in deploy_hosts.items():
             for (platform, platform_data) in host_data.items():
@@ -164,6 +165,7 @@ class Network(object):
             try:
                 self.build()
             except Exception, e:
+                log.exception(e)
                 # Send the visualisation to help debugging
                 try:
                     if self.should_visualise:
