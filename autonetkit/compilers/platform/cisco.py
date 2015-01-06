@@ -361,6 +361,7 @@ class CiscoCompiler(PlatformCompiler):
             DmNode.indices = phy_node.indices
 
             for interface in DmNode.loopback_interfaces():
+                #TODO: create iterator that skips loopback zero
                 if interface != DmNode.loopback_zero:
                     interface.id = loopback_ids.next()
 
