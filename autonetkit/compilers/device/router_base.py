@@ -87,6 +87,7 @@ class RouterCompiler(DeviceCompiler):
         super(RouterCompiler, self).__init__(nidb, anm)
 
     def compile(self, node):
+        #TODO: call this from parent
         node.do_render = True  # turn on rendering
 
         phy_node = self.anm['phy'].node(node)

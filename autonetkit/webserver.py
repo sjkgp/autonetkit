@@ -136,7 +136,6 @@ class MyWebSocketHandler(websocket.WebSocketHandler):
         else:
             self.write_message(body)
 
-
 class AnkAccessor():
 
     """ Used to store published topologies"""
@@ -247,7 +246,7 @@ class AnkAccessor():
             anm = self.anm_index[uuid]
         except KeyError:
             logging.warning("Unable to find topology with UUID %s" % uuid)
-            raise OverlayNotFound
+            return ""
         else:
             try:
                 if overlay_id == "*":
@@ -259,8 +258,7 @@ class AnkAccessor():
                     return anm[overlay_id]
             except KeyError:
                 logging.warning(
-                    "Unable to find overlay %s in topoplogy with UUID %s", overlay_id, uuid)
-                raise OverlayNotFound
+                    "Unable to find overlay %s in topoplogy with UUID %s" % (overlay_id, uuid))
 
     def overlay_list(self, uuid):
         logging.info("Trying for anm list with UUID %s" % uuid)
@@ -329,7 +327,6 @@ class IndexHandler(tornado.web.RequestHandler):
         template = os.path.join(self.content_path, "index.html")
         self.render(template, uuid=uuid)
 
-
 class ThreeDHandler(tornado.web.RequestHandler):
 
     def initialize(self, path):
@@ -337,8 +334,8 @@ class ThreeDHandler(tornado.web.RequestHandler):
 
     def get(self):
         # if not set, use default uuid of "singleuser"
+        uuid = self.get_argument("uuid", "singleuser")
         overlays_to_load = ['phy', 'layer1', 'layer2', "igp"]
-
         uuid = self.get_argument("uuid", "singleuser")
 
         logging.info("Rendering template with uuid %s" % uuid)
@@ -413,7 +410,7 @@ def main():
 
     settings = {
         "static_path": content_path,
-        'debug': True,
+        'debug': False,
         # otherwise content with folder /static won't get mapped
         "static_url_prefix": "unused",
     }

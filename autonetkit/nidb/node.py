@@ -238,12 +238,15 @@ class DmNode(object):
     def is_server(self):
         return self.device_type == "server"
 
+    def is_firewall(self):
+        return self.device_type == "firewall"
+
     def is_l3device(self):
-        """Layer 3 devices: router, server, cloud, host
+        """Layer 3 devices: router, server, firewall
         ie not switch
         """
-        # TODO: need to check for cloud, host
-        return self.is_router() or self.is_server()
+        #TODO: move this shared logic with anm into base device that both inherit from
+        return self.is_router() or self.is_server() or self.is_firewall()
 
     def edges(self, *args, **kwargs):
         # TODO: want to add filter for *args and **kwargs here too
