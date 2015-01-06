@@ -59,7 +59,7 @@ def parse_options(argument_string=None):
         '--webserver', action="store_true", default=False, help="Webserver")
     parser.add_argument('--grid', type=int, help="Grid Size (n * n)")
     parser.add_argument(
-        '--target', choices=['netkit', 'cisco'], default=None)
+        '--target', choices=['netkit'], default=None)
     parser.add_argument(
         '--vis_uuid', default=None, help="UUID for multi-user visualisation")
     if argument_string:
@@ -71,120 +71,125 @@ def parse_options(argument_string=None):
     return arguments
 
 
-def main(options):
-    settings = config.settings
+class Runner(object):
+    def __init__(self, options):
+        self.options = options
+        self.settings = config.settings
+        if options.vis_uuid:
+            config.settings['Http Post']['uuid'] = options.vis_uuid
 
-    if options.vis_uuid:
-        config.settings['Http Post']['uuid'] = options.vis_uuid
+        self.print_version()
 
-    try:
-        # test if can import, if not present will fail and not add to template
-        # path
-        import autonetkit_cisco
-    except ImportError:
-        pass
-    else:
-        import autonetkit_cisco.version
-        version_banner = autonetkit_cisco.version.banner()
-        log.info("%s" % version_banner)
+        if options.debug or self.settings['General']['debug']:
+            # TODO: fix this
+            import logging
+            logger = logging.getLogger("ANK")
+            logger.setLevel(logging.DEBUG)
 
-    log.info("AutoNetkit %s" % ANK_VERSION)
+        if options.quiet or self.settings['General']['quiet']:
+            import logging
+            logger = logging.getLogger("ANK")
+            logger.setLevel(logging.WARNING)
 
-    if options.target == "cisco":
-        # output target is Cisco
-        log.info("Setting output target as Cisco")
-        settings['Graphml']['Node Defaults']['platform'] = "VIRL"
-        settings['Graphml']['Node Defaults']['host'] = "internal"
-        settings['Graphml']['Node Defaults']['syntax'] = "ios_xr"
-        settings['Compiler']['Cisco']['to memory'] = 1
-        settings['General']['deploy'] = 1
-        settings['Deploy Hosts']['internal'] = {'VIRL':
-                                                {'deploy': 1}}
+        self.init_build_options()
 
-    if options.debug or settings['General']['debug']:
-        # TODO: fix this
-        import logging
-        logger = logging.getLogger("ANK")
-        logger.setLevel(logging.DEBUG)
+        if options.webserver:
+            log.info("Webserver not yet supported, please run as seperate module")
 
-    if options.quiet or settings['General']['quiet']:
-        import logging
-        logger = logging.getLogger("ANK")
-        logger.setLevel(logging.WARNING)
+        self.load_input()
 
-    build_options = {
-        'compile': options.compile or settings['General']['compile'],
-        'render': options.render or settings['General']['render'],
-        'validate': options.validate or settings['General']['validate'],
-        'build': options.build or settings['General']['build'],
-        'deploy': options.deploy or settings['General']['deploy'],
-        'measure': options.measure or settings['General']['measure'],
-        'monitor': options.monitor or settings['General']['monitor'],
-        'diff': options.diff or settings['General']['diff'],
-        'archive': options.archive or settings['General']['archive'],
-        # use and for visualise as no_vis negates
-        'visualise': options.visualise and settings['General']['visualise'],
-    }
+    def print_version(self):
+        log.info("AutoNetkit %s" % ANK_VERSION)
 
-    if options.webserver:
-        log.info("Webserver not yet supported, please run as seperate module")
+    def init_build_options(self):
+        self.build_options = {
+            'compile': self.options.compile or self.settings['General']['compile'],
+            'render': self.options.render or self.settings['General']['render'],
+            'validate': self.options.validate or self.settings['General']['validate'],
+            'build': self.options.build or self.settings['General']['build'],
+            'deploy': self.options.deploy or self.settings['General']['deploy'],
+            'measure': self.options.measure or self.settings['General']['measure'],
+            'monitor': self.options.monitor or self.settings['General']['monitor'],
+            'diff': self.options.diff or self.settings['General']['diff'],
+            'archive': self.options.archive or self.settings['General']['archive'],
+            # use and for visualise as no_vis negates
+            'visualise': self.options.visualise and self.settings['General']['visualise'],
+        }
 
-    if options.file:
-        with open(options.file, "r") as fh:
-            input_string = fh.read()
-        timestamp = os.stat(options.file).st_mtime
-    elif options.stdin:
-        input_string = sys.stdin
-        now = datetime.now()
-        timestamp = now.strftime("%Y%m%d_%H%M%S_%f")
-    elif options.grid:
-        input_string = ""
-        now = datetime.now()
-        timestamp = now.strftime("%Y%m%d_%H%M%S_%f")
-    else:
-        log.info("No input file specified. Exiting")
-        return
+    def load_input(self):
+        if self.options.file:
+            with open(self.options.file, "r") as fh:
+                self.input_string = fh.read()
+            self.timestamp = os.stat(self.options.file).st_mtime
+        elif self.options.stdin:
+            self.input_string = sys.stdin
+            now = datetime.now()
+            self.timestamp = now.strftime("%Y%m%d_%H%M%S_%f")
+        elif self.options.grid:
+            self.input_string = ""
+            now = datetime.now()
+            self.timestamp = now.strftime("%Y%m%d_%H%M%S_%f")
+        else:
+            log.info("No input file specified. Exiting")
+            raise Exception('No input specified')
 
-    try:
-        workflow.manage_network(input_string, timestamp,
-                       grid=options.grid, **build_options)
-    except Exception, err:
-        log.error(
-            "Error generating network configurations: %s" % err)
-        log.debug("Error generating network configurations", exc_info=True)
-        if settings['General']['stack_trace']:
-            print traceback.print_exc()
-        sys.exit("Unable to build configurations.")
+    def load_network(self):
+        if self.input_string:
+            self.network = workflow.Network(self.input_string, self.timestamp,
+                                            **self.build_options)
+        elif self.options.grid:
+            self.network = workflow.GridNetwork(self.options.grid,
+                                                self.timestamp,
+                                                **self.build_options)
 
-# TODO: work out why build_options is being clobbered for monitor mode
-    build_options['monitor'] = options.monitor or settings['General'][
-        'monitor']
-
-    if build_options['monitor']:
+    def run(self):
         try:
-            log.info("Monitoring for updates...")
-            input_filemonitor = workflow.file_monitor(options.file)
-            #build_filemonitor = file_monitor("autonetkit/build_network.py")
-            while True:
-                time.sleep(1)
-                rebuild = False
-                if input_filemonitor.next():
-                    rebuild = True
+            self.load_network()
+            self.network.configure()
+        except Exception as err:
+            log.exception('Error generating network configurations: %s. More '
+                      'information may be available in the debug log.' % err)
+            log.debug('Error generating network configurations', exc_info=True)
+            if self.settings['General']['stack_trace']:
+                print traceback.print_exc()
+            sys.exit('Unable to build configurations.')
 
-                if rebuild:
-                    try:
-                        log.info("Input graph updated, recompiling network")
-                        with open(options.file, "r") as fh:
-                            input_string = fh.read()  # read updates
-                        workflow.manage_network(input_string,
-                                       timestamp, build_options)
-                        log.info("Monitoring for updates...")
-                    except Exception, e:
-                        log.warning("Unable to build network %s" % e)
-                        traceback.print_exc()
+        # TODO: work out why build_options is being clobbered for monitor mode
+        self.build_options['monitor'] = self.options.monitor or self.settings['General'][
+            'monitor']
 
-        except KeyboardInterrupt:
-            log.info("Exiting")
+        if self.build_options['monitor']:
+            try:
+                log.info("Monitoring for updates...")
+                input_filemonitor = workflow.file_monitor(self.options.file)
+                #build_filemonitor = file_monitor("autonetkit/build_network.py")
+                while True:
+                    time.sleep(1)
+                    rebuild = False
+                    if input_filemonitor.next():
+                        rebuild = True
+
+                    if rebuild:
+                        try:
+                            log.info("Input graph updated, recompiling network")
+                            with open(options.file, "r") as fh:
+                                input_string = fh.read()  # read updates
+                            self.network = workflow.Network(
+                                self.input_string, self.timestamp,
+                                **self.build_options)
+                            self.network.configure()
+                            log.info("Monitoring for updates...")
+                        except Exception, e:
+                            log.warning("Unable to build network %s" % e)
+                            traceback.print_exc()
+
+            except KeyboardInterrupt:
+                log.info("Exiting")
+
+
+def main(options):
+    runner = Runner(options)
+    runner.run()
 
 def console_entry():
     """If come from console entry point"""

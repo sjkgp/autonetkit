@@ -98,22 +98,6 @@ def netkit_connector(host, username, password, command, *args, **kwargs):
     return hostname, result
 
 CONNECTORS['netkit'] = netkit_connector
-try:
-    import autonetkit_cisco
-    import autonetkit_cisco.measure_connectors
-except ImportError:
-    pass  # not installed
-else:
-    CONNECTORS[
-        'iosv_ns'] = autonetkit_cisco.measure_connectors.iosv_ns_connector
-    CONNECTORS[
-        'csr1000v_ns'] = autonetkit_cisco.measure_connectors.iosv_ns_connector
-    CONNECTORS[
-        'ios_xrv_ns'] = autonetkit_cisco.measure_connectors.ios_xrv_ns_connector
-    CONNECTORS[
-        'nx_osv_ns'] = autonetkit_cisco.measure_connectors.nx_osv_ns_connector
-    CONNECTORS[
-        'ubuntu_ns'] = autonetkit_cisco.measure_connectors.linux_ns_connector
 
 
 def do_connect(**kwargs):

@@ -16,7 +16,8 @@ input_graph = graphml.load_graphml(input_file)
 
 import autonetkit.build_network as build_network
 anm = build_network.initialise(input_graph)
-anm = build_network.apply_design_rules(anm)
+aplicator = build_network.DesignRulesAplicator(anm)
+anm = aplicator.design()
 
 import autonetkit.console_script as console_script
 render_hostname = "localhost"
@@ -47,7 +48,8 @@ assert(result == expected)
 #nk_compiler = pl_netkit.NetkitCompiler(nidb_a, anm_a, render_hostname)
 #nk_compiler.compile()
 #
-#anm_b = build_network.apply_design_rules(anm)
+#aplicator = build_network.DesignRulesAplicator(anm_b)
+#anm_b = aplicator.design()
 #nidb_b = console_script.create_nidb(anm_b)
 #import autonetkit.compilers.platform.netkit as pl_netkit
 #nk_compiler = pl_netkit.NetkitCompiler(nidb_b, anm_b, render_hostname)

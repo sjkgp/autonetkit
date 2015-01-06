@@ -91,7 +91,7 @@ class CiscoCompiler(PlatformCompiler):
         self.compile_devices()
         self.assign_management_interfaces()
 
-    def _parameters(self):
+    def _set_parameters(self):
         g_phy = self.anm['phy']
         settings = autonetkit.config.settings
         to_memory = settings['Compiler']['Cisco']['to memory']
@@ -106,76 +106,18 @@ class CiscoCompiler(PlatformCompiler):
             dst_folder = os.path.join("rendered", self.host, "cisco")
 
         # TODO: use a namedtuple
-        return to_memory, use_mgmt_interfaces, dst_folder
+        self.to_memory = to_memory
+        self.dst_folder = dst_folder
+        self.use_mgmt_interfaces = use_mgmt_interfaces
 
-    #@call_log
-    def compile_devices(self):
-        g_phy = self.anm['phy']
+    @property
+    def ubuntu_compiler(self):
+        from autonetkit.compilers.device.ubuntu import UbuntuCompiler
+        return UbuntuCompiler(self.nidb, self.anm)
 
-        to_memory, use_mgmt_interfaces, dst_folder = self._parameters()
-        if use_mgmt_interfaces:
-            log.debug("Allocating VIRL management interfaces")
-        else:
-            log.debug("Not allocating VIRL management interfaces")
-# TODO: need to copy across the interface name from edge to the interface
-
-# TODO: merge common router code, so end up with three loops: routers, ios
-# routers, ios_xr routers
-
-    # TODO: Split out each device compiler into own function
-
-    # TODO: look for unused code paths here - especially for interface
-    # allocation
-
-        # store autonetkit_cisco version
-        log.debug("Generating device configurations")
-        from pkg_resources import get_distribution
-
-        # Copy across indices for external connectors (e.g may want to copy
-        # configs)
-        external_connectors = [n for n in g_phy
-                               if n.host == self.host and n.device_type == "external_connector"]
-        for phy_node in external_connectors:
-            DmNode = self.nidb.node(phy_node)
-            DmNode.indices = phy_node.indices
-
-        managed_switches = [n for n in g_phy.switches()
-        if n.host == self.host
-        and n.device_subtype == "managed"]
-        for phy_node in managed_switches:
-            DmNode = self.nidb.node(phy_node)
-            DmNode.indices = phy_node.indices
-
-        for phy_node in g_phy.l3devices(host=self.host):
-            loopback_ids = self.loopback_interface_ids()
-            # allocate loopbacks to routes (same for all ios variants)
-            DmNode = self.nidb.node(phy_node)
-            DmNode.add_stanza("render")
-            DmNode.indices = phy_node.indices
-
-            for interface in DmNode.loopback_interfaces():
-                if interface != DmNode.loopback_zero:
-                    interface.id = loopback_ids.next()
-
-            # numeric ids
-            numeric_int_ids = self.numeric_interface_ids()
-            for interface in DmNode.physical_interfaces():
-                phy_numeric_id = phy_node.interface(interface).numeric_id
-                if phy_numeric_id is None:
-                    # TODO: remove numeric ID code
-                    interface.numeric_id = numeric_int_ids.next()
-                else:
-                    interface.numeric_id = int(phy_numeric_id)
-
-                phy_specified_id = phy_node.interface(interface).specified_id
-                if phy_specified_id is not None:
-                    interface.id = phy_specified_id
-
-        #from autonetkit.compilers.device.ubuntu import UbuntuCompiler
-        from autonetkit_cisco.compilers.device.ubuntu import UbuntuCompiler
-
-        ubuntu_compiler = UbuntuCompiler(self.nidb, self.anm)
-        for phy_node in g_phy.servers(host=self.host):
+    def compile_ubuntu(self):
+        ubuntu_compiler = self.ubuntu_compiler
+        for phy_node in self.anm['phy'].servers(host=self.host):
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
             DmNode.add_stanza("ip")
@@ -211,7 +153,7 @@ class CiscoCompiler(PlatformCompiler):
 
             # not these are physical interfaces; configure after previous
             # config steps
-            if use_mgmt_interfaces:
+            if self.use_mgmt_interfaces:
                 mgmt_int = DmNode.add_interface(
                     management=True, description="eth0")
                 mgmt_int_id = "eth0"
@@ -224,26 +166,29 @@ class CiscoCompiler(PlatformCompiler):
             if not phy_node.dont_configure_static_routing:
                 DmNode.render.template = os.path.join(
                     "templates", "linux", "static_route.mako")
-                if to_memory:
+                if self.to_memory:
                     DmNode.render.to_memory = True
                 else:
-                    DmNode.render.dst_folder = dst_folder
+                    DmNode.render.dst_folder = self.dst_folder
                     DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
                         phy_node)
 
-        # TODO: refactor out common logic
+    @property
+    def ios_compiler(self):
+        return IosClassicCompiler(self.nidb, self.anm)
 
-        ios_compiler = IosClassicCompiler(self.nidb, self.anm)
-        host_routers = g_phy.routers(host=self.host)
+    def compile_ios(self):
+        ios_compiler = self.ios_compiler
+        host_routers = self.anm['phy'].routers(host=self.host)
         ios_nodes = (n for n in host_routers if n.syntax in ("ios", "ios_xe"))
         for phy_node in ios_nodes:
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
             DmNode.render.template = os.path.join("templates", "ios.mako")
-            if to_memory:
+            if self.to_memory:
                 DmNode.render.to_memory = True
             else:
-                DmNode.render.dst_folder = dst_folder
+                DmNode.render.dst_folder = self.dst_folder
                 DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
                     phy_node)
 
@@ -265,7 +210,7 @@ class CiscoCompiler(PlatformCompiler):
                 int_ids = self.interface_ids_ios()
                 numeric_to_interface_label = self.numeric_to_interface_label_ios
 
-            if use_mgmt_interfaces:
+            if self.use_mgmt_interfaces:
                 if phy_node.device_subtype == "IOSv":
                     # TODO: make these configured in the internal config file
                     # for platform/device_subtype keying
@@ -280,25 +225,25 @@ class CiscoCompiler(PlatformCompiler):
                         interface.numeric_id)
 
             ios_compiler.compile(DmNode)
-            if use_mgmt_interfaces:
+            if self.use_mgmt_interfaces:
                 mgmt_int = DmNode.add_interface(management=True)
                 mgmt_int.id = mgmt_int_id
 
-        try:
-            from autonetkit_cisco.compilers.device.cisco import IosXrCompiler
-            ios_xr_compiler = IosXrCompiler(self.nidb, self.anm)
-        except ImportError:
-            ios_xr_compiler = IosXrCompiler(self.nidb, self.anm)
+    @property
+    def xr_compiler(self):
+        return IosXrCompiler(self.nidb, self.anm)
 
-        for phy_node in g_phy.routers(host=self.host, syntax='ios_xr'):
+    def compile_xr(self):
+        ios_xr_compiler = self.xr_compiler
+        for phy_node in self.anm['phy'].routers(host=self.host, syntax='ios_xr'):
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
             DmNode.render.template = os.path.join(
                 "templates", "ios_xr", "router.conf.mako")
-            if to_memory:
+            if self.to_memory:
                 DmNode.render.to_memory = True
             else:
-                DmNode.render.dst_folder = dst_folder
+                DmNode.render.dst_folder = self.dst_folder
                 DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
                     phy_node)
 
@@ -311,20 +256,25 @@ class CiscoCompiler(PlatformCompiler):
 
             ios_xr_compiler.compile(DmNode)
 
-            if use_mgmt_interfaces:
+            if self.use_mgmt_interfaces:
                 mgmt_int_id = "mgmteth0/0/CPU0/0"
                 mgmt_int = DmNode.add_interface(management=True)
                 mgmt_int.id = mgmt_int_id
 
-        nxos_compiler = NxOsCompiler(self.nidb, self.anm)
-        for phy_node in g_phy.routers(host=self.host, syntax='nx_os'):
+    @property
+    def nxos_compiler(self):
+        return NxOsCompiler(self.nidb, self.anm)
+
+    def compile_nxos(self):
+        nxos_compiler = self.nxos_compiler
+        for phy_node in self.anm['phy'].routers(host=self.host, syntax='nx_os'):
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
             DmNode.render.template = os.path.join("templates", "nx_os.mako")
-            if to_memory:
+            if self.to_memory:
                 DmNode.render.to_memory = True
             else:
-                DmNode.render.dst_folder = dst_folder
+                DmNode.render.dst_folder = self.dst_folder
                 DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
                     phy_node)
 
@@ -341,20 +291,25 @@ class CiscoCompiler(PlatformCompiler):
             nxos_compiler.compile(DmNode)
             # TODO: make this work other way around
 
-            if use_mgmt_interfaces:
+            if self.use_mgmt_interfaces:
                 mgmt_int_id = "mgmt0"
                 mgmt_int = DmNode.add_interface(management=True)
                 mgmt_int.id = mgmt_int_id
 
-        staros_compiler = StarOsCompiler(self.nidb, self.anm)
-        for phy_node in g_phy.routers(host=self.host, syntax='StarOS'):
+    @property
+    def staros_compiler(self):
+        return StarOsCompiler(self.nidb, self.anm)
+
+    def compile_staros(self):
+        staros_compiler = self.staros_compiler
+        for phy_node in self.anm['phy'].routers(host=self.host, syntax='StarOS'):
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
             DmNode.render.template = os.path.join("templates", "staros.mako")
-            if to_memory:
+            if self.to_memory:
                 DmNode.render.to_memory = True
             else:
-                DmNode.render.dst_folder = dst_folder
+                DmNode.render.dst_folder = self.dst_folder
                 DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
                     phy_node)
 
@@ -368,14 +323,75 @@ class CiscoCompiler(PlatformCompiler):
             staros_compiler.compile(DmNode)
             # TODO: make this work other way around
 
-            if use_mgmt_interfaces:
+            if self.use_mgmt_interfaces:
                 mgmt_int_id = "ethernet 1/1"
                 mgmt_int = DmNode.add_interface(management=True)
                 mgmt_int.id = mgmt_int_id
 
+    #@call_log
+    def compile_devices(self):
+        self._set_parameters()
+        if self.use_mgmt_interfaces:
+            log.debug("Allocating VIRL management interfaces")
+        else:
+            log.debug("Not allocating VIRL management interfaces")
+
+        # TODO: need to copy across the interface name from edge to the interface
+        # TODO: merge common router code, so end up with three loops: routers, ios
+        # routers, ios_xr routers
+        # TODO: Split out each device compiler into own function
+        # TODO: look for unused code paths here - especially for interface
+        # allocation
+
+        log.debug("Generating device configurations")
+
+        # Copy across indices for external connectors (e.g may want to copy
+        # configs)
+        external_connectors = [n for n in self.anm['phy']
+                               if n.host == self.host and n.device_type == "external_connector"]
+        for phy_node in external_connectors:
+            DmNode = self.nidb.node(phy_node)
+            DmNode.indices = phy_node.indices
+
+        for phy_node in self.anm['phy'].l3devices(host=self.host):
+            loopback_ids = self.loopback_interface_ids()
+            # allocate loopbacks to routes (same for all ios variants)
+            DmNode = self.nidb.node(phy_node)
+            DmNode.add_stanza("render")
+            DmNode.indices = phy_node.indices
+
+            for interface in DmNode.loopback_interfaces():
+                if interface != DmNode.loopback_zero:
+                    interface.id = loopback_ids.next()
+
+            # numeric ids
+            numeric_int_ids = self.numeric_interface_ids()
+            for interface in DmNode.physical_interfaces():
+                phy_numeric_id = phy_node.interface(interface).numeric_id
+                if phy_numeric_id is None:
+                    # TODO: remove numeric ID code
+                    interface.numeric_id = numeric_int_ids.next()
+                else:
+                    interface.numeric_id = int(phy_numeric_id)
+
+                phy_specified_id = phy_node.interface(interface).specified_id
+                if phy_specified_id is not None:
+                    interface.id = phy_specified_id
+
+        self.compile_ubuntu()
+
+        # TODO: refactor out common logic
+
+        self.compile_ios()
+
+        self.compile_xr()
+
+        self.compile_nxos()
+
+        self.compile_staros()
+
     def assign_management_interfaces(self):
-        g_phy = self.anm['phy']
-        use_mgmt_interfaces = g_phy.data.mgmt_interfaces_enabled
+        use_mgmt_interfaces = self.anm['phy'].data.mgmt_interfaces_enabled
         if not use_mgmt_interfaces:
             return
         lab_topology = self.nidb.topology(self.host)

@@ -1,15 +1,15 @@
 import autonetkit
 import autonetkit.design.igp
 from mock import patch
+from autonetkit.build_network import DesignRulesApplicator
+
 
 def build_layer3():
     anm = autonetkit.topos.house()
-    from autonetkit.design.osi_layers import build_layer1, build_layer2, build_layer3
-    build_layer1(anm)
-    build_layer2(anm)
-    build_layer3(anm)
-
-
+    applicator = DesignRulesApplicator(anm)
+    applicator.build_layer_1()
+    applicator.build_layer_2()
+    applicator.build_layer_3()
     return anm
 
 
