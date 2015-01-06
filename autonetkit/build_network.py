@@ -237,8 +237,8 @@ def build(input_graph):
     """Main function to build network overlay topologies"""
     anm = None
     anm = initialise(input_graph)
-    aplicator = DesignRulesAplicator(anm)
-    anm = aplicator.design()
+    applicator = DesignRulesApplicator(anm)
+    anm = applicator.design()
     return anm
 
 def build_phy(anm):

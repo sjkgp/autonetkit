@@ -18,8 +18,8 @@ def test():
 
     import autonetkit.build_network as build_network
     anm = build_network.initialise(input_graph)
-    aplicator = build_network.DesignRulesAplicator(anm)
-    anm = aplicator.design()
+    applicator = build_network.DesignRulesApplicator(anm)
+    anm = applicator.design()
     anm.save()
     anm_restored =  autonetkit.NetworkModel()
     anm_restored.restore_latest()
