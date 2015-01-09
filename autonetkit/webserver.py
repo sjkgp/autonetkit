@@ -147,19 +147,24 @@ class AnkAccessor():
         self.anm = {}
         self.ip_allocation = {}
         self.simplified_overlays = simplified_overlays
+        #TODO: put this block into a subclass (so doesn't conflict with inherited like in ank cisco)
+        try:
         vis_content = pkg_resources.resource_filename(
             "autonetkit_vis", "web_content")
-        default_file = os.path.join(vis_content, "default.json.gz")
+        except ImportError:
+            pass
+        else:
+            default_file = os.path.join(vis_content, "default.json.gz")
 
-        try:
-            import gzip
-            fh = gzip.open(default_file, "r")
-            data = json.load(fh)
-            # data = json.loads(loaded)
-            self.anm_index['singleuser'] = data
-        except IOError, e:
-            logging.warning(e)
-            pass  # use default blank anm
+            try:
+                import gzip
+                fh = gzip.open(default_file, "r")
+                data = json.load(fh)
+                # data = json.loads(loaded)
+                self.anm_index['singleuser'] = data
+            except IOError, e:
+                logging.warning(e)
+                pass  # use default blank anm
 
     def store_overlay(self, uuid, overlay_input):
         logging.info("Storing overlay_input with UUID %s" % uuid)
