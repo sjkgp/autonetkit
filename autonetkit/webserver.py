@@ -149,8 +149,8 @@ class AnkAccessor():
         self.simplified_overlays = simplified_overlays
         #TODO: put this block into a subclass (so doesn't conflict with inherited like in ank cisco)
         try:
-        vis_content = pkg_resources.resource_filename(
-            "autonetkit_vis", "web_content")
+            vis_content = pkg_resources.resource_filename(
+                "autonetkit_vis", "web_content")
         except ImportError:
             pass
         else:
