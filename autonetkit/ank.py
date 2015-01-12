@@ -193,7 +193,9 @@ def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
     if not dst_attr:
         dst_attr = src_attr
 
-    if not nbunch:
+    if nbunch:
+        nbunch = [overlay_src.node(n) for n in nbunch]
+    else:
         nbunch = overlay_src.nodes()
 
     for node in nbunch:
