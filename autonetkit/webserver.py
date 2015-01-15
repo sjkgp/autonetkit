@@ -140,7 +140,7 @@ class AnkAccessor():
 
     """ Used to store published topologies"""
 
-    def __init__(self, maxlen=25, simplified_overlays=False):
+    def __init__(self, maxlen=25, simplified_overlays=False, singleuser_data = None):
         from collections import deque
         self.anm_index = {}
         self.uuid_list = deque(maxlen=maxlen)  # use for circular buffer
@@ -148,6 +148,10 @@ class AnkAccessor():
         self.ip_allocation = {}
         self.simplified_overlays = simplified_overlays
         #TODO: put this block into a subclass (so doesn't conflict with inherited like in ank cisco)
+        self._set_default_topology()
+
+
+    def _set_default_topology(self):
         try:
             vis_content = pkg_resources.resource_filename(
                 "autonetkit_vis", "web_content")
@@ -156,18 +160,20 @@ class AnkAccessor():
         else:
             default_file = os.path.join(vis_content, "default.json.gz")
 
-            try:
-                import gzip
-                fh = gzip.open(default_file, "r")
-                data = json.load(fh)
-                # data = json.loads(loaded)
-                self.anm_index['singleuser'] = data
-            except IOError, e:
-                logging.warning(e)
-                pass  # use default blank anm
+        try:
+            import gzip
+            fh = gzip.open(default_file, "r")
+            data = json.load(fh)
+            # data = json.loads(loaded)
+            self.anm_index['singleuser'] = data
+        except IOError, e:
+            logging.warning(e)
+            pass  # use default blank anm
 
     def store_overlay(self, uuid, overlay_input):
         logging.info("Storing overlay_input with UUID %s" % uuid)
+
+        #TODO: move the labels handling to client side now?
 
         if self.simplified_overlays:
             overlays_tidied = {}
