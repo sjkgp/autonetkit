@@ -74,18 +74,10 @@ class Network(object):
             import autonetkit.compilers.platform.netkit as pl_netkit
             platform_compiler = pl_netkit.NetkitCompiler(self.nidb, self.anm,
                                                          host)
-        elif platform == 'dynagen':
-            import autonetkit.compilers.platform.dynagen as pl_dynagen
-            platform_compiler = pl_dynagen.DynagenCompiler(self.nidb, self.anm,
-                                                           host)
-        elif platform == 'junosphere':
-            import autonetkit.compilers.platform.junosphere as pl_junosphere
-            platform_compiler = pl_junosphere.JunosphereCompiler(
-                self.nidb, self.anm, host)
         else:
             platform_compiler = NoneCompiler(platform)
             if print_log:
-                log.warning('Unknown platform "%s"' % platform)
+                log.warning('Unknown platform "%s"', platform)
         return platform_compiler
 
     #@do_cprofile
@@ -180,20 +172,21 @@ class Network(object):
                 if self.should_visualise:
                     # log.info("Visualising network")
                     import autonetkit
-                    autonetkit.update_vis(self.anm)
+                    # autonetkit.update_vis(self.anm)
 
-            if not compile:
+            if not self.should_compile:
                 # autonetkit.update_vis(self.anm)
                 pass
 
             if self.should_validate:
                 self.validate()
 
-        if compile:
+        if self.should_compile:
             if self.should_archive:
                 self.anm.save()
             self.nidb = self.compile_network()
-            autonetkit.update_vis(self.anm, self.nidb)
+            if self.should_visualise:
+                autonetkit.update_vis(self.anm, self.nidb)
 
             #autonetkit.update_vis(self.anm, self.nidb)
             log.debug('Sent ANM to web server')
@@ -202,10 +195,11 @@ class Network(object):
 
             # render.remove_dirs(["rendered"])
 
-            if render:
+            if self.should_render:
                 #import time
                 #start = time.clock()
-                autonetkit.render.render(self.nidb)
+                from autonetkit import render
+                render.render(self.nidb)
                 # print time.clock() - start
                 #import autonetkit.render2
                 #start = time.clock()
