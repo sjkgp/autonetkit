@@ -11,7 +11,7 @@ from autonetkit.ank_utils import call_log
 from autonetkit.compilers.device.cisco import (IosBaseCompiler,
                                                IosClassicCompiler,
                                                IosXrCompiler, NxOsCompiler,
-                                               StarOsCompiler)
+                                               )
 from autonetkit.compilers.platform.platform_base import PlatformCompiler
 from autonetkit.nidb import ConfigStanza
 
@@ -296,38 +296,6 @@ class CiscoCompiler(PlatformCompiler):
                 mgmt_int = DmNode.add_interface(management=True)
                 mgmt_int.id = mgmt_int_id
 
-    @property
-    def staros_compiler(self):
-        return StarOsCompiler(self.nidb, self.anm)
-
-    def compile_staros(self):
-        staros_compiler = self.staros_compiler
-        for phy_node in self.anm['phy'].routers(host=self.host, syntax='StarOS'):
-            DmNode = self.nidb.node(phy_node)
-            DmNode.add_stanza("render")
-            DmNode.render.template = os.path.join("templates", "staros.mako")
-            if self.to_memory:
-                DmNode.render.to_memory = True
-            else:
-                DmNode.render.dst_folder = self.dst_folder
-                DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
-                    phy_node)
-
-            # Assign interfaces
-            int_ids = self.interface_ids_nxos()
-            for interface in DmNode.physical_interfaces():
-                if not interface.id:
-                    interface.id = self.numeric_to_interface_label_star_os(
-                        interface.numeric_id)
-
-            staros_compiler.compile(DmNode)
-            # TODO: make this work other way around
-
-            if self.use_mgmt_interfaces:
-                mgmt_int_id = "ethernet 1/1"
-                mgmt_int = DmNode.add_interface(management=True)
-                mgmt_int.id = mgmt_int_id
-
     #@call_log
     def compile_devices(self):
         self._set_parameters()
@@ -389,7 +357,6 @@ class CiscoCompiler(PlatformCompiler):
 
         self.compile_nxos()
 
-        self.compile_staros()
 
     def assign_management_interfaces(self):
         use_mgmt_interfaces = self.anm['phy'].data.mgmt_interfaces_enabled

@@ -908,6 +908,4 @@ class NxOsCompiler(IosBaseCompiler):
                                'use_ipv6': node.ip.use_ipv6}
 
 
-class StarOsCompiler(IosBaseCompiler):
 
-    pass
