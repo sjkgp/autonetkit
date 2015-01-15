@@ -55,8 +55,8 @@ class AnkEncoder(json.JSONEncoder):
             return str(obj)
 
         if isinstance(obj, autonetkit.anm.interface.NmPort):
-                # TODO: check this is consistent with deserialization
-                return str(obj)
+            # TODO: check this is consistent with deserialization
+            return str(obj)
         if isinstance(obj, nx.classes.Graph):
             # TODO: remove now?
             return json_graph.node_link_data(obj)
@@ -160,7 +160,8 @@ def rebind_interfaces(anm):
         for node in overlay.nodes():
             unbound_ports = node.raw_interfaces
             if len(unbound_ports):  # is list if none set
-                interfaces = {int(key): val for key, val in unbound_ports.items()}
+                interfaces = {
+                    int(key): val for key, val in unbound_ports.items()}
                 node.raw_interfaces = interfaces
 
 # TODO: need to also rebind_interfaces for nidb
@@ -277,9 +278,17 @@ def jsonify_anm_with_graphics(anm, nidb=None):
     overlay_ids = sorted(anm.overlays(),
                          key=lambda x: nodes_by_layer.get(x, 0))
 
+    phy_int_ids = {}
+    for node in anm['phy']:
+        phy_int_ids[node.node_id] = {}
+        for interface in node.interfaces():
+            int_name = interface.get("id") or "" #TODO: handle loopbacks here
+            phy_int_ids[node.node_id][interface.interface_id] = {"id": int_name,
+                                        "id_brief": shortened_interface(int_name)}
+
     for overlay_id in overlay_ids:
         try:
-            #make a shallow copy
+            # make a shallow copy
             # input_graph = anm[overlay_id]._graph
             # nm_graph = shallow_copy_nx_graph(input_graph)
             nm_graph = anm[overlay_id]._graph.copy()
@@ -349,7 +358,35 @@ def jsonify_anm_with_graphics(anm, nidb=None):
             except KeyError:
                 pass
 
-            if nidb:
+            """TODO: major refactor of this logic
+            if nidb then copy across from nidb raw graph
+            else if phy  just map to id brief
+            else copy id from phy and create id brief
+            """
+
+            # copy across interface id
+            if overlay_id != "nidb":
+                # set the interface id and name
+                if node in phy_int_ids:
+                    # copy from phy
+                    try:
+                        ports = nm_graph.node[node]["_ports"]
+                    except KeyError:
+                        pass #TODO: log to debug
+                    else:
+                        for index in ports:
+                            ports[index].update(phy_int_ids[node][index])
+
+                elif overlay_id == "graphics":
+                    pass #TODO: remove this workaround once retire graphics overlay
+                else:
+                    anm_node = anm[overlay_id].node(node)
+                    for interface in anm_node.interfaces():
+                        int_name = interface.get("id") or "" #TODO: handle loopbacks here
+                        data = {"id": int_name, "id_brief": shortened_interface(int_name)}
+                        ports[index].update(data)
+
+            else:
                 nidb_graph = nidb.raw_graph()
                 if node in nidb:
                     DmNode_data = nidb_graph.node[node]
@@ -375,6 +412,7 @@ def jsonify_anm_with_graphics(anm, nidb=None):
                             interface_id]['id_brief'] = id_brief
 
         anm_json[overlay_id] = ank_json_dumps(nm_graph)
+        # print anm_json[overlay_id]
         test_anm_data[overlay_id] = nm_graph
 
     if nidb:
