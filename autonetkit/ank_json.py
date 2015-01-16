@@ -381,10 +381,14 @@ def jsonify_anm_with_graphics(anm, nidb=None):
                     pass #TODO: remove this workaround once retire graphics overlay
                 else:
                     anm_node = anm[overlay_id].node(node)
+                    ports = nm_graph.node[node]["_ports"]
                     for interface in anm_node.interfaces():
                         int_name = interface.get("id") or "" #TODO: handle loopbacks here
                         data = {"id": int_name, "id_brief": shortened_interface(int_name)}
-                        ports[index].update(data)
+                        try:
+                            ports[index].update(data)
+                        except KeyError:
+                            pass #TODO warn
 
             else:
                 nidb_graph = nidb.raw_graph()
