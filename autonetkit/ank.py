@@ -660,7 +660,9 @@ def neigh_most_frequent(nm_graph, node, attribute,
     values = sorted(values)
     if not allow_none:
         values = [v for v in values if v is not None]
-    return most_frequent(values)
+
+    if len(values):
+        return most_frequent(values)
 
 
 def neigh_average(nm_graph, node, attribute, attribute_graph=None):
