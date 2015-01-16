@@ -289,9 +289,8 @@ def jsonify_anm_with_graphics(anm, nidb=None):
     for overlay_id in overlay_ids:
         try:
             # make a shallow copy
-            # input_graph = anm[overlay_id]._graph
-            # nm_graph = shallow_copy_nx_graph(input_graph)
-            nm_graph = anm[overlay_id]._graph.copy()
+            input_graph = anm[overlay_id]._graph
+            nm_graph = shallow_copy_nx_graph(input_graph)
         except Exception, e:
             log.warning("Unable to copy overlay %s: %s", overlay_id, e)
             continue
