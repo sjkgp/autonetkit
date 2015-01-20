@@ -1,6 +1,5 @@
 import autonetkit.ank as ank_utils
 import autonetkit.log as log
-from autonetkit.ank_utils import call_log
 
 #@call_log
 
@@ -19,8 +18,6 @@ def build_ibgp_v4(anm):
                             retain=["ibgp_role", "hrr_cluster", "rr_cluster"])
     g_ibgpv4.add_edges_from(g_bgp.edges(type="ibgp"), retain="direction")
 
-#@call_log
-
 
 def build_ibgp_v6(anm):
     # TODO: remove the bgp layer and have just ibgp and ebgp
@@ -36,8 +33,6 @@ def build_ibgp_v6(anm):
                             retain=["ibgp_role", "hrr_cluster", "rr_cluster"])
     g_ibgpv6.add_edges_from(g_bgp.edges(type="ibgp"), retain="direction")
 
-#@call_log
-
 
 def build_ebgp_v4(anm):
     # TODO: remove the bgp layer and have just ibgp and ebgp
@@ -51,8 +46,6 @@ def build_ebgp_v4(anm):
         return
     g_ebgpv4.add_nodes_from(n for n in g_ebgp if n in ipv4_nodes)
     g_ebgpv4.add_edges_from(g_ebgp.edges(), retain="direction")
-
-#@call_log
 
 
 def build_ebgp_v6(anm):
@@ -68,9 +61,6 @@ def build_ebgp_v6(anm):
     g_ebgpv6.add_nodes_from(n for n in g_ebgp if n in ipv6_nodes)
     g_ebgpv6.add_edges_from(g_ebgp.edges(), retain="direction")
 
-#@call_log
-
-
 def build_ebgp(anm):
     g_l3 = anm['layer3']
 
@@ -81,9 +71,6 @@ def build_ebgp(anm):
 
     ebgp_edges = [e for e in g_l3.edges() if e.src.asn != e.dst.asn]
     g_ebgp.add_edges_from(ebgp_edges, bidirectional=True, type='ebgp')
-
-#@call_log
-
 
 def build_ibgp(anm):
     g_in = anm['input']
@@ -203,9 +190,6 @@ def build_ibgp(anm):
         g_bgp.add_edges_from(over_links, type='ibgp', direction='over')
         g_bgp.add_edges_from(up_links, type='ibgp', direction='up')
         g_bgp.add_edges_from(down_links, type='ibgp', direction='down')
-
-#@call_log
-
 
 def build_bgp(anm):
     """Build iBGP end eBGP overlays"""

@@ -9,7 +9,6 @@ from autonetkit.log import CustomAdapter
 from autonetkit.anm.ank_element import AnkElement
 
 
-
 @total_ordering
 class NmNode(AnkElement):
 
@@ -138,7 +137,7 @@ class NmNode(AnkElement):
         return self.interfaces(*args, **kwargs)
 
     def loopback_interfaces(self, *args, **kwargs):
-        #TODO: allow abiility to skip loopback zero
+        # TODO: allow abiility to skip loopback zero
         """"""
         kwargs['category'] = "loopback"
         return self.interfaces(*args, **kwargs)
@@ -262,7 +261,7 @@ class NmNode(AnkElement):
                 # shouldn't happen since the next free id is from the phy
 
                 log.warning("Internal consistency error with copying loopback "
-                    "interface %s to %s in %s", interface_id, self, overlay)
+                            "interface %s to %s in %s", interface_id, self, overlay)
                 continue
 
             o_node._ports[interface_id] = {"category": "loopback"}
@@ -273,7 +272,7 @@ class NmNode(AnkElement):
         interface_id = self._add_interface(category='loopback', *args,
                                            **kwargs)
 
-        #TODO: want to add loopbacks to all overlays the node is in
+        # TODO: want to add loopbacks to all overlays the node is in
         self._sync_loopbacks(interface_id)
         return NmPort(self.anm, self.overlay_id,
                       self.node_id, interface_id)
@@ -423,7 +422,7 @@ class NmNode(AnkElement):
 
         """
         #self.log_info("add int")
-        #TODO: tidy this logic up to not auto fallback to phy being hard-coded
+        # TODO: tidy this logic up to not auto fallback to phy being hard-coded
 
         return self.device_type == 'firewall' or self['phy'].device_type \
             == 'firewall'
@@ -717,7 +716,7 @@ class NmNode(AnkElement):
                 result = node_data[key]
                 return result
             except KeyError:
-                #TODO: check if in self['phy'[ here]
+                # TODO: check if in self['phy'[ here]
                 if self.overlay_id != "phy":
                     if key == "device_type":
                         return self['phy'].device_type
@@ -725,9 +724,9 @@ class NmNode(AnkElement):
                         return self['phy'].device_subtype
 
                 # from http://stackoverflow.com/q/2654113
-                #self.log.debug(
+                # self.log.debug(
                     #"Accessing unset attribute %s in %s" % (key,
-                                                            #self.overlay_id))
+                        # self.overlay_id))
                 return
 
         # map through to phy

@@ -1,8 +1,6 @@
 import autonetkit.log as log
 import autonetkit.ank as ank_utils
 
-from autonetkit.ank_utils import call_log
-
 # TODO: extract the repeated code and use the layer2  and layer3 graphs
 
 
@@ -56,14 +54,11 @@ def build_ospf(anm):
     g_ospf.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_ospf, "multipoint")
 
-    # TODO: work out why this doesnt work
-    #ank_utils.copy_int_attr_from(g_in, g_ospf, "ospf_cost", dst_attr="cost",  type=int, default = 1)
     for node in g_ospf:
         for interface in node.physical_interfaces():
             interface.cost = 1
 
     ank_utils.copy_attr_from(g_in, g_ospf, "ospf_area", dst_attr="area")
-    #ank_utils.copy_edge_attr_from(g_in, g_ospf, "ospf_cost", dst_attr="cost",  type=int, default = 1)
     ank_utils.copy_attr_from(
         g_in, g_ospf, "custom_config_ospf", dst_attr="custom_config")
 
@@ -163,9 +158,6 @@ def build_ospf(anm):
         router.loopback_zero.cost = 0
         router.process_id = router.asn
 
-#@call_log
-
-
 def ip_to_net_ent_title_ios(ip_addr):
     """ Converts an IP address into an OSI Network Entity Title
     suitable for use in IS-IS on IOS.
@@ -187,9 +179,6 @@ def ip_to_net_ent_title_ios(ip_addr):
         octet) for octet in ip_words)  # single string, padded if needed
     return ".".join([area_id, ip_octets[0:4], ip_octets[4:8], ip_octets[8:12],
                      "00"])
-
-#@call_log
-
 
 def build_eigrp(anm):
     """Build eigrp overlay"""
@@ -234,9 +223,6 @@ def build_eigrp(anm):
         for interface in edge.interfaces():
             interface.metric = edge.metric
             interface.multipoint = edge.multipoint
-
-#@call_log
-
 
 def build_network_entity_title(anm):
     g_isis = anm['isis']
