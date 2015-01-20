@@ -134,14 +134,17 @@ class DesignRulesApplicator(object):
     def __init__(self, anm):
         self.anm = anm
 
+    def _layer2builder(self):
+        from autonetkit.design.layer2 import Layer2Builder
+        return Layer2Builder(self.anm)
+
     def build_layer_1(self):
         from autonetkit.design.layer1 import Layer1Builder
         builder = Layer1Builder(self.anm)
         builder.build_layer1()
 
     def build_layer_2(self):
-        from autonetkit.design.layer2 import Layer2Builder
-        builder = Layer2Builder(self.anm)
+        builder = self._layer2builder()
         builder.build_layer2()
 
     def build_layer_3(self):

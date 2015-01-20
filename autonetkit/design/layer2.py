@@ -27,16 +27,6 @@ class Layer2Builder(object):
                 node.broadcast_domain = True
                 node.device_type = "broadcast_domain"
 
-        try:
-            from autonetkit_cisco import build_network as cisco_build_network
-        except ImportError:
-            pass
-        else:
-            cisco_build_network.post_layer2(anm)
-
-        # Note: layer 2 base is much simpler since most is inherited from layer 1
-        # cds
-
 
     def build_layer2_conn(self):
         anm = self.anm
