@@ -121,9 +121,9 @@ class MyWebSocketHandler(websocket.WebSocketHandler):
             body = self.ank_accessor.get_overlay(self.uuid, self.overlay_id)
         except OverlayNotFound:
             body = {"nodes": [],
-            "links": [],
-            "directed": False,
-            "graph": [ ], }
+                    "links": [],
+                    "directed": False,
+                    "graph": [], }
         finally:
             self.write_message(body)
 
@@ -136,20 +136,21 @@ class MyWebSocketHandler(websocket.WebSocketHandler):
         else:
             self.write_message(body)
 
+
 class AnkAccessor():
 
     """ Used to store published topologies"""
 
-    def __init__(self, maxlen=25, simplified_overlays=False, singleuser_data = None):
+    def __init__(self, maxlen=25, simplified_overlays=False, singleuser_data=None):
         from collections import deque
         self.anm_index = {}
         self.uuid_list = deque(maxlen=maxlen)  # use for circular buffer
         self.anm = {}
         self.ip_allocation = {}
         self.simplified_overlays = simplified_overlays
-        #TODO: put this block into a subclass (so doesn't conflict with inherited like in ank cisco)
+        # TODO: put this block into a subclass (so doesn't conflict with
+        # inherited like in ank cisco)
         self._set_default_topology()
-
 
     def _set_default_topology(self):
         try:
@@ -173,7 +174,7 @@ class AnkAccessor():
     def store_overlay(self, uuid, overlay_input):
         logging.info("Storing overlay_input with UUID %s" % uuid)
 
-        #TODO: move the labels handling to client side now?
+        # TODO: move the labels handling to client side now?
 
         if self.simplified_overlays:
             overlays_tidied = {}
@@ -332,7 +333,9 @@ class IndexHandler(tornado.web.RequestHandler):
 
         logging.info("Rendering template with uuid %s" % uuid)
         template = os.path.join(self.content_path, "index.html")
-        self.render(template, uuid=uuid)
+        vis_engine_version = self.application.vis_engine_version
+        self.render(template, uuid=uuid, vis_engine_version=vis_engine_version)
+
 
 class ThreeDHandler(tornado.web.RequestHandler):
 
@@ -391,8 +394,11 @@ def main():
         import autonetkit_vis
     except ImportError:
         pass  # #TODO: logging no vis
+        VIS_ENGINE_VERSION = "dev"
     else:
         # use web content from autonetkit_cisco module
+        VIS_ENGINE_VERSION = pkg_resources.get_distribution(
+            "autonetkit_vis").version
         content_path = pkg_resources.resource_filename(
             "autonetkit_vis", "web_content")
 
@@ -442,6 +448,7 @@ def main():
     ], **settings)
 
     logging.getLogger().setLevel(logging.INFO)
+    application.vis_engine_version = VIS_ENGINE_VERSION
 
     from collections import defaultdict
     application.socket_listeners = defaultdict(set)  # Indexed by uuid
