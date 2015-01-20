@@ -172,8 +172,8 @@ class Runner(object):
                     if rebuild:
                         try:
                             log.info("Input graph updated, recompiling network")
-                            with open(options.file, "r") as fh:
-                                input_string = fh.read()  # read updates
+                            with open(self.options.file, "r") as fh:
+                                self.input_string = fh.read()  # read updates
                             self.network = workflow.Network(
                                 self.input_string, self.timestamp,
                                 **self.build_options)
