@@ -73,7 +73,8 @@ class Layer2Builder(object):
                 edges = g_l2.edges(switch, neighbor)
                 if len(edges) > 1:
                     # more than one edge between the (src, dst) pair -> parallel
-                    log.warning("Multiple edges (%s) between %s and device %s",
+                    log.warning("There are multiple parallel edges (%s) between %s and device %s. "
+                        "This may lead to unexpected protocol behavior.",
                                 len(edges), switch, neighbor)
 
 
