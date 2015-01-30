@@ -254,7 +254,8 @@ def build_ipv6(anm):
 
         ipv6.allocate_loopbacks(g_ipv6, loopback_block)
 
-    l3_devices = [d for d in g_in if d.device_type in ('router', 'server')]
+    l3_devices = [d for d in g_in if d.device_type in ('router', 'firewall', 'server')]
+
 
     manual_alloc_devices = set()
     for device in l3_devices:

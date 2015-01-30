@@ -83,6 +83,8 @@ def manual_ipv4_infrastructure_allocation(anm):
                 # TODO: copy interface allocate attribute across
                 continue
 
+            print "interface is", interface
+
             ip_address = netaddr.IPAddress(interface['input'
                                                      ].ipv4_address)
             prefixlen = interface['input'].ipv4_prefixlen
@@ -255,7 +257,7 @@ def build_ipv4(anm, infrastructure=True):
 
     # do we need this still? in ANM? - differnt because input graph.... but
     # can map back to  self overlay first then phy???
-    l3_devices = [d for d in g_in if d.device_type in ('router', 'server')]
+    l3_devices = [d for d in g_in if d.device_type in ('router', 'firewall', 'server')]
 
     # TODO: need to account for devices whose interfaces are in only e.g. vpns
 
