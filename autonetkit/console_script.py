@@ -16,6 +16,7 @@ try:
 except pkg_resources.DistributionNotFound:
     ANK_VERSION = "dev"
 
+
 def parse_options(argument_string=None):
     """Parse user-provided options"""
     import argparse
@@ -39,8 +40,8 @@ def parse_options(argument_string=None):
     parser.add_argument('--diff', action="store_true", default=False,
                         help="Diff DeviceModel")
     parser.add_argument('--no_vis', dest="visualise",
-        action="store_false", default=True,
-        help="Visualise output")
+                        action="store_false", default=True,
+                        help="Visualise output")
     parser.add_argument('--compile', action="store_true",
                         default=False, help="Compile")
     parser.add_argument(
@@ -72,6 +73,7 @@ def parse_options(argument_string=None):
 
 
 class Runner(object):
+
     def __init__(self, options):
         self.options = options
         self.settings = config.settings
@@ -94,7 +96,8 @@ class Runner(object):
         self.init_build_options()
 
         if options.webserver:
-            log.info("Webserver not yet supported, please run as seperate module")
+            log.info(
+                "Webserver not yet supported, please run as seperate module")
 
         self.load_input()
 
@@ -118,9 +121,14 @@ class Runner(object):
 
     def load_input(self):
         if self.options.file:
-            with open(self.options.file, "r") as fh:
-                self.input_string = fh.read()
-            self.timestamp = os.stat(self.options.file).st_mtime
+            try:
+                with open(self.options.file, "r") as fh:
+                    self.input_string = fh.read()
+                    self.timestamp = os.stat(self.options.file).st_mtime
+            except IOError, exc:
+                log.warning("Unable to load input file: %s", exc)
+                raise exc
+
         elif self.options.stdin:
             self.input_string = sys.stdin
             now = datetime.now()
@@ -148,7 +156,7 @@ class Runner(object):
             self.network.configure()
         except Exception as err:
             log.exception('Error generating network configurations: %s. More '
-                      'information may be available in the debug log.' % err)
+                          'information may be available in the debug log.' % err)
             log.debug('Error generating network configurations', exc_info=True)
             if self.settings['General']['stack_trace']:
                 print traceback.print_exc()
@@ -171,7 +179,8 @@ class Runner(object):
 
                     if rebuild:
                         try:
-                            log.info("Input graph updated, recompiling network")
+                            log.info(
+                                "Input graph updated, recompiling network")
                             with open(self.options.file, "r") as fh:
                                 self.input_string = fh.read()  # read updates
                             self.network = workflow.Network(
@@ -190,6 +199,7 @@ class Runner(object):
 def main(options):
     runner = Runner(options)
     runner.run()
+
 
 def console_entry():
     """If come from console entry point"""
