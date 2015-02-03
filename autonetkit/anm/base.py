@@ -132,6 +132,7 @@ class OverlayBase(AnkElement):
         '''
 
         # TODO: handle multigraphs
+        from autonetkit.nidb.node import DmNode
         if isinstance(edge_to_find, NmEdge):
             # TODO: tidy this logic
             edge = edge_to_find  # alias for neater code
@@ -174,7 +175,8 @@ class OverlayBase(AnkElement):
             elif self._graph.has_edge(src, dst):
                 return NmEdge(self._anm, self._overlay_id, src, dst)
 
-        if isinstance(src, NmNode) and isinstance(dst, NmNode):
+        # TODO: refactor to pick up a BaseNode class that both NmNode, DmNode inherit from
+        if isinstance(src, (NmNode, DmNode)) and isinstance(dst, (NmNode, DmNode)):
             src_id = src.node_id
             dst_id = dst.node_id
 
