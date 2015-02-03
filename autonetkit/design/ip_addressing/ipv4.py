@@ -83,8 +83,6 @@ def manual_ipv4_infrastructure_allocation(anm):
                 # TODO: copy interface allocate attribute across
                 continue
 
-            print "interface is", interface
-
             ip_address = netaddr.IPAddress(interface['input'
                                                      ].ipv4_address)
             prefixlen = interface['input'].ipv4_prefixlen
