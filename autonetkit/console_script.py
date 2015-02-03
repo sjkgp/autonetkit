@@ -155,11 +155,12 @@ class Runner(object):
             self.load_network()
             self.network.configure()
         except Exception as err:
-            log.exception('Error generating network configurations: %s. More '
+            log.warning('Error generating network configurations: %s. More '
                           'information may be available in the debug log.' % err)
             log.debug('Error generating network configurations', exc_info=True)
             if self.settings['General']['stack_trace']:
                 print traceback.print_exc()
+                pass
             sys.exit('Unable to build configurations.')
 
         # TODO: work out why build_options is being clobbered for monitor mode
