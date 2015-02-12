@@ -117,7 +117,7 @@ class CiscoCompiler(PlatformCompiler):
 
     def compile_ubuntu(self):
         ubuntu_compiler = self.ubuntu_compiler
-        for phy_node in self.anm['phy'].servers(host=self.host):
+        for phy_node in self.anm['phy'].servers(host=self.host, syntax="ubuntu"):
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
             DmNode.add_stanza("ip")
