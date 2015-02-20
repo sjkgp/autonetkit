@@ -54,19 +54,32 @@ class UbuntuCompiler(ServerCompiler):
         cloud_init_static_routes = []
         g_l3 = self.anm['layer3']
 
+        #TODO: need to handle multipoint to only enter once
         for gateway in sorted(gateway_list):
+            seen = set()
             for gateway_edge_l3 in g_l3.edges(node, gateway):
                 server_interface = gateway_edge_l3.src_int
                 server_interface_id = self.nidb.interface(server_interface).id
 
                 gateway_interface = gateway_edge_l3.dst_int
+                if gateway_interface in seen:
+                    continue # don't add same interface more than once
+                    # e.g. if from multipoint
+                seen.add(gateway_interface)
 
                 gateway_ipv4 = gateway_ipv6 = None
                 node.add_stanza("ip")
                 if node.ip.use_ipv4:
                     gateway_ipv4 = gateway_interface['ipv4'].ip_address
+                    if gateway_ipv4 is None:
+                        log.warning("No gateway IPv4 for %s to %s", node, gateway)
+                        continue
+
                 if node.ip.use_ipv6:
                     gateway_ipv6 = gateway_interface['ipv6'].ip_address
+                    if gateway_ipv6 is None:
+                        log.warning("No gateway IPv6 for %s to %s", node, gateway)
+                        continue
 
                 # TODO: look at aggregation
                 # TODO: catch case of ip addressing being disabled
