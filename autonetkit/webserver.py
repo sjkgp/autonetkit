@@ -182,9 +182,8 @@ class AnkAccessor():
             overlay_keys = [
                 index for index, data in overlay_input.items() if len(data.get("nodes"))]
 
-            keys_to_exclude = {"input",
-                               "bgp", "ibgp", "ebgp",
-                               "graphics", "ip", "nidb"}
+            keys_to_exclude = {"bgp", "ibgp", "ebgp",
+                               "graphics", "nidb"}
             overlay_keys = [
                 k for k in overlay_keys if k not in keys_to_exclude]
 
