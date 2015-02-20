@@ -32,7 +32,7 @@ def build_ip(anm):
             bc.asn = asn
 
         for neigh in bc.neighbors():
-            if (neigh.device_type == "external_connector"
+            if (neigh.device_type in ("external_connector", "switch")
                 and neigh.device_subtype in ("FLAT", "SNAT")):
                 bc.allocate = False
 
