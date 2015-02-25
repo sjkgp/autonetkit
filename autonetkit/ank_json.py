@@ -202,7 +202,7 @@ def shortened_interface(name):
     return name
 
 
-def jsonify_anm_with_graphics(anm, nidb=None):
+def prepare_json_anm_nidb(anm, nidb=None):
     """ Returns a dictionary of json-ified overlay graphs, with graphics data appended to each overlay"""
     from collections import defaultdict
     import math
@@ -421,6 +421,11 @@ def jsonify_anm_with_graphics(anm, nidb=None):
     if nidb:
         test_anm_data['nidb'] = prepare_nidb(nidb)
 
+    return test_anm_data
+
+
+def jsonify_anm_with_graphics(anm, nidb=None):
+    test_anm_data = prepare_json_anm_nidb(anm, nidb)
     result = json.dumps(
         test_anm_data, cls=AnkEncoder, indent=4, sort_keys=True)
     return result

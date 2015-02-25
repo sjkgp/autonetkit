@@ -60,11 +60,11 @@ class Network(object):
         self.should_compile = kwargs.get('compile', True)
         self.should_validate = kwargs.get('validate', True)
         self.should_render = kwargs.get('render', True)
-        self.should_monitor = kwargs.get('monitor', True)
+        self.should_monitor = kwargs.get('monitor', False)
         self.should_deploy = kwargs.get('deploy', True)
-        self.should_measure = kwargs.get('measure', True)
-        self.should_diff = kwargs.get('diff', True)
-        self.should_archive = kwargs.get('archive', True)
+        self.should_measure = kwargs.get('measure', False)
+        self.should_diff = kwargs.get('diff', False)
+        self.should_archive = kwargs.get('archive', False)
 
     def load(self):
         self.graph = build_network.load(self.graph_def)

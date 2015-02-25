@@ -450,6 +450,8 @@ def main():
 
     logging.getLogger().setLevel(logging.INFO)
     application.vis_engine_version = VIS_ENGINE_VERSION
+    #TODO: refactor to remove this from needing to be passed to each handler
+    application.ank_accessor = ank_accessor
 
     from collections import defaultdict
     application.socket_listeners = defaultdict(set)  # Indexed by uuid
