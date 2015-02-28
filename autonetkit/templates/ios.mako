@@ -53,10 +53,13 @@ line vty 0 4
  login
 line con 0
  password cisco
-!
-% if node.use_cdp:
+% if node.use_cdp is True:
 !
 cdp run
+!
+% elif node.use_cdp is False:
+!
+no cdp run
 !
 %endif
 % if node.use_onepk:
