@@ -228,11 +228,18 @@ def build_mpls_ldp(anm):
     g_mpls_ldp = anm.add_overlay("mpls_ldp")
     nodes_to_add = [n for n in g_in.routers()
                     if n['vrf'].vrf_role in ("PE", "P")]
-    g_mpls_ldp.add_nodes_from(nodes_to_add, retain=["vrf_role", "vrf"])
+    g_mpls_ldp.add_nodes_from(nodes_to_add)
+    ank_utils.copy_attr_from(g_vrf, g_mpls_ldp, "vrf_role", dst_attr="role")
+    ank_utils.copy_attr_from(g_vrf, g_mpls_ldp, "vrf")
+
+    nodes_to_add = [n for n in g_in.routers() if n.LDP]
+    g_mpls_ldp.add_nodes_from(nodes_to_add)
+    for node in nodes_to_add:
+        node["mpls_ldp"].role = "P" # set as P nodes
 
     # store as set for faster lookup
-    pe_nodes = set(g_vrf.nodes(vrf_role="PE"))
-    p_nodes = set(g_vrf.nodes(vrf_role="P"))
+    pe_nodes = set(g_mpls_ldp.nodes(role="PE"))
+    p_nodes = set(g_mpls_ldp.nodes(role="P"))
 
     pe_to_pe_edges = (e for e in g_layer3.edges()
                       if e.src in pe_nodes and e.dst in pe_nodes)
@@ -312,7 +319,6 @@ def build_vrf(anm):
                      if is_pe_p_edge(e))
     g_vrf.add_edges_from(vrf_add_edges)
 
-    build_mpls_ldp(anm)
     # add PE to P edges
 
     add_vrf_loopbacks(g_vrf)

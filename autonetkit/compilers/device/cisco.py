@@ -61,6 +61,7 @@ class IosBaseCompiler(RouterCompiler):
 
         node.label = self.anm['phy'].node(node).label
         self.vrf(node)
+        self.mpls_ldp(node)
 
     def interfaces(self, node):
         phy_loopback_zero = self.anm['phy'
@@ -293,7 +294,6 @@ class IosBaseCompiler(RouterCompiler):
         g_vrf = self.anm['vrf']
         vrf_node = self.anm['vrf'].node(node)
         node.add_stanza("vrf")
-        node.add_stanza("mpls")
         node.vrf.vrfs = []
         if vrf_node and vrf_node.vrf_role is 'PE':
 
@@ -317,30 +317,36 @@ class IosBaseCompiler(RouterCompiler):
                         interface.description += ' vrf %s' \
                             % vrf_int.vrf_name
 
-        if vrf_node and vrf_node.vrf_role in ('P', 'PE'):
-
-            # Add PE -> P, PE -> PE interfaces to MPLS LDP
-
-            node.mpls.ldp_interfaces = []
-            for interface in node.physical_interfaces():
-                mpls_ldp_int = self.anm['mpls_ldp'].interface(interface)
-                if mpls_ldp_int.is_bound:
-                    node.mpls.ldp_interfaces.append(interface.id)
-                    interface.use_mpls = True
-
-        if vrf_node and vrf_node.vrf_role is 'P':
-            node.mpls.ldp_interfaces = []
-            for interface in node.physical_interfaces():
-                node.mpls.ldp_interfaces.append(interface.id)
-
         vrf_node = self.anm['vrf'].node(node)
 
         node.vrf.use_ipv4 = node.ip.use_ipv4
         node.vrf.use_ipv6 = node.ip.use_ipv6
         node.vrf.vrfs = sorted(node.vrf.vrfs, key=lambda x: x.vrf)
 
-        if self.anm.has_overlay('mpls_ldp') and node \
-                in self.anm['mpls_ldp']:
+    def mpls_ldp(self, node):
+        g_mpls_ldp = self.anm['mpls_ldp']
+        mpls_ldp_node = g_mpls_ldp.node(node)
+        node.add_stanza("mpls")
+        if mpls_ldp_node and mpls_ldp_node.role in ('P', 'PE'):
+
+            # Add PE -> P, PE -> PE interfaces to MPLS LDP
+
+            node.mpls.ldp_interfaces = []
+            for interface in node.physical_interfaces():
+                mpls_ldp_int = mpls_ldp_node.interface(interface)
+                if mpls_ldp_int.is_bound:
+                    node.mpls.ldp_interfaces.append(interface.id)
+                    interface.use_mpls = True
+
+        #TODO: check if this block is repeated (redundant) logic of above
+        if mpls_ldp_node and mpls_ldp_node.role is 'P':
+            node.mpls.ldp_interfaces = []
+            for interface in node.physical_interfaces():
+                node.mpls.ldp_interfaces.append(interface.id)
+
+        #TODO: refactor this logic
+        if mpls_ldp_node:
+            # P, PE, CE
             node.mpls.enabled = True
             node.mpls.router_id = node.loopback_zero.id
 

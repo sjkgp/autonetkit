@@ -168,8 +168,10 @@ class DesignRulesApplicator(object):
 
         check_server_asns(anm)
 
-        from autonetkit.design.mpls import build_vrf
+        from autonetkit.design.mpls import build_vrf, build_mpls_ldp
         build_vrf(anm)  # do before to add loopbacks before ip allocations
+        build_mpls_ldp(anm)
+
         from autonetkit.design.ip import build_ip, build_ipv4, build_ipv6
         # TODO: replace this with layer2 overlay topology creation
         # log.info("Allocating IP addresses")
