@@ -41,12 +41,13 @@ def build_ospf(anm):
     g_phy = anm['phy']
     # add regardless, so allows quick check of node in anm['ospf'] in compilers
     g_ospf = anm.add_overlay("ospf")
-    if not anm['phy'].data.enable_routing:
-        g_ospf.log.info("Routing disabled, not configuring OSPF")
-        return
 
     if not any(n.igp == "ospf" for n in g_phy):
         g_ospf.log.debug("No OSPF nodes")
+        return
+
+    if not anm['phy'].data.enable_routing:
+        g_ospf.log.info("Routing disabled, not configuring OSPF")
         return
 
     ospf_nodes = [n for n in g_l3 if n['phy'].igp == "ospf"]
@@ -188,13 +189,14 @@ def build_eigrp(anm):
     g_eigrp = anm.add_overlay("eigrp")
     g_phy = anm['phy']
 
+    if not any(n.igp == "eigrp" for n in g_phy):
+        log.debug("No EIGRP nodes")
+        return
+
     if not anm['phy'].data.enable_routing:
         g_eigrp.log.info("Routing disabled, not configuring EIGRP")
         return
 
-    if not any(n.igp == "eigrp" for n in g_phy):
-        log.debug("No EIGRP nodes")
-        return
     eigrp_nodes = [n for n in g_l3 if n['phy'].igp == "eigrp"]
     g_eigrp.add_nodes_from(eigrp_nodes)
     g_eigrp.add_edges_from(g_l3.edges(), warn=False)
@@ -239,13 +241,14 @@ def build_rip(anm):
     g_rip = anm.add_overlay("rip")
     g_phy = anm['phy']
 
-    if not anm['phy'].data.enable_routing:
-        g_rip.log.info("Routing disabled, not configuring rip")
-        return
-
     if not any(n.igp == "rip-v2" for n in g_phy):
         log.debug("No rip nodes")
         return
+
+    if not anm['phy'].data.enable_routing:
+        g_rip.log.info("Routing disabled, not configuring RIP")
+        return
+
     rip_nodes = [n for n in g_l3 if n['phy'].igp == "rip-v2"]
     g_rip.add_nodes_from(rip_nodes)
     g_rip.add_edges_from(g_l3.edges(), warn=False)
@@ -277,12 +280,12 @@ def build_isis(anm):
     g_phy = anm['phy']
     g_isis = anm.add_overlay("isis")
 
-    if not anm['phy'].data.enable_routing:
-        g_isis.log.info("Routing disabled, not configuring ISIS")
-        return
-
     if not any(n.igp == "isis" for n in g_phy):
         g_isis.log.debug("No ISIS nodes")
+        return
+
+    if not anm['phy'].data.enable_routing:
+        g_isis.log.info("Routing disabled, not configuring ISIS")
         return
 
     isis_nodes = [n for n in g_l3 if n['phy'].igp == "isis"]
