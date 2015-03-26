@@ -385,7 +385,8 @@ def prepare_json_anm_nidb(anm, nidb=None):
                         int_name = interface.get("id") or "" #TODO: handle loopbacks here
                         data = {"id": int_name, "id_brief": shortened_interface(int_name)}
                         try:
-                            ports[index].update(data)
+                            # ports[index].update(data)
+                            pass # needs to be port index?
                         except KeyError:
                             pass #TODO warn
 
