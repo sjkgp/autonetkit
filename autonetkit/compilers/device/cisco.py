@@ -849,6 +849,7 @@ class NxOsCompiler(IosBaseCompiler):
         super(NxOsCompiler, self).compile(node)
         self.mpls_te(node)
         self.mpls_oam(node)
+        self.mpls_ldp(node)
 
     def mpls_te(self, node):
         g_mpls_te = self.anm['mpls_te']
@@ -867,6 +868,33 @@ class NxOsCompiler(IosBaseCompiler):
         if node.supported_features.mpls_oam is False:
             node.log.warning("Feature MPLS OAM is not supported for %s the on %s platform" % (
                 node.device_subtype, node.platform))
+
+    def mpls_ldp(self, node):
+        g_mpls_ldp = self.anm['mpls_ldp']
+        mpls_ldp_node = g_mpls_ldp.node(node)
+        node.add_stanza("mpls")
+        if mpls_ldp_node and mpls_ldp_node.role in ('P', 'PE'):
+
+            # Add PE -> P, PE -> PE interfaces to MPLS LDP
+
+            node.mpls.ldp_interfaces = []
+            for interface in node.physical_interfaces():
+                mpls_ldp_int = mpls_ldp_node.interface(interface)
+                if mpls_ldp_int.is_bound:
+                    node.mpls.ldp_interfaces.append(interface.id)
+                    interface.use_mpls = True
+
+        #TODO: check if this block is repeated (redundant) logic of above
+        if mpls_ldp_node and mpls_ldp_node.role is 'P':
+            node.mpls.ldp_interfaces = []
+            for interface in node.physical_interfaces():
+                node.mpls.ldp_interfaces.append(interface.id)
+
+        #TODO: refactor this logic
+        if mpls_ldp_node:
+            # P, PE, CE
+            node.mpls.enabled = True
+            node.mpls.router_id = node.loopback_zero.id
 
     def vrf(self, node):
         g_vrf = self.anm['vrf']
