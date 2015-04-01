@@ -23,8 +23,15 @@ static_route_v6 = namedtuple("static_route_v6",
 
 
 def sn_preflen_to_network(address, prefixlen):
-    """Workaround for creating an IPNetwork from an address and a prefixlen
+    """Workaround for creating an IPNetwork from an address and a prefixlen.
     TODO: check if this is part of netaddr module
+    
+    >>> sn_preflen_to_network('1', '2')
+    IPNetwork('1.0.0.0/2')
+    >>> sn_preflen_to_network('1', '4')
+    IPNetwork('1.0.0.0/4')
+    >>> sn_preflen_to_network('5', '4')
+    IPNetwork('5.0.0.0/4')
     """
 
     import netaddr
@@ -33,6 +40,7 @@ def sn_preflen_to_network(address, prefixlen):
 
 def fqdn(node):
     """
+    Returns in label.asn format of a node.
 
     Example:
 
@@ -40,12 +48,30 @@ def fqdn(node):
     >>> r1 = anm['phy'].node("r1")
     >>> fqdn(r1)
     'r1.1'
+    >>> r2 = anm['phy'].node("r2")
+    >>> fqdn(r2)
+    'r2.1'
 
     """
     return '%s.%s' % (node.label, node.asn)
 
 
 def name_folder_safe(foldername):
+    """Returning foldername if it's safe. If illegal character exists,
+       replace the illegal character with a underscore.
+
+    >>> name_folder_safe('ank')
+    'ank'
+    >>> name_folder_safe('ank/repo')
+    'ank_repo'
+    >>> name_folder_safe('auto.net.kit.repo')
+    'auto_net_kit_repo'
+    >>> name_folder_safe('ank.folder')
+    'ank_folder'
+    >>> name_folder_safe('ank__repo')
+    'ank_repo'
+
+    """
     for illegal_char in [' ', '/', '_', ',', '.', '&amp;', '-', '(', ')', ]:
         foldername = foldername.replace(illegal_char, '_')
 
@@ -58,7 +84,7 @@ def name_folder_safe(foldername):
 
 def set_node_default(nm_graph, nbunch=None, **kwargs):
     """Sets all nodes in nbunch to value if key not already set
-    Note: this won't apply to future nodes added
+    This will not apply to future nodes that are added.
 
     >>> anm = autonetkit.topos.house()
     >>> g_phy = anm['phy']
@@ -97,7 +123,8 @@ def set_node_default(nm_graph, nbunch=None, **kwargs):
 
 def copy_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
                    nbunch=None, type=None, default=None):
-    """
+    """ Copies attribute from specific values that user sets from the source
+        to the destination. Also can specify the remote attribute or default value.
 
     >>> anm = autonetkit.topos.house()
     >>> g_in = anm['input']
@@ -128,9 +155,6 @@ def copy_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
     >>> copy_attr_from(g_in, g_phy, "memory", type=int)
     >>> [n.memory for n in g_phy]
     [32, 32, 32, 32, 32]
-
-
-    Supported types to case to are float and int
 
     """
 
@@ -170,6 +194,9 @@ def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
 
     #TODO: check if copies to loopbacks as well
     """
+    Copies interger attributes from the source to destination. 
+    Supported types are float and int.
+
 
     >>> anm = autonetkit.topos.house()
     >>> g_in = anm['input']
@@ -182,9 +209,6 @@ def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
     >>> copy_int_attr_from(g_in, g_phy, "ospf_cost")
     >>> [iface.ospf_cost for node in g_phy for iface in node]
     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
-
-
-    Supported types to case to are float and int
 
     """
 
@@ -215,47 +239,64 @@ def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
                 dst_int.set(dst_attr, val)
 
 
-def copy_edge_attr_from(overlay_src, overlay_dst, src_attr,
-                        dst_attr=None, type=None, default=None):
-    # note this won't work if merge/aggregate edges
+def copy_edge_attr_from(overlay_src, overlay_dst, src_attr, 
+                        dst_attr=None, type=None, default=None): 
+    # note this won't work if merge/aggregate edges 
+ 
+    """
+    Main purpose is to copy edge attributes from source to the destination. Gets the edge attribute
+    from source and copies the set attribute over to the destination edge.
 
-    if not dst_attr:
-        dst_attr = src_attr
+    >>> anm = autonetkit.topos.house()
+    >>> g_in = anm['input']
+    >>> g_phy = anm['phy']
+    >>> g_in.edges()
+    [(r4, r5), (r4, r2), (r5, r3), (r1, r2), (r1, r3), (r2, r3)]
+    >>> g_phy.edges()
+    [(r4, r5), (r4, r2), (r5, r3), (r1, r2), (r1, r3), (r2, r3)]
+    >>> g_in.edge("r1", "r2").color = "red"
+    >>> g_in.edges(color = "red")
+    [(r1, r2)]
+    >>> copy_edge_attr_from(g_in, g_phy, 'color')
+    >>> g_phy.edges(color = "red")
+    [(r1, r2)]
 
-    for edge in overlay_src.edges():
-        try:
+    """
+    if not dst_attr: 
+        dst_attr = src_attr 
+ 
+    for edge in overlay_src.edges(): 
+        try: 
             val = edge.get(src_attr)
-            if val is None:
-                val = default
-        except KeyError:
+            if val is None: 
+                val = default 
+        except KeyError: 
+ 
+            # TODO: check if because edge doesn't exist in dest, or because 
+            # attribute doesn't exist in graph_src 
+ 
+            log.debug('Unable to copy edge attribute %s for (%s, %s) in %s', 
+                      src_attr, edge.src, edge.dst, overlay_src) 
+ 
+        else: 
+ 
+            # TODO: use a dtype to take an int, float, etc 
+ 
+            if type is float: 
+                val = float(val) 
+            elif type is int: 
+                val = int(val) 
+ 
+            try: 
+                overlay_dst.edge(edge).set(dst_attr, val) 
+            except AttributeError: 
+                # fail to debug - as attribute may not have been set 
+                log.debug('Unable to set edge attribute on %s in %s', 
+                          edge, overlay_dst) 
 
-            # TODO: check if because edge doesn't exist in dest, or because
-            # attribute doesn't exist in graph_src
-
-            log.debug('Unable to copy edge attribute %s for (%s, %s) in %s',
-                      src_attr, edge.src, edge.dst, overlay_src)
-
-        else:
-
-            # TODO: use a dtype to take an int, float, etc
-
-            if type is float:
-                val = float(val)
-            elif type is int:
-                val = int(val)
-
-            try:
-                overlay_dst.edge(edge).set(dst_attr, val)
-            except AttributeError:
-                # fail to debug - as attribute may not have been set
-                log.debug('Unable to set edge attribute on %s in %s',
-                          edge, overlay_dst)
-
-
-# TODO: make edges own module
 
 def wrap_edges(nm_graph, edges):
-    """ wraps edge ids into edge overlay
+    """ wraps edge ids into the edge overlay.
 
     >>> anm = autonetkit.topos.house()
     >>> g_phy = anm['phy']
@@ -288,7 +329,7 @@ def wrap_edges(nm_graph, edges):
 
 
 def wrap_nodes(nm_graph, nodes):
-    """ wraps node id into node overlay
+    """ Wraps node id into the node overlay.
 
     >>> anm = autonetkit.topos.house()
     >>> g_phy = anm['phy']
@@ -301,7 +342,7 @@ def wrap_nodes(nm_graph, nodes):
     [r1, r2, r3]
 
     This is generally used in internal functions.
-    An alternative method is:
+    An alternative method is:f
 
     >>> [g_phy.node(n) for n in nlist]
     [r1, r2, r3]
@@ -311,14 +352,26 @@ def wrap_nodes(nm_graph, nodes):
     return [NmNode(nm_graph._anm, nm_graph._overlay_id, node)
             for node in nodes]
 
+def in_edges(nm_graph, nodes=None): 
+    """
+    Returns incoming edges.
 
-def in_edges(nm_graph, nodes=None):
-
-    # TODO: make support multigraphs
-
-    graph = unwrap_graph(nm_graph)
-    edges = graph.in_edges(nodes)
-    return wrap_edges(nm_graph, edges)
+    >>> g = nx.MultiDiGraph()
+    >>> g.add_edges_from([(1,2),(3,4),(1,6)])
+    >>> g.out_edges(1) 
+    [(1, 2), (1, 6)]
+    >>> g.in_edges(1)
+    []
+    >>> g.in_edges(4)
+    [(3, 4)]
+    """
+ 
+    # TODO: make support multigraphs 
+ 
+    graph = unwrap_graph(nm_graph) 
+    edges = graph.in_edges(nodes) 
+    return wrap_edges(nm_graph, edges) 
+ 
 
 
 def split(nm_graph, edges, retain=None, id_prepend=''):
@@ -418,8 +471,7 @@ def split(nm_graph, edges, retain=None, id_prepend=''):
 
 
 def explode_nodes(nm_graph, nodes, retain=None):
-    """Explodes all nodes in nodes
-    TODO: explain better
+    """Explodes all nodes in nodes.
     TODO: Add support for digraph - check if nm_graph.is_directed()
 
     >>> anm = autonetkit.topos.mixed()
@@ -518,11 +570,25 @@ def explode_nodes(nm_graph, nodes, retain=None):
 
 
 def label(nm_graph, nodes):
+    """
+    Returns the label for each node in list format after looking up for each node.
+
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> r1 = g_phy.node("r1")
+    >>> r2 = g_phy.node("r2")
+    >>> r5 = g_phy.node("r5")
+    >>> label(g_phy, [r1, r2, r5])
+    ['r1', 'r2', 'r5']
+    """
     return list(nm_graph._anm.node_label(node) for node in nodes)
 
 
 def connected_subgraphs(nm_graph, nodes = None):
     """
+    Returns the connected subgraphs in list. If edges are removed from connected graph,
+    subgraph would output subgraphs with reflected changes.
 
     >>> anm = autonetkit.topos.house()
     >>> g_phy = anm['phy']
@@ -560,7 +626,20 @@ def connected_subgraphs(nm_graph, nodes = None):
 
 
 def aggregate_nodes(nm_graph, nodes, retain=None):
-    """Combines connected into a single node"""
+    """Used to aggregate nodes in the nm_graph. Returns values with
+    total amount of edges that are added.
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> rlist = ['r4', 'r2']
+    >>> aggregate_nodes(g_phy, rlist)
+    [(r2, r5)]
+    >>> alist = ['r1', 'r2', 'r3', 'r4']
+    >>> aggregate_nodes(g_phy, alist)
+    [(r3, r5)]
+
+    """
+
     if retain is None:
         retain = []
 
@@ -627,7 +706,16 @@ def aggregate_nodes(nm_graph, nodes, retain=None):
 
 
 def most_frequent(iterable):
-    """returns most frequent item in iterable"""
+    """Returns most frequent item in iterable. If value error occurs,
+    it will return that it's unable to calculate most frequent value.
+    >>> rlist= ['r1', 'r2', 'r3', 'r1']
+    >>> most_frequent(rlist)
+    'r1'
+    >>> rlist= ['r1', 'r2', 'r3', 'r1', 'r3', 'r3']
+    >>> most_frequent(rlist)
+    'r3'
+
+    """
 
 # from http://stackoverflow.com/q/1518522
 
@@ -642,8 +730,15 @@ def most_frequent(iterable):
 
 def neigh_most_frequent(nm_graph, node, attribute,
                         attribute_graph=None, allow_none=False):
-    """Used to explicitly force most frequent -
-    useful if integers such as ASN which would otherwise return mean"""
+    """Used to explicitly force most frequent values of attribute in sorted format. 
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> neigh_most_frequent(g_phy, "r2", "asn")
+    1
+    >>> neigh_most_frequent(g_phy, "r5", "asn")
+    1
+    """
 
     # TODO: rename to median?
 
@@ -667,6 +762,13 @@ def neigh_average(nm_graph, node, attribute, attribute_graph=None):
     attribute_graph is the graph to read the attribute from
     if property is numeric, then return mean
     else return most frequently occuring value
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> neigh_average(g_phy, "r5", "asn")
+    1.5
+    >>> neigh_average(g_phy, "r3", "asn")
+    1.3333333333333333
     """
 
     graph = unwrap_graph(nm_graph)
@@ -678,8 +780,6 @@ def neigh_average(nm_graph, node, attribute, attribute_graph=None):
     values = [attribute_graph.node[n].get(attribute) for n in
               graph.neighbors(node)]
 
-# TODO: use neigh_attr
-
     try:
         values = [float(val) for val in values]
         return sum(values) / len(values)
@@ -688,12 +788,14 @@ def neigh_average(nm_graph, node, attribute, attribute_graph=None):
 
 
 def neigh_attr(nm_graph, node, attribute, attribute_graph=None):
-    """TODO:
-    tidy up parameters to take attribute_graph first, and
-    then evaluate if attribute_graph set, if not then use attribute_graph
-    as attribute
-    explain how nm_graph and attribute_graph work, eg for G_ip and
-    G_phy
+    """
+    For each node in valid nodes, return neighbor attribute 
+    from neighbors in specified nm_graph. attribute_graph is the graph to read the attribute from.
+
+    # >>> anm = autonetkit.topos.house()
+    # >>> g_phy = anm['phy']
+    # >>> neigh_attr(g_phy, "r2", "asn")
+   
     """
 
     graph = unwrap_graph(nm_graph)
@@ -712,22 +814,45 @@ def neigh_attr(nm_graph, node, attribute, attribute_graph=None):
 
 
 def neigh_equal(nm_graph, node, attribute, attribute_graph=None):
-    """Boolean, True if neighbors in nm_graph
-    all have same attribute in attribute_graph"""
+    """Boolean, returns True if neighbors in nm_graph
+    all have same attribute in attribute_graph. If not, returns False.
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> neigh_equal(g_phy, "r2", "asn")
+    False
+    >>> neigh_equal(g_phy, "r1", "asn")
+    True
+    """
 
     neigh_attrs = neigh_attr(nm_graph, node, attribute, attribute_graph)
     return len(set(neigh_attrs)) == 1
 
 
 def unique_attr(nm_graph, attribute):
+    """
+    Returns a set which contains unique attribute in nm_graph. Goes
+    through the nodes, and searches for the attribute that has been set.
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> unique_attr(g_phy, "asn")
+    set([1, 2])
+
+    """
     graph = unwrap_graph(nm_graph)
     return set(graph.node[node].get(attribute) for node in graph)
 
 
 def groupby(attribute, nodes):
     """Takes a group of nodes and returns a generator of (attribute, nodes)
-     for each attribute value A simple wrapped around itertools.groupby
-     that creates a lambda for the attribute
+     for each attribute value. A simple wrapped around itertools.groupby
+     that creates a lambda for the attribute.
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> g_phy.groupby("asn")
+    {1: [r1, r2, r3], 2: [r4, r5]}
     """
 
     keyfunc = lambda x: x.get(attribute)
@@ -736,6 +861,18 @@ def groupby(attribute, nodes):
 
 def shortest_path(nm_graph, src, dst):
 
+    """
+    Returns the shortest path from the source to the destination.
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> shortest_path(g_phy,'r1','r2')
+    [r1, r2]
+    >>> shortest_path(g_phy,'r1','r4')
+    [r1, r2, r4]
+    >>> shortest_path(g_phy,'r1','r5')
+    [r1, r3, r5]
+    """
     # TODO: move to utils
 # TODO: use networkx boundary nodes directly: does the same thing
 
@@ -751,7 +888,15 @@ def shortest_path(nm_graph, src, dst):
 
 def boundary_nodes(nm_graph, nodes):
     """ returns nodes at boundary of G based on
-    edge_boundary from networkx """
+    edge_boundary from networkx.
+
+    >>> anm = autonetkit.topos.house()
+    >>> g_phy = anm['phy']
+    >>> rlist = ["r4", "r2"]
+    >>> boundary_nodes(g_phy, rlist)
+    [r4, r2, r2]
+
+    """
 
     # TODO: move to utils
 # TODO: use networkx boundary nodes directly: does the same thing
