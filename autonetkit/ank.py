@@ -365,9 +365,7 @@ def in_edges(nm_graph, nodes=None):
     >>> g.in_edges(4)
     [(3, 4)]
     """
- 
-    # TODO: make support multigraphs 
- 
+  
     graph = unwrap_graph(nm_graph) 
     edges = graph.in_edges(nodes) 
     return wrap_edges(nm_graph, edges) 
