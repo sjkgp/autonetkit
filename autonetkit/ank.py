@@ -192,7 +192,6 @@ def copy_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
 def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
                        nbunch=None, type=None, default=None):
 
-    #TODO: check if copies to loopbacks as well
     """
     Copies interger attributes from the source to destination. 
     Supported types are float and int.
