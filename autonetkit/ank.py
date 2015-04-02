@@ -354,7 +354,7 @@ def wrap_nodes(nm_graph, nodes):
 
 def in_edges(nm_graph, nodes=None): 
     """
-    Returns incoming edges.
+    Returns incoming edges NetworkModel edge objects.
 
     >>> g = nx.MultiDiGraph()
     >>> g.add_edges_from([(1,2),(3,4),(1,6)])
