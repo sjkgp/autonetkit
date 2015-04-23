@@ -30,7 +30,9 @@ class DmEdge(object):
 
     @property
     def raw_interfaces(self):
-        """Direct access to the interfaces dictionary, used by ANK modules"""
+        """Direct access to the interfaces dictionary, used by ANK modules
+        >>> nidb.node("r1").raw_interfaces
+        {0: {'category': 'loopback', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to sw1'}, 2: {'category': 'physical', 'description': 'r1 to r2'}, 3: {'category': 'physical', 'description': 'r1 to r3'}}"""
         return self._ports
 
     @raw_interfaces.setter
@@ -38,19 +40,27 @@ class DmEdge(object):
         self._ports = value
 
     def is_multigraph(self):
+        """Return graph that is multigraph
+
+        >>> nidb.is_multigraph()
+        True
+        """
         return self._graph.is_multigraph()
 
     @property
     def src(self):
+        """Source node of an edge"""
         return DmNode(self.nidb, self.src_id)
 
     @property
     def src_int(self):
+        """Interface bound to source node of an edge"""
         src_int_id = self._ports[self.src_id]
         return DmInterface(self.nidb, self.src_id, src_int_id)
 
     @property
     def dst_int(self):
+        """Interface bound to destination node of an edge"""
         dst_int_id = self._ports[self.dst_id]
         return DmInterface(self.nidb, self.dst_id, dst_int_id)
 
@@ -94,6 +104,11 @@ class DmEdge(object):
     # Internal properties
     def __nonzero__(self):
         """Allows for checking if edge exists
+
+        >>> anm = autonetkit.topos.house()
+        >>> e1 = anm['phy'].edge("r1", "r2")
+        >>> bool(e1)
+        True
         """
         if self.is_multigraph():
             return self._graph.has_edge(self.src_id, self.dst_id,
@@ -103,6 +118,7 @@ class DmEdge(object):
 
     @property
     def dst(self):
+        """Destination node of an edge"""
         return DmNode(self.nidb, self.dst_id)
 
     def dump(self):

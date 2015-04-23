@@ -13,11 +13,10 @@ def test():
 
     g_in = anm.add_overlay("input")
     nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
+    input_edges = [("r1", "r2"), ("r2", "r4"), ("r3", "r4"), ("r3", "r5"), ("r1", "r3")]
     g_in.add_nodes_from(nodes)
     
-    g_in.update(device_type = "router", asn=1)
-    g_in.update("r3", asn = 2)
-    g_in.update("r2", device_type = "switch")
+
 
     positions = {'r3': (107, 250), 'r5': (380, 290), 'r1': (22, 50), 'r2': (377, 9), 'r4': (571, 229)}
     for node in g_in:
@@ -26,8 +25,12 @@ def test():
         eth0 = node.add_interface("eth0")
         eth0.speed = 100
 
-    input_edges = [("r1", "r2"), ("r2", "r4"), ("r3", "r4"), ("r3", "r5"), ("r1", "r3")]
     input_interface_edges = [(g_in.node(src).interface(1), g_in.node(dst).interface(1)) for src, dst in input_edges]
+
+    
+    g_in.update(device_type = "router", asn=1)
+    g_in.update("r3", asn = 2)
+    g_in.update("r2", device_type = "switch")
     g_in.add_edges_from(input_interface_edges)
 
 
