@@ -1,5 +1,6 @@
 import logging
 
+import autonetkit
 import autonetkit.log as log
 from autonetkit.log import CustomAdapter
 from autonetkit.anm.ank_element import AnkElement
@@ -28,7 +29,15 @@ class NmPort(AnkElement):
         return (self.interface_id, self.node_id)
 
     def __hash__(self):
-        """"""
+        """Return hash of a key
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth0.__hash__()
+        2346446788448031185
+        """
 
         return hash(self.__key())
 
@@ -40,17 +49,43 @@ class NmPort(AnkElement):
 
 
     def __repr__(self):
+        """
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth0.__repr__()
+        'eth0.r1'
+        """
         description = self.id or self.description
         return '%s.%s' % (description, self.node)
 
     def __eq__(self, other):
+        """Comparison method
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)        
+        >>> eth0.__eq__(eth0)
+        True
+
+        """
         return self.__key() == other.__key()
 
     def __nonzero__(self):
 
         # TODO: work out why description and category being set/copied to each
         # overlay
-
+        """Check to see if interface is nonzero, over than 0.
+        
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1) 
+        >>> eth0.__nonzero__()
+        True
+        """
         try:
             interface = self._interface
         except KeyError:
@@ -59,6 +94,16 @@ class NmPort(AnkElement):
         return len(interface) > 0  # if interface data set
 
     def __lt__(self, other):
+        """Comparison method
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1) 
+        >>> eth0.__lt__(eth0)
+        False
+
+        """
 
         # TODO: check how is comparing the node
 
@@ -69,6 +114,13 @@ class NmPort(AnkElement):
     @property
     def id(self):
         """Returns  id of node, falls-through to phy if not set on this overlay
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1) 
+        >>> eth0.id
+        'eth0'
 
         """
         #TODO: make generic function for fall-through properties stored on the anm
@@ -96,7 +148,16 @@ class NmPort(AnkElement):
     @property
     def is_bound(self):
         # TODO: make this a function
-        """Returns if this interface is bound to an edge on this layer"""
+        """Returns if this interface is bound to an edge on this layer
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth0.is_bound
+        True
+
+        """
 
         return len(self.edges()) > 0
 
@@ -111,13 +172,31 @@ class NmPort(AnkElement):
 
     @property
     def _node(self):
-        """Return graph data the node belongs to"""
+        """Return graph data the node belongs to
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth0._node
+        {'_ports': {0: {'category': 'physical', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to r2', 'id': 'eth0'}, 2: {'category': 'physical', 'description': 'r1 to r3', 'id': 'eth1'}}, 'label': 'r1', 'device_type': 'router', 'y': 400, 'x': 350, 'asn': 1}
+
+        # """
 
         return self._graph.node[self.node_id]
 
     @property
     def _interface(self):
-        """Return data dict for the interface"""
+        """Return data dict for the interface
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> loopback0 = test_node.interface(0)
+        >>> eth0 = test_node.interface(1)
+        >>> eth0._interface
+        {'category': 'physical', 'description': 'r1 to r2', 'id': 'eth0'}
+        """
         try:
             return self.node.raw_interfaces[self.interface_id]
         except KeyError:
@@ -135,6 +214,19 @@ class NmPort(AnkElement):
 
     @property
     def phy(self):
+        """
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth1 = test_node.interface(2)
+        >>> eth0.phy
+        eth0.r1
+        >>> eth1.phy
+        eth1.r1
+
+        """
         if self.overlay_id == 'phy':
             return self
         return NmPort(self.anm, 'phy', self.node_id, self.interface_id)
@@ -160,19 +252,54 @@ class NmPort(AnkElement):
 
     @property
     def is_loopback(self):
-        """"""
+        """
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth0.is_loopback
+        False
+        >>> loopback0 = test_node.interface(0)
+        >>> loopback0.is_loopback
+        True
+
+        """
 
         return self.category == 'loopback' or self.phy.category == 'loopback'
 
     @property
     def is_physical(self):
-        """"""
+        """ Check if interface is physical
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth1 = test_node.interface(2)
+        >>> loopback0 = test_node.interface(0)
+        >>> eth0.is_physical
+        True
+        >>> eth1.is_physical
+        True
+        >>> loopback0.is_physical
+        False
+
+        """
+
 
         return self.category == 'physical' or self.phy.category == 'physical'
 
     @property
     def description(self):
-        """"""
+        """Returns description of interface
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth0.description
+        'r1 to r2'
+        """
 
         return_val = None
         try:
@@ -188,11 +315,36 @@ class NmPort(AnkElement):
 
     @property
     def is_loopback_zero(self):
+        """ Returns true if it is loopback zero
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> loopback0 = test_node.interface(0)
+        >>> eth0.is_loopback_zero
+        False
+        >>> loopback0.is_loopback_zero
+        True
+
+        """
         return self.interface_id == 0 and self.is_loopback
 
     @property
     def category(self):
-        """"""
+        """Returns category of specified interface
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> loopback0 = test_node.interface(0)
+        >>> eth0.category
+        'physical'
+        >>> loopback0.category
+        'loopback'
+
+        """
 
 # TODO: make 0 correctly access interface 0 -> copying problem
 # TODO: this needs a bugfix rather than the below hard-coded workaround
@@ -214,12 +366,37 @@ class NmPort(AnkElement):
 
     @property
     def node(self):
-        """Returns parent node of this interface"""
+        """Returns parent node of this interface
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth1 = test_node.interface(2)
+        >>> loopback0 = test_node.interface(0)
+        >>> eth0.node
+        r1
+        >>> eth1.node
+        r1
+        >>> loopback0.node
+        r1
+
+        """
 
         from autonetkit.anm.node import NmNode
         return NmNode(self.anm, self.overlay_id, self.node_id)
 
     def dump(self):
+        """Returns string of items 
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> loopback0 = test_node.interface(0)
+        >>> eth0 = test_node.interface(1)
+        >>> eth0.dump()
+        "[('category', 'physical'), ('description', 'r1 to r2'), ('id', 'eth0')]"
+        """ 
         return str(self._interface.items())
 
     def __getattr__(self, key):
@@ -254,8 +431,16 @@ class NmPort(AnkElement):
 
     def edges(self):
         """Returns all edges from node that have this interface ID
-        This is the convention for binding an edge to an interface"""
+        This is the convention for binding an edge to an interface
 
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> loopback0 = test_node.interface(0)
+        >>> eth0 = test_node.interface(1)
+        >>> eth0.edges()
+        [(r1, r2)]
+        """
         # edges have _interfaces stored as a dict of {node_id: interface_id, }
 
         valid_edges = [e for e in self.node.edges() if self.node_id
@@ -266,6 +451,18 @@ class NmPort(AnkElement):
     def neighbors(self):
         """Returns interfaces on nodes that are linked to this interface
         Can get nodes using [i.node for i in interface.neighbors()]
+        
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth1 = test_node.interface(2)
+        >>> eth0.neighbors()
+        [eth0.r2]
+        >>> eth1.neighbors()
+        [eth0.r3]
+
+
         """
 
         edges = self.edges()
