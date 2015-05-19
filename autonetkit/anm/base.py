@@ -66,6 +66,21 @@ class OverlayBase(AnkElement):
         """
         return self._graph.is_multigraph()
 
+
+    def is_directed(self):
+        """
+        Example:
+
+        >>> anm = autonetkit.topos.house()
+        >>> anm['phy'].is_directed()
+        False
+        >>> anm = autonetkit.topos.multi_edge()
+        >>> anm['phy'].is_directed()
+        False
+
+        """
+        return self._graph.is_directed()
+
     @property
     def data(self):
         """Returns data stored on this overlay graph"""
