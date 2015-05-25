@@ -5,6 +5,16 @@ hostname ${node}
 boot-start-marker
 boot-end-marker
 !
+vrf definition Mgmt-intf
+!
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+!
+!
 % if node.include_csr:
 license accept end user agreement
 license boot level premium
@@ -109,6 +119,9 @@ pseudowire-class ${pwc.name}
 % for interface in node.interfaces:
 interface ${interface.id}
   description ${interface.description}
+  % if interface.mgmt:
+  vrf definition Mgmt-intf
+  % endif
   % if interface.comment:
   ! ${interface.comment}
   %endif
