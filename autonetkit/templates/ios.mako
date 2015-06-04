@@ -120,7 +120,7 @@ pseudowire-class ${pwc.name}
 interface ${interface.id}
   description ${interface.description}
   % if interface.mgmt:
-  vrf definition Mgmt-intf
+  vrf forwarding Mgmt-intf
   % endif
   % if interface.comment:
   ! ${interface.comment}
