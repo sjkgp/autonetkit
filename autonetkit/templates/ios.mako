@@ -194,7 +194,6 @@ interface ${interface.id}
   % if not node.exclude_phy_int_auto_speed_duplex:
   ## don't include auto duplex and speed on platforms eg CSR1000v
   ## include by default
-  duplex auto
   duplex full
   speed auto
   % endif
