@@ -129,6 +129,9 @@ def manual_ipv6_infrastructure_allocation(anm):
                 continue  # unbound interface
             if not interface['ipv6'].is_bound:
                 continue
+            if interface['ip'].allocate is False:
+                # TODO: copy interface allocate attribute across
+                continue
             ip_address = netaddr.IPAddress(interface['input'
                                                      ].ipv6_address)
             prefixlen = interface['input'].ipv6_prefixlen
@@ -155,6 +158,8 @@ def manual_ipv6_infrastructure_allocation(anm):
     mismatched_interfaces = []
 
     for coll_dom in broadcast_domains:
+        if coll_dom.allocate is False:
+            continue
         connected_interfaces = [edge.dst_int for edge in
                                 coll_dom.edges()]
         cd_subnets = [IPNetwork('%s/%s' % (i.subnet.network,
