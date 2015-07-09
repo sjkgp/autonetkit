@@ -159,7 +159,7 @@ class Runner(object):
                           'information may be available in the debug log.' % err)
             log.debug('Error generating network configurations', exc_info=True)
             if self.settings['General']['stack_trace']:
-                print traceback.print_exc()
+                traceback.print_exc()
                 pass
             sys.exit('Unable to build configurations.')
 
