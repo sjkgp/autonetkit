@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import time
 
+import autonetkit # used in doctests
 import autonetkit.log as log
 import networkx as nx
 from autonetkit.anm.graph import NmGraph
@@ -32,11 +33,17 @@ class NetworkModel(AnkElement):
         self.init_logging("ANM")
 
     def __repr__(self):
-        """"""
+        """
+        """
 
         return 'ANM %s' % self.timestamp
 
     def __len__(self):
+        """Returns length of overlays
+        >>> anm = autonetkit.NetworkModel()
+        >>> len(anm)
+        4
+        """
         return len(self._overlays)
 
     @property
@@ -46,11 +53,21 @@ class NetworkModel(AnkElement):
         return self._overlays
 
     def has_overlay(self, overlay_id):
-        """"""
+        """
+        >>> anm = autonetkit.NetworkModel()
+        >>> anm.has_overlay('non_existent')
+        False
+        >>> anm.has_overlay('phy')
+        True
+        """
 
         return overlay_id in self._overlays
 
     def dump(self):
+
+        """
+        """
+
         import autonetkit.ank_json as ank_json
         data = ank_json.jsonify_anm(self)
 
@@ -128,7 +145,12 @@ class NetworkModel(AnkElement):
 
     @property
     def _phy(self):
-        """"""
+        """Returns phy
+
+        >>> anm = autonetkit.NetworkModel()
+        >>> anm._phy
+        phy
+        """
 
         return NmGraph(self, 'phy')
 
@@ -157,7 +179,11 @@ class NetworkModel(AnkElement):
 
     def add_overlay(self, name, nodes=None, graph=None,
                     directed=False, multi_edge=False, retain=None):
-        """Adds overlay graph of name name"""
+        """Adds overlay graph of name name
+
+        anm = autonetkit.NetworkModel()
+        g_in = anm.add_overlay("input")
+        """
         # TODO: refactor this logic
         log.debug("Adding overlay %s" % name)
 
@@ -198,11 +224,22 @@ class NetworkModel(AnkElement):
         return overlay
 
     def __iter__(self):
+        """Shortcut to iterate over the network model data
+
+        >>> anm = autonetkit.NetworkModel()
+        >>> list(anm)
+        [input, phy, _dependencies, graphics]
+        """
         return iter(NmGraph(self, name) for name in self.overlays())
 
     def overlays(self):
         # TODO: rename to overlay ids
-        """"""
+        """Returns overlay keys
+
+        >>> anm = autonetkit.NetworkModel()
+        >>> anm.overlays()
+        ['input', 'phy', '_dependencies', 'graphics']
+        """
 
         return self._overlays.keys()
 
@@ -217,18 +254,33 @@ class NetworkModel(AnkElement):
         return NmGraph(self, key)
 
     def overlay(self, key):
-        """"""
+        """
+        >>> anm = autonetkit.NetworkModel()
+        >>> anm.overlay('input')
+        input
+        >>> anm.overlay('phy')
+        phy
+        >>> anm.overlay('_dependencies')
+        _dependencies
+        """
 
         return NmGraph(self, key)
 
     def node_label(self, node):
-        """Returns node label from physical graph"""
+        """Returns node label from physical graph
 
+        >>> anm = autonetkit.NetworkModel()
+        >>> g_phy = anm['phy']
+        >>> r1 = g_phy.add_node('r1')
+        >>> anm.node_label(r1)
+        'r1'
+
+        """
         # TODO: refactor out node label
         return self.default_node_label(node)
 
     def _build_node_label(self):
-        """"""
+        """build node label"""
 
         def custom_label(node):
             """
@@ -253,7 +305,7 @@ class NetworkModel(AnkElement):
         self.node_label = custom_label
 
     def set_node_label(self, seperator, label_attrs):
-        """"""
+        """set node label"""
 
         try:
             label_attrs.lower()

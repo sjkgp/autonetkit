@@ -30,8 +30,13 @@ class NmNode(AnkElement):
         self.init_logging("node")
 
     def __hash__(self):
-        """"""
+        """Returns hashed value of node id
 
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> hash(r1)
+        14592087666131685
+        """
         return hash(self.node_id)
 
     def __nonzero__(self):
@@ -78,7 +83,7 @@ class NmNode(AnkElement):
         return len(list(self.__iter__()))
 
     def __eq__(self, other):
-        """
+        """Comparison method to check equality
 
         >>> anm = autonetkit.topos.house()
         >>> r1 = anm['phy'].node("r1")
@@ -104,7 +109,7 @@ class NmNode(AnkElement):
             return self.node_id == other  # eg compare Node to label
 
     def __ne__(self, other):
-        """
+        """Comparison method to check the values are not equal
 
         >>> anm = autonetkit.topos.house()
         >>> r1 = anm['phy'].node("r1")
@@ -132,17 +137,45 @@ class NmNode(AnkElement):
         return (i for i in self.interfaces('is_loopback_zero')).next()
 
     def physical_interfaces(self, *args, **kwargs):
-        """"""
+        """Returns physical interfaces
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.physical_interfaces()
+        [eth0.r1, eth1.r1, eth2.r1]
+
+        #TODO: add test with args and kwargs too
+
+        """
         kwargs['category'] = "physical"
         return self.interfaces(*args, **kwargs)
 
     def loopback_interfaces(self, *args, **kwargs):
-        # TODO: allow abiility to skip loopback zero
-        """"""
+        """
+        # TODO: allow ability to skip loopback zero
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.loopback_interfaces()
+        [None.r1]
+        """
+
         kwargs['category'] = "loopback"
         return self.interfaces(*args, **kwargs)
 
     def is_multigraph(self):
+        """Checks if node is multigraph
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.is_multigraph()
+        False
+        >>> anm = autonetkit.topos.multi_edge()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.is_multigraph()
+        True
+
+        """
         return self._graph.is_multigraph()
 
     def __lt__(self, other):
@@ -153,11 +186,14 @@ class NmNode(AnkElement):
         >>> r2 = anm['phy'].node("r2")
         >>> r1 < r2
         True
+        >>> r2 < r1
+        False
+
 
         """
 
-# want [r1, r2, ..., r11, r12, ..., r21, r22] not [r1, r11, r12, r2, r21, r22]
-# so need to look at numeric part
+        # want [r1, r2, ..., r11, r12, ..., r21, r22] not [r1, r11, r12, r2, r21, r22]
+        # so need to look at numeric part
         import string
         # TODO: use human sort from StackOverflow
 
@@ -200,7 +236,12 @@ class NmNode(AnkElement):
         return (self.asn, self_node_id) < (other.asn, other_node_id)
 
     def _next_int_id(self):
-        """"""
+        """
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1._next_int_id()
+        3
+        """
 
 # returns next free interface I
 
@@ -212,7 +253,12 @@ class NmNode(AnkElement):
 
     def _add_interface(self, description=None, category='physical',
                        **kwargs):
-        """"""
+        """
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1._add_interface()
+        3
+        """
 
         data = dict(kwargs)
 
@@ -303,7 +349,12 @@ class NmNode(AnkElement):
         return retval
 
     def interface(self, key):
-        """Returns interface based on interface id"""
+        """Returns interface based on interface id
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.interface("eth0")
+        eth0.r1
+        """
 
         try:
             if key.interface_id in self._interface_ids():
@@ -338,7 +389,12 @@ class NmNode(AnkElement):
             return search[0]  # first result
 
     def _interface_ids(self):
-        """Returns interface ids for this node"""
+        """Returns interface ids for this node
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1._interface_ids()
+        [0, 1, 2, 3]
+        """
         # TODO: use from this layer, otherwise can get errors iterating when eg
         # vrfs
         return self._ports.keys()
@@ -359,7 +415,12 @@ class NmNode(AnkElement):
 
     @property
     def _ports(self):
-        """Returns underlying interface dict"""
+        """Returns underlying interface dict
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1._ports
+        {0: {'category': 'physical', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to sw1', 'id': 'eth0'}, 2: {'category': 'physical', 'description': 'r1 to r2', 'id': 'eth1'}, 3: {'category': 'physical', 'description': 'r1 to r3', 'id': 'eth2'}}
+        """
 
         try:
             return self._graph.node[self.node_id]['_ports']
@@ -379,7 +440,8 @@ class NmNode(AnkElement):
 
     @property
     def _nx_node_data(self):
-        """Return NetworkX node data for the node"""
+        """Return NetworkX node data for the node
+        """
         try:
             return self._graph.node[self.node_id]
         except Exception, e:
@@ -387,7 +449,7 @@ class NmNode(AnkElement):
                         (self.overlay_id, self.node_id, e))
 
     def is_router(self):
-        """Either from this graph or the physical graph
+        """Returns if device is a router. Either from this graph or the physical graph
 
         >>> anm = autonetkit.topos.mixed()
         >>> r1 = anm['phy'].node("r1")
@@ -407,7 +469,7 @@ class NmNode(AnkElement):
             == 'router'
 
     def is_firewall(self):
-        """Either from this graph or the physical graph
+        """Returns if device is a firewall. Either from this graph or the physical graph
 
         >>> anm = autonetkit.topos.mixed()
         >>> r1 = anm['phy'].node("r1")
@@ -428,7 +490,7 @@ class NmNode(AnkElement):
             == 'firewall'
 
     def is_hub(self):
-        """Either from this graph or the physical graph
+        """Returns if device is a hub. Either from this graph or the physical graph
 
         """
         #self.log_info("add int")
@@ -506,11 +568,19 @@ class NmNode(AnkElement):
 
     @property
     def raw_interfaces(self):
-        """Direct access to the interfaces dictionary, used by ANK modules"""
+        """Direct access to the interfaces dictionary, used by ANK modules
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.raw_interfaces
+        {0: {'category': 'physical', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to r2', 'id': 'eth0'}, 2: {'category': 'physical', 'description': 'r1 to r3', 'id': 'eth1'}}
+        """
+
         return self._ports
 
     @raw_interfaces.setter
     def raw_interfaces(self, value):
+        """
+        """
         self._ports = value
 
     @property
@@ -555,6 +625,13 @@ class NmNode(AnkElement):
 
     @asn.setter
     def asn(self, value):
+        """Returns ASN Value
+
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.asn
+        1
+        """
         # TODO: make a function (not property)
 
         # TODO: double check this logic
@@ -570,7 +647,13 @@ class NmNode(AnkElement):
 
     @property
     def id(self):
-        """Returns node id"""
+        """Returns node id
+
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.id
+        'r1'
+        """
 
         return self.node_id
 
@@ -625,7 +708,8 @@ class NmNode(AnkElement):
         return self._overlay.filter(neighs, *args, **kwargs)
 
     def neighbor_interfaces(self, *args, **kwargs):
-        """
+        """Returns neighbor interfaces
+
 
         >>> anm = autonetkit.topos.house()
         >>> r1 = anm['phy'].node("r1")
@@ -649,12 +733,24 @@ class NmNode(AnkElement):
     # TODO: make a function to reflect dynamic nature: constructed from other
     # attributes
     def label(self):
-        """Returns node label (mapped from ANM)"""
+        """Returns node label (mapped from ANM)
+
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.label
+        'r1'
+        """
 
         return self.__repr__()
 
     def dump(self):
-        """Dump attributes of this node"""
+        """Dump attributes of this node
+
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.dump()
+        "{'device_type': 'router', 'y': 400, 'x': 350, 'asn': 1, 'label': 'r1'}"
+        """
 
         data = dict(self._nx_node_data)
         try:
@@ -683,7 +779,13 @@ class NmNode(AnkElement):
 
     def __repr__(self):
         """Try label if set in overlay, otherwise from physical,
-        otherwise node id"""
+        otherwise node id
+
+        >>> anm = autonetkit.topos.house()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.__repr__()
+        'r1'
+        """
 
         try:
             return self.anm.node_label(self)

@@ -1,4 +1,5 @@
 import autonetkit.log as log
+import autonetkit
 
 from autonetkit.nidb.interface import DmInterface
 from autonetkit.nidb.edge import DmEdge
@@ -23,14 +24,36 @@ class DmBase(object):
         self._graph = state
 
     def __repr__(self):
+        """Return nidb
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb
+        nidb
+        """
         return "nidb"
 
     def is_multigraph(self):
+        """Returns graph that is multigraph
+
+        >>> anm = autonetkit.topos.house()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.is_multigraph()
+        True
+        >>> anm = autonetkit.topos.multi_edge()
+        >>> nidb.is_multigraph()
+        True
+        """
         return self._graph.is_multigraph()
 
     # Model-level functions
 
     def save(self, timestamp=True, use_gzip=True):
+        """ Used to save
+
+        >>> anm = autonetkit.topos.house()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.save()
+        """
         import os
         import gzip
         archive_dir = os.path.join("versions", "nidb")
@@ -52,10 +75,25 @@ class DmBase(object):
                 json_fh.write(data)
 
     def interface(self, interface):
+        """
+        >>> anm = autonetkit.topos.house()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> test_node = nidb.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> nidb.interface(eth0)
+        r1.r1 to r2
+        """
         return DmInterface(self,
                            interface.node_id, interface.interface_id)
 
     def restore_latest(self, directory=None):
+        """Restore latest saved DeviceModel
+
+        # >>> anm = autonetkit.topos.mixed()
+        # >>> nidb = autonetkit.DeviceModel(anm)
+        # >>> nidb.restore_latest()
+        # WARNING No previous DeviceModel saved. Please compile new DeviceModel
+        """
         import os
         import glob
         if not directory:
@@ -76,6 +114,7 @@ class DmBase(object):
         ank_json.rebind_nidb_interfaces(self)
 
     def restore(self, pickle_file):
+        """Used to restore specific file by setting the file"""
         import gzip
         log.debug("Restoring %s" % pickle_file)
         with gzip.open(pickle_file, "r") as fh:
@@ -87,10 +126,24 @@ class DmBase(object):
 
     @property
     def name(self):
+        """ Return name
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.name
+        'nidb'
+        """
         return self.__repr__()
 
     def raw_graph(self):
-        """Returns the underlying NetworkX graph"""
+        """Returns the underlying NetworkX graph
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.__setstate__('r1')
+        >>> nidb.raw_graph()
+        'r1'
+        """
         return self._graph
 
     def copy_graphics(self, network_model):
@@ -111,10 +164,24 @@ class DmBase(object):
             node.device_subtype = source_node.device_subtype
 
     def __len__(self):
+        """Returns length of the graph
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.__len__()
+        5
+        """
         return len(self._graph)
 
     @property
     def data(self):
+        """Returns data stored on the graph
+
+        # >>> anm = autonetkit.topos.mixed()
+        # >>> nidb = autonetkit.DeviceModel(anm)
+        # >>> nidb.data
+        # DeviceModel data: {'topologies': defaultdict(<type 'dict'>, {}), 'timestamp': '20150421_143139'}
+        """
         from autonetkit.nidb.device_model import DmGraphData
         return DmGraphData(self)
 
@@ -126,7 +193,15 @@ class DmBase(object):
 
     def node(self, key):
         """Returns node based on name
-        This is currently O(N). Could use a lookup table"""
+        This is currently O(N). Could use a lookup table
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> test_node = nidb.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> nidb.node(eth0)
+        r1
+        """
         try:
             if key.node_id in self._graph:
                 return DmNode(self, key.node_id)
@@ -136,8 +211,6 @@ class DmBase(object):
                 if str(node) == key:
                     return node
                 elif node.id == key:
-                    # label could be "a b" -> "a_b" (ie folder safe, etc)
-                    # TODO: need to fix this discrepancy
                     return node
             print "Unable to find node", key, "in", self
             return None
@@ -154,25 +227,50 @@ class DmBase(object):
         return result
 
     def routers(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be router"""
+        """Shortcut for nodes(), sets device_type to be router
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.routers()
+        [r1, r2, r3]
+
+
+        """
 
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_router()]
 
     def switches(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be switch"""
+        """Shortcut for nodes(), sets device_type to be switch
 
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.switches()
+        [sw1]
+        """
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_switch()]
 
     def servers(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be server"""
+        """Shortcut for nodes(), sets device_type to be server
 
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.servers()
+        [s1]
+        """
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_server()]
 
     def l3devices(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be server"""
+        """Shortcut for nodes(), sets device_type to be server
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> nidb.l3devices()
+        [s1, r1, r2, r3]
+        """
+
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_l3device()]
 
@@ -192,6 +290,7 @@ class DmBase(object):
         return (n for n in nbunch if filter_func(n))
 
     def add_nodes_from(self, nbunch, retain=None, **kwargs):
+        """Add nodes from by importing from different overlay"""
         if retain is None:
             retain = []
         try:
@@ -227,6 +326,28 @@ class DmBase(object):
     # Edges
 
     def edges(self, nbunch=None, *args, **kwargs):
+        """returns edges in the graph
+
+        >>> import autonetkit
+        >>> anm = autonetkit.NetworkModel()
+        >>> g_phy = anm['phy']
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> input_edges = [("r1", "r2"), ("r2", "r4"), ("r3", "r4"), ("r3", "r5"), ("r1", "r3")]
+        >>> nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
+        >>> g_in = anm.add_overlay("input")
+        >>> g_in.add_nodes_from(nodes)
+        >>> g_in.add_edges_from(input_edges)
+        [(r1, r2), (r2, r4), (r3, r4), (r3, r5), (r1, r3)]
+        >>> g_phy.add_nodes_from(g_in)
+        >>> g_phy.add_edges_from(g_in.edges())
+        [(r4, r2), (r4, r3), (r5, r3), (r1, r2), (r1, r3)]
+        >>> retain = ['label', 'host', 'platform', 'x', 'y', 'asn', 'device_type']
+        >>> nidb.add_nodes_from(g_phy, retain=retain)
+        >>> nidb.add_edges_from(g_phy.edges())
+        >>> list(nidb.edges())
+        [(r4, r2, 0), (r4, r3, 0), (r5, r3, 0), (r1, r2, 0), (r1, r3, 0)]
+
+        """
         # nbunch may be single node
         # TODO: Apply edge filters
         if nbunch:
@@ -237,6 +358,7 @@ class DmBase(object):
                 nbunch = (n.node_id for n in nbunch)
 
         def filter_func(edge):
+            """Filter based on args and kwargs"""
             return (
                 all(getattr(edge, key) for key in args) and
                 all(getattr(edge, key) == val for key, val in kwargs.items())
@@ -262,17 +384,19 @@ class DmBase(object):
         # but that's so rare (that's a design stage if anywhere)
         src_id = edge_to_find.src
         dst_id = edge_to_find.dst
+        search_key = key
 
         if self.is_multigraph():
             for (src, dst, rkey) in self._graph.edges(src_id, keys=True):
                 if dst == dst_id and rkey == search_key:
-                    return DmEdge(self._anm, src, dst, search_key)
+                    return DmEdge(self, src, dst, search_key)
 
         for (src, dst) in self._graph.edges(src_id):
             if dst == dst_id:
-                return DmEdge(self._anm, src, dst)
+                return DmEdge(self, src, dst)
 
     def add_edge(self, src, dst, retain=None, **kwargs):
+        """Add edge with the set source and the destination"""
         # TODO: support multigraph
         if retain is None:
             retain = []
@@ -285,8 +409,30 @@ class DmBase(object):
         (check for DmNode as well as NmNode)
 
         To keep congruency, only allow copying edges from ANM
-        can't add NIDB edges directly (node, node) oor (port, port)
+        can't add NIDB edges directly (node, node) or (port, port)
         workflow: if need this, create a new overlay and copy from there
+
+        >>> import autonetkit
+        >>> anm = autonetkit.NetworkModel()
+        >>> g_phy = anm['phy']
+        >>> nidb = autonetkit.DeviceModel(anm)
+        >>> input_edges = [("r1", "r2"), ("r2", "r4"), ("r3", "r4"), ("r3", "r5"), ("r1", "r3")]
+        >>> nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
+        >>> g_in = anm.add_overlay("input")
+        >>> g_in.add_nodes_from(nodes)
+        >>> g_in.add_edges_from(input_edges)
+        [(r1, r2), (r2, r4), (r3, r4), (r3, r5), (r1, r3)]
+        >>> g_phy.add_nodes_from(g_in)
+        >>> g_phy.add_edges_from(g_in.edges())
+        [(r4, r2), (r4, r3), (r5, r3), (r1, r2), (r1, r3)]
+        >>> retain = ['label', 'host', 'platform', 'x', 'y', 'asn', 'device_type']
+        >>> nidb.add_nodes_from(g_phy, retain=retain)
+        >>> nidb.add_edges_from(g_phy.edges())
+        >>> list(nidb.edges())
+        [(r4, r2, 0), (r4, r3, 0), (r5, r3, 0), (r1, r2, 0), (r1, r3, 0)]
+
+        >>> list(nidb.edges())
+        [(r4, r2, 0), (r4, r3, 0), (r5, r3, 0), (r1, r2, 0), (r1, r3, 0)]
         """
         from autonetkit.anm import NmEdge
         if not retain:
