@@ -21,7 +21,7 @@ class DmBase(object):
         return self._graph
 
     def __setstate__(self, state):
-        self._graph = state 
+        self._graph = state
 
     def __repr__(self):
         """Return nidb
@@ -48,7 +48,7 @@ class DmBase(object):
     # Model-level functions
 
     def save(self, timestamp=True, use_gzip=True):
-        """ Used to save 
+        """ Used to save
 
         >>> anm = autonetkit.topos.house()
         >>> nidb = autonetkit.DeviceModel(anm)
@@ -89,8 +89,8 @@ class DmBase(object):
     def restore_latest(self, directory=None):
         """Restore latest saved DeviceModel
 
-        # >>> anm = autonetkit.topos.mixed()        
-        # >>> nidb = autonetkit.DeviceModel(anm)        
+        # >>> anm = autonetkit.topos.mixed()
+        # >>> nidb = autonetkit.DeviceModel(anm)
         # >>> nidb.restore_latest()
         # WARNING No previous DeviceModel saved. Please compile new DeviceModel
         """
@@ -126,7 +126,7 @@ class DmBase(object):
 
     @property
     def name(self):
-        """ Return name 
+        """ Return name
 
         >>> anm = autonetkit.topos.mixed()
         >>> nidb = autonetkit.DeviceModel(anm)
@@ -137,7 +137,7 @@ class DmBase(object):
 
     def raw_graph(self):
         """Returns the underlying NetworkX graph
-        
+
         >>> anm = autonetkit.topos.mixed()
         >>> nidb = autonetkit.DeviceModel(anm)
         >>> nidb.__setstate__('r1')
@@ -242,7 +242,7 @@ class DmBase(object):
 
     def switches(self, *args, **kwargs):
         """Shortcut for nodes(), sets device_type to be switch
-        
+
         >>> anm = autonetkit.topos.mixed()
         >>> nidb = autonetkit.DeviceModel(anm)
         >>> nidb.switches()
@@ -384,15 +384,16 @@ class DmBase(object):
         # but that's so rare (that's a design stage if anywhere)
         src_id = edge_to_find.src
         dst_id = edge_to_find.dst
+        search_key = key
 
         if self.is_multigraph():
             for (src, dst, rkey) in self._graph.edges(src_id, keys=True):
                 if dst == dst_id and rkey == search_key:
-                    return DmEdge(self._anm, src, dst, search_key)
+                    return DmEdge(self, src, dst, search_key)
 
         for (src, dst) in self._graph.edges(src_id):
             if dst == dst_id:
-                return DmEdge(self._anm, src, dst)
+                return DmEdge(self, src, dst)
 
     def add_edge(self, src, dst, retain=None, **kwargs):
         """Add edge with the set source and the destination"""
