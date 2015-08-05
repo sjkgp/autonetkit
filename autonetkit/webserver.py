@@ -118,7 +118,7 @@ class MyWebSocketHandler(websocket.WebSocketHandler):
 
     def update_overlay(self):
         try:
-            body = self.ank_accessor.get_overlay(self.uuid, self.overlay_id)
+            body = self.ank_accessor.get_overlay(self.uuid, self.overlay_id) or {}
         except OverlayNotFound:
             body = {"nodes": [],
                     "links": [],

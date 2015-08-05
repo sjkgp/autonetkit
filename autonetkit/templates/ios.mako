@@ -5,6 +5,16 @@ hostname ${node}
 boot-start-marker
 boot-end-marker
 !
+vrf definition Mgmt-intf
+!
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+!
+!
 % if node.include_csr:
 license accept end user agreement
 license boot level premium
@@ -109,6 +119,9 @@ pseudowire-class ${pwc.name}
 % for interface in node.interfaces:
 interface ${interface.id}
   description ${interface.description}
+  % if interface.mgmt:
+  vrf forwarding Mgmt-intf
+  % endif
   % if interface.comment:
   ! ${interface.comment}
   %endif
@@ -181,7 +194,7 @@ interface ${interface.id}
   % if not node.exclude_phy_int_auto_speed_duplex:
   ## don't include auto duplex and speed on platforms eg CSR1000v
   ## include by default
-  duplex auto
+  duplex full
   speed auto
   % endif
   no shutdown
