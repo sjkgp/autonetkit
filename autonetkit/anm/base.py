@@ -255,7 +255,7 @@ class OverlayBase(AnkElement):
         >>> anm = autonetkit.topos.house()
         >>> g_phy = anm['phy']
         >>> g_phy.__getitem__('1')
-        WARNING Unable to find node 1 in phy 
+
         >>> g_phy.__getitem__('r1')
         r1
 
@@ -340,14 +340,14 @@ class OverlayBase(AnkElement):
         return self.anm.has_overlay(self._overlay_id)
 
     def node_label(self, node):
-        """Return node label 
+        """Return node label
 
         >>> anm = autonetkit.topos.house()
         >>> g_phy = anm['phy']
         >>> g_phy.node_label('r1')
         'r1'
         >>> g_phy.node_label('r2')
-        'r2'       
+        'r2'
         """
 
         return repr(NmNode(self._anm, self._overlay_id, node))
@@ -385,8 +385,8 @@ class OverlayBase(AnkElement):
 
         >>> anm = autonetkit.topos.multi_as()
         >>> g_phy = anm["phy"]
-        >>> list(g_phy.__iter__())
-        [r4, r5, r1, r2, r3]
+        >>> list(sorted(g_phy))
+        [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10]
         """
 
         return iter(self.nodes())
@@ -397,9 +397,9 @@ class OverlayBase(AnkElement):
         >>> anm = autonetkit.topos.multi_as()
         >>> g_phy = anm["phy"]
         >>> g_phy.nodes()
-        [r4, r5, r1, r2, r3]
+        [r4, r5, r6, r7, r1, r2, r3, r8, r9, r10]
         >>> g_phy.__len__()
-        5
+        10
 
         """
 
@@ -560,7 +560,7 @@ class OverlayBase(AnkElement):
     def edges(self, src_nbunch=None, dst_nbunch=None, *args,
               **kwargs):
         """Returns edges. Can also return edges by setting filter.
-        
+
         >>> anm = autonetkit.topos.house()
         >>> g_phy = anm['phy']
         >>> g_phy.edges()

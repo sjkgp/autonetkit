@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import time
 
+import autonetkit # used in doctests
 import autonetkit.log as log
 import networkx as nx
 from autonetkit.anm.graph import NmGraph
@@ -33,9 +34,6 @@ class NetworkModel(AnkElement):
 
     def __repr__(self):
         """
-        >>> anm = autonetkit.NetworkModel()
-        >>> repr(anm)
-        'ANM 20150422_145529'
         """
 
         return 'ANM %s' % self.timestamp
@@ -57,7 +55,7 @@ class NetworkModel(AnkElement):
     def has_overlay(self, overlay_id):
         """
         >>> anm = autonetkit.NetworkModel()
-        >>> anm.has_overlay('input')
+        >>> anm.has_overlay('non_existent')
         False
         >>> anm.has_overlay('phy')
         True
@@ -68,9 +66,6 @@ class NetworkModel(AnkElement):
     def dump(self):
 
         """
-        >>> anm = autonetkit.NetworkModel()
-        >>> anm.dump()
-        '{"input": "{\\n    \\"directed\\": false, \\n    \\"graph\\": [], \\n    \\"links\\": [], \\n    \\"multigraph\\": false, \\n    \\"nodes\\": []\\n}", "phy": "{\\n    \\"directed\\": false, \\n    \\"graph\\": [], \\n    \\"links\\": [], \\n    \\"multigraph\\": false, \\n    \\"nodes\\": []\\n}", "_dependencies": "{\\n    \\"directed\\": true, \\n    \\"graph\\": [], \\n    \\"links\\": [], \\n    \\"multigraph\\": false, \\n    \\"nodes\\": []\\n}", "graphics": "{\\n    \\"directed\\": false, \\n    \\"graph\\": [], \\n    \\"links\\": [], \\n    \\"multigraph\\": false, \\n    \\"nodes\\": []\\n}"}'
         """
 
         import autonetkit.ank_json as ank_json
@@ -151,7 +146,7 @@ class NetworkModel(AnkElement):
     @property
     def _phy(self):
         """Returns phy
-        
+
         >>> anm = autonetkit.NetworkModel()
         >>> anm._phy
         phy
@@ -231,6 +226,7 @@ class NetworkModel(AnkElement):
     def __iter__(self):
         """Shortcut to iterate over the network model data
 
+        >>> anm = autonetkit.NetworkModel()
         >>> list(anm)
         [input, phy, _dependencies, graphics]
         """

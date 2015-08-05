@@ -34,7 +34,7 @@ class NmNode(AnkElement):
 
         >>> anm = autonetkit.topos.house()
         >>> r1 = anm['phy'].node("r1")
-        r1.__hash__()
+        >>> hash(r1)
         14592087666131685
         """
         return hash(self.node_id)
@@ -139,18 +139,42 @@ class NmNode(AnkElement):
     def physical_interfaces(self, *args, **kwargs):
         """Returns physical interfaces
 
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.physical_interfaces()
+        [eth0.r1, eth1.r1, eth2.r1]
+
+        #TODO: add test with args and kwargs too
+
         """
         kwargs['category'] = "physical"
         return self.interfaces(*args, **kwargs)
 
     def loopback_interfaces(self, *args, **kwargs):
-        # TODO: allow abiility to skip loopback zero
-        """"""
+        """
+        # TODO: allow ability to skip loopback zero
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.loopback_interfaces()
+        [None.r1]
+        """
+
         kwargs['category'] = "loopback"
         return self.interfaces(*args, **kwargs)
 
     def is_multigraph(self):
-        """Checks if graph is multigraph
+        """Checks if node is multigraph
+
+        >>> anm = autonetkit.topos.mixed()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.is_multigraph()
+        False
+        >>> anm = autonetkit.topos.multi_edge()
+        >>> r1 = anm['phy'].node("r1")
+        >>> r1.is_multigraph()
+        True
+
         """
         return self._graph.is_multigraph()
 
@@ -162,11 +186,14 @@ class NmNode(AnkElement):
         >>> r2 = anm['phy'].node("r2")
         >>> r1 < r2
         True
+        >>> r2 < r1
+        False
+
 
         """
 
-# want [r1, r2, ..., r11, r12, ..., r21, r22] not [r1, r11, r12, r2, r21, r22]
-# so need to look at numeric part
+        # want [r1, r2, ..., r11, r12, ..., r21, r22] not [r1, r11, r12, r2, r21, r22]
+        # so need to look at numeric part
         import string
         # TODO: use human sort from StackOverflow
 
@@ -212,8 +239,8 @@ class NmNode(AnkElement):
         """
         >>> anm = autonetkit.topos.house()
         >>> r1 = anm['phy'].node("r1")
-        >>> r1._next_int_id
-        4
+        >>> r1._next_int_id()
+        3
         """
 
 # returns next free interface I
@@ -230,7 +257,7 @@ class NmNode(AnkElement):
         >>> anm = autonetkit.topos.house()
         >>> r1 = anm['phy'].node("r1")
         >>> r1._add_interface()
-        3   
+        3
         """
 
         data = dict(kwargs)
@@ -325,8 +352,8 @@ class NmNode(AnkElement):
         """Returns interface based on interface id
         >>> anm = autonetkit.topos.mixed()
         >>> r1 = anm['phy'].node("r1")
-        >>> r1.interface(eth0)
-        r1.r1 to r2
+        >>> r1.interface("eth0")
+        eth0.r1
         """
 
         try:
@@ -365,7 +392,7 @@ class NmNode(AnkElement):
         """Returns interface ids for this node
         >>> anm = autonetkit.topos.mixed()
         >>> r1 = anm['phy'].node("r1")
-        >>> r1._interface_ids
+        >>> r1._interface_ids()
         [0, 1, 2, 3]
         """
         # TODO: use from this layer, otherwise can get errors iterating when eg
@@ -392,7 +419,7 @@ class NmNode(AnkElement):
         >>> anm = autonetkit.topos.mixed()
         >>> r1 = anm['phy'].node("r1")
         >>> r1._ports
-        {0: {'category': 'loopback', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to r2'}, 2: {'category': 'physical', 'description': 'r1 to r3'}, 3: {'category': 'physical', 'description': None}}
+        {0: {'category': 'physical', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to sw1', 'id': 'eth0'}, 2: {'category': 'physical', 'description': 'r1 to r2', 'id': 'eth1'}, 3: {'category': 'physical', 'description': 'r1 to r3', 'id': 'eth2'}}
         """
 
         try:
@@ -414,10 +441,6 @@ class NmNode(AnkElement):
     @property
     def _nx_node_data(self):
         """Return NetworkX node data for the node
-        >>> anm = autonetkit.topos.mixed()
-        >>> r1 = anm['phy'].node("r1")
-        >>> r1._nx_node_data
-        {1: 3, '_ports': {0: {'category': 'physical', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to r2', 'id': 'eth0'}, 2: {'category': 'physical', 'description': 'r1 to r3', 'id': 'eth1'}, 3: {'category': 'physical', 'description': None}, 4: {'category': 'physical', 'description': None}, 5: {'category': 'physical', 'description': None}, 6: {'category': 'physical', 'description': None}, 7: {'category': 'physical', 'description': None}}, 'label': 'r1', 'device_type': 'router', 'y': 400, 'x': 350, 'asn': 1}
         """
         try:
             return self._graph.node[self.node_id]
@@ -547,9 +570,9 @@ class NmNode(AnkElement):
     def raw_interfaces(self):
         """Direct access to the interfaces dictionary, used by ANK modules
         >>> anm = autonetkit.topos.house()
-        >>> r1 = anm['phy'].node("r1")       
+        >>> r1 = anm['phy'].node("r1")
         >>> r1.raw_interfaces
-        {0: {'category': 'physical', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to r2', 'id': 'eth0'}, 2: {'category': 'physical', 'description': 'r1 to r3', 'id': 'eth1'}, 3: {'category': 'physical', 'description': None}, 4: {'category': 'physical', 'description': None}, 5: {'category': 'physical', 'description': None}, 6: {'category': 'physical', 'description': None}, 7: {'category': 'physical', 'description': None}}
+        {0: {'category': 'physical', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to r2', 'id': 'eth0'}, 2: {'category': 'physical', 'description': 'r1 to r3', 'id': 'eth1'}}
         """
 
         return self._ports
@@ -726,7 +749,7 @@ class NmNode(AnkElement):
         >>> anm = autonetkit.topos.house()
         >>> r1 = anm['phy'].node("r1")
         >>> r1.dump()
-        "{1: 3, 'device_type': 'router', 'y': 400, 'x': 350, 'asn': 1, 'label': 'r1'}"
+        "{'device_type': 'router', 'y': 400, 'x': 350, 'asn': 1, 'label': 'r1'}"
         """
 
         data = dict(self._nx_node_data)

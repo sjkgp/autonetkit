@@ -1,7 +1,7 @@
 import functools
 import logging
 import string
-import autonetkit 
+import autonetkit
 import doctest
 
 import autonetkit.log as log
@@ -79,7 +79,7 @@ class DmNode(object):
         >>> r1 = nidb.node('r1')
         >>> rb = nidb.node('rb')
         Unable to find node rb in nidb
-        >>> rb = nidb.node('r1')    
+        >>> rb = nidb.node('r1')
         >>> r1 == rb
         True
         """
@@ -202,18 +202,18 @@ class DmNode(object):
         >>> nidb = autonetkit.DeviceModel(anm)
         >>> r1 = nidb.node("r1")
         >>> r1.physical_interfaces()
-        [eth0.r1, eth1.r1]
+        [r1.r1 to r2, r1.r1 to r3]
         """
         return self.get_interfaces(category="physical")
 
     def loopback_interfaces(self):
         """Get and return loopback interfaces
 
-        >>> anm = autonetkit.topos.house(mixed)
+        >>> anm = autonetkit.topos.mixed()
         >>> nidb = autonetkit.DeviceModel(anm)
         >>> r1 = nidb.node("r1")
         >>> r1.loopback_interfaces()
-        [None.r1]
+        [r1.0]
         """
         return self.get_interfaces(category="loopback")
 
@@ -233,7 +233,7 @@ class DmNode(object):
         all_interfaces = iter(DmInterface(self.nidb,
                                           self.node_id, interface_id)
                               for interface_id in self._interface_ids)
-        retval = (i for i in all_interfaces if filter_func(i))
+        retval = [i for i in all_interfaces if filter_func(i)]
         return retval
 
     @property
@@ -289,8 +289,8 @@ class DmNode(object):
         >>> r1.neighbors()
         [r2, r3]
         """
-        return iter(DmNode(self.nidb, node)
-                    for node in self._graph.neighbors(self.node_id))
+        return [DmNode(self.nidb, node)
+                    for node in self._graph.neighbors(self.node_id)]
 
     def __setstate__(self, state):
         (nidb, node_id) = state
@@ -390,7 +390,7 @@ class DmNode(object):
 
         >>> anm = autonetkit.topos.house()
         >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')      
+        >>> r1 = nidb.node('r1')
         >>> bool(r1)
         True
         """
@@ -450,7 +450,7 @@ class DmNode(object):
 
     def is_firewall(self):
         """Check if device type is firewall
-         
+
         >>> anm = autonetkit.topos.mixed()
         >>> nidb = autonetkit.DeviceModel(anm)
         >>> r1 = nidb.node("r1")

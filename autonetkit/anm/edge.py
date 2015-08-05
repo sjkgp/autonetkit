@@ -38,11 +38,12 @@ class NmEdge(AnkElement):
 
     def __hash__(self):
         """Return a hash of a key
+        #TODO: check if we care to check the hash value
 
         >>> anm = autonetkit.topos.multi_edge()
         >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.__hash__()
-        268533498
+        >>> hash(edge)
+        -5246091905943233080
         """
 
         return hash(self.__key())
@@ -57,8 +58,11 @@ class NmEdge(AnkElement):
         >>> edge = anm['phy'].edge("r2", "r3")
         >>> edge.is_multigraph()
         True
-        >>> edge = anm['phy'].edge("r3", "r4")
-        >>> edge.is_multigraph()
+        >>> anm = autonetkit.topos.house()
+        >>> e1 = anm['phy'].edge("r1", "r2")
+        >>> e1.is_multigraph()
+        False
+
         """
         return self._graph.is_multigraph()
 
@@ -327,7 +331,7 @@ class NmEdge(AnkElement):
         self._ports[node.id] = interface
 
     def interfaces(self):
-        """Returning interfaces 
+        """Returning interfaces
 
         >>> anm = autonetkit.topos.house()
         >>> edge = anm['phy'].edge("r1", "r2")
@@ -350,8 +354,7 @@ class NmEdge(AnkElement):
         >>> anm = autonetkit.topos.house()
         >>> e2 = anm['phy'].edge("r1", "r3")
         >>> e2.dump()
-        "{0: {'_ports': {'r1': (r1, r3, 0), 'r3': 1}, 'raw_interfaces': {}}, 
-        1: {'_ports': {'r1': 4, 'r3': 4}, 'raw_interfaces': {}}, 2: {'_ports': {'r1': 5, 'r3': 5}, 'raw_interfaces': {}}}"
+        "{'_ports': {'r1': 2, 'r3': 1}, 'raw_interfaces': {}}"
         """
         return str(self._graph[self.src_id][self.dst_id])
 
