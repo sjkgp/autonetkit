@@ -48,6 +48,23 @@ class DmInterface(object):
         """
         return self.__key() == other.__key()
 
+    def __lt__(self, other):
+        """Comparison method
+
+        >>> anm = autonetkit.topos.house()
+        >>> g_phy = anm['phy']
+        >>> test_node = g_phy.node("r1")
+        >>> eth0 = test_node.interface(1)
+        >>> eth0.__lt__(eth0)
+        False
+
+        """
+
+        # TODO: check how is comparing the node
+
+        return (self.node, self.interface_id) < (other.node,
+                                                 other.interface_id)
+
     @property
     def is_bound(self):
         """Returns if this interface is bound to an edge on this layer
@@ -67,7 +84,7 @@ class DmInterface(object):
 
     def __repr__(self):
         """Return string representation of an object in node, description format
-        
+
         >>> anm = autonetkit.topos.mixed()
         >>> nidb = autonetkit.DeviceModel(anm)
         >>> test_node = nidb.node("r1")
