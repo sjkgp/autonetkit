@@ -18,11 +18,15 @@ from autonetkit.nidb import ConfigStanza
 
 class CiscoCompiler(PlatformCompiler):
 
+    _seed = "virl"  # for random number generator
     used_macs = set()
+
 
     def randomMac(self):
         import random
         from netaddr import EUI, mac_cisco
+        # generate the same sequence each run
+        random.seed(self._seed)
         # fa-16-3e-00-00-01
         start = 274973436411904 + 1
         # fa-16-3e-ff-ff-fe
@@ -349,7 +353,7 @@ class CiscoCompiler(PlatformCompiler):
             DmNode.indices = phy_node.indices
 
             for interface in DmNode.loopback_interfaces():
-                #TODO: create iterator that skips loopback zero
+                # TODO: create iterator that skips loopback zero
                 if interface != DmNode.loopback_zero:
                     interface.id = loopback_ids.next()
 
@@ -376,7 +380,6 @@ class CiscoCompiler(PlatformCompiler):
         self.compile_xr()
 
         self.compile_nxos()
-
 
     def assign_management_interfaces(self):
         use_mgmt_interfaces = self.anm['phy'].data.mgmt_interfaces_enabled
