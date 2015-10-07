@@ -18,6 +18,24 @@ from autonetkit.nidb import ConfigStanza
 
 class CiscoCompiler(PlatformCompiler):
 
+    used_macs = set()
+
+    def randomMac(self):
+        import random
+        from netaddr import EUI, mac_cisco
+        # fa-16-3e-00-00-01
+        start = 274973436411904 + 1
+        # fa-16-3e-ff-ff-fe
+        stop = 274973453189119 - 1
+
+        while True:
+            candidate = random.randint(start, stop)
+            if candidate not in self.used_macs:
+                self.used_macs.add(candidate)
+                break
+
+        return EUI(candidate, dialect=mac_cisco)
+
     """Platform compiler for Cisco"""
 
     @staticmethod
@@ -281,6 +299,7 @@ class CiscoCompiler(PlatformCompiler):
             # Assign interfaces
             int_ids = self.interface_ids_nxos()
             for interface in DmNode.physical_interfaces():
+                interface.mac_address = self.randomMac()
                 if not interface.id:
                     interface.id = self.numeric_to_interface_label_nxos(
                         interface.numeric_id)
@@ -295,6 +314,7 @@ class CiscoCompiler(PlatformCompiler):
                 mgmt_int_id = "mgmt0"
                 mgmt_int = DmNode.add_interface(management=True)
                 mgmt_int.id = mgmt_int_id
+                mgmt_int.mac_address = self.randomMac()
 
     #@call_log
     def compile_devices(self):

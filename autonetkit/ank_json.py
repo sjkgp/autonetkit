@@ -31,6 +31,9 @@ class AnkEncoder(json.JSONEncoder):
             return str(obj)
         if isinstance(obj, netaddr.IPNetwork):
             return str(obj)
+        if isinstance(obj, netaddr.EUI):
+            #TODO: also want to restore MAC addresses when parsing (regex)
+            return str(obj)
         if isinstance(obj, autonetkit.nidb.node.DmNode):
             # TODO: need to unserialize nidb nodes...
             return str(obj)
