@@ -21,7 +21,6 @@ class CiscoCompiler(PlatformCompiler):
     _seed = "virl"  # for random number generator
     used_macs = set()
 
-
     def randomMac(self):
         import random
         from netaddr import EUI, mac_cisco
@@ -51,7 +50,7 @@ class CiscoCompiler(PlatformCompiler):
     @staticmethod
     def numeric_to_interface_label_ra(x):
         """Starts at Gi0/1
-        #TODO: check"""
+        # TODO: check"""
         x = x + 1
         return "GigabitEthernet%s" % x
 
@@ -150,7 +149,7 @@ class CiscoCompiler(PlatformCompiler):
                 if phy_specified_id is not None:
                     interface.id = phy_specified_id
 
-                #interface.id = self.numeric_to_interface_label_linux(interface.numeric_id)
+                # interface.id = self.numeric_to_interface_label_linux(interface.numeric_id)
                 # print "numeric", interface.numeric_id, interface.id
                 DmNode.ip.use_ipv4 = phy_node.use_ipv4
                 DmNode.ip.use_ipv6 = phy_node.use_ipv6
@@ -289,7 +288,8 @@ class CiscoCompiler(PlatformCompiler):
 
     def compile_nxos(self):
         nxos_compiler = self.nxos_compiler
-        for phy_node in self.anm['phy'].routers(host=self.host, syntax='nx_os'):
+        for phy_node in sorted(self.anm['phy'].routers(host=self.host,
+                                                       syntax='nx_os')):
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
             DmNode.render.template = os.path.join("templates", "nx_os.mako")
@@ -302,7 +302,7 @@ class CiscoCompiler(PlatformCompiler):
 
             # Assign interfaces
             int_ids = self.interface_ids_nxos()
-            for interface in DmNode.physical_interfaces():
+            for interface in sorted(DmNode.physical_interfaces()):
                 interface.mac_address = self.randomMac()
                 if not interface.id:
                     interface.id = self.numeric_to_interface_label_nxos(
