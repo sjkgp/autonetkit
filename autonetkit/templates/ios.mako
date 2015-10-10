@@ -497,5 +497,5 @@ ipv6 route ${route.prefix} ${route.nexthop}
 %endif
 % endfor
 !
-end
 % endif
+end
