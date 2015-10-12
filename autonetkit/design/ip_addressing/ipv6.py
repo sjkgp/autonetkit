@@ -243,8 +243,8 @@ def build_ipv6(anm):
 
     # TODO: replace this with direct allocation to interfaces in ip alloc
     # plugin
-    allocated = sorted([n for n in g_ip if n['input'].loopback_v6])
-    if len(allocated) == len(g_ip.l3devices()):
+    allocated = sorted([n for n in g_ip.routers() if n['input'].loopback_v6])
+    if len(allocated) == len(g_ip.routers()):
         # all allocated
         # TODO: need to infer subnetomanual_ipv6_loopback_allocation
         log.info("Using user-specified IPv6 loopback addresses")
