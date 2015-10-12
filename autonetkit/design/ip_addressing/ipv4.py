@@ -307,8 +307,8 @@ def build_ipv4(anm, infrastructure=True):
     else:
         log.info("Allocating from IPv4 loopback block: %s" % loopback_block)
         # Check if some nodes are allocated
-        allocated = sorted([n for n in g_ip if n['input'].loopback_v4])
-        unallocated = sorted([n for n in g_ip if not n['input'].loopback_v4])
+        allocated = sorted([n for n in g_ip.routers() if n['input'].loopback_v4])
+        unallocated = sorted([n for n in g_ip.routers() if not n['input'].loopback_v4])
         if len(allocated):
             log.warning(
                 "Using automatic IPv4 loopback allocation. IPv4 loopback addresses specified on nodes %s will be ignored." % allocated)
