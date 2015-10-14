@@ -15,15 +15,17 @@ SETTINGS = autonetkit.config.settings
 __all__ = ['build']
 
 
-def load(input_graph_string, defaults = True):
+def load(input_graph_string, defaults=True):
 
     # TODO: look at XML header for file type
     import autonetkit.load.graphml as graphml
     import autonetkit.load.load_json as load_json
     try:
-        input_graph = graphml.load_graphml(input_graph_string, defaults=defaults)
+        input_graph = graphml.load_graphml(
+            input_graph_string, defaults=defaults)
     except autonetkit.exception.AnkIncorrectFileFormat:
-        input_graph = load_json.load_json(input_graph_string, defaults=defaults)
+        input_graph = load_json.load_json(
+            input_graph_string, defaults=defaults)
 
     return input_graph
 
@@ -87,7 +89,7 @@ def initialise(input_graph):
     # TODO: is this used?
     g_in.update(g_in.servers(platform="netkit"), syntax="quagga")
 
-    #TODO: check this is needed
+    # TODO: check this is needed
     #autonetkit.ank.set_node_default(g_in, specified_int_names=None)
 
     g_graphics = anm.add_overlay("graphics")  # plotting data
@@ -106,7 +108,7 @@ def check_server_asns(anm):
     g_phy = anm['phy']
 
     for server in g_phy.servers():
-        #TODO: remove now have external_connector device_type?
+        # TODO: remove now have external_connector device_type?
         if server.device_subtype in ("SNAT", "FLAT"):
             continue  # Don't warn on ASN for NAT elements
         l3_neighbors = list(server['layer3'].neighbors())
@@ -131,6 +133,7 @@ def check_server_asns(anm):
 
 
 class DesignRulesApplicator(object):
+
     def __init__(self, anm):
         self.anm = anm
 
@@ -246,6 +249,7 @@ def build(input_graph):
     anm = applicator.design()
     return anm
 
+
 def build_phy(anm):
     """Build physical overlay"""
     g_in = anm['input']
@@ -270,6 +274,8 @@ def build_phy(anm):
     ank_utils.copy_attr_from(g_in, g_phy, "custom_config_global",
                              dst_attr="custom_config")
 
+    g_phy.data.infrastructure_only = g_in.data.infrastructure_only
+
     for node in g_phy:
         if node['input'].custom_config_loopback_zero:
             lo_zero_config = node['input'].custom_config_loopback_zero
@@ -282,13 +288,13 @@ def build_phy(anm):
             if specified_id:
                 interface.specified_id = specified_id  # map across
 
-    #TODO: tidy this code up
+    # TODO: tidy this code up
     for node in g_phy:
         for interface in node:
             remote_edges = interface.edges()
             if len(remote_edges):
                 interface.description = 'to %s' \
-                % remote_edges[0].dst.label
+                    % remote_edges[0].dst.label
 
 
 def build_conn(anm):
