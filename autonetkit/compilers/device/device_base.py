@@ -8,7 +8,7 @@ class DeviceCompiler(object):
     def compile(self, node):
         node.do_render = True  # turn on rendering
         #TODO: refactor interfaces to go here - be careful - need to check against dependencies/ordering
-        pass
+        node.infrastructure_only = self.anm["phy"].data.infrastructure_only
 
     def interfaces(self, node):
         for interface in node.physical_interfaces():
