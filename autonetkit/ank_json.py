@@ -473,4 +473,7 @@ def jsonify_nidb(nidb):
 
 
 def dumps(anm, nidb=None, indent=4):
-    return jsonify_anm_with_graphics(anm, nidb)
+    log.debug("Building JSON")
+    result = jsonify_anm_with_graphics(anm, nidb)
+    log.debug("Built JSON")
+    return result
