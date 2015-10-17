@@ -51,7 +51,8 @@ class UbuntuCompiler(ServerCompiler):
         # TODO: need to check that servers don't have any direct ebgp
         # connections
 
-        cloud_init_static_routes = []
+        cloud_init_static_routes_v4 = []
+        cloud_init_static_routes_v6 = []
         g_l3 = self.anm['layer3']
 
         #TODO: need to handle multipoint to only enter once
@@ -125,14 +126,14 @@ class UbuntuCompiler(ServerCompiler):
                         # TODO: combine the above logic into single step rather than
                         # creating dict then formatting with it
 
-                        for entry in static_routes_v4:
-                            formatted = 'route add -net %s gw %s dev %s' \
-                                % (entry.network, entry.gw, entry.interface)
-                            cloud_init_static_routes.append(formatted)
                         for entry in host_routes_v4:
                             formatted = 'route add -host %s gw %s dev %s' \
                                 % (entry.prefix, entry.gw, entry.interface)
-                            cloud_init_static_routes.append(formatted)
+                            cloud_init_static_routes_v4.append(formatted)
+                        for entry in static_routes_v4:
+                            formatted = 'route add -net %s gw %s dev %s' \
+                                % (entry.network, entry.gw, entry.interface)
+                            cloud_init_static_routes_v4.append(formatted)
 
             # IGP advertised infrastructure pool from same AS
 
@@ -184,17 +185,20 @@ class UbuntuCompiler(ServerCompiler):
                     # TODO: combine the above logic into single step rather than
                     # creating dict then formatting with it
 
-                    for entry in static_routes_v6:
-                        formatted = 'route -A inet6 add %s gw %s dev %s' \
-                            % (entry.network, entry.gw, entry.interface)
-                        cloud_init_static_routes.append(formatted)
+
                     for entry in host_routes_v6:
                         formatted = 'route -A inet6 add %s gw %s dev %s' \
                             % (entry.prefix, entry.gw, entry.interface)
-                        cloud_init_static_routes.append(formatted)
+                        cloud_init_static_routes_v6.append(formatted)
+
+                    for entry in static_routes_v6:
+                        formatted = 'route -A inet6 add %s gw %s dev %s' \
+                            % (entry.network, entry.gw, entry.interface)
+                        cloud_init_static_routes_v6.append(formatted)
 
         node.add_stanza("cloud_init")
-        node.cloud_init.static_routes = cloud_init_static_routes
+        node.cloud_init.static_routes_v4 = cloud_init_static_routes_v4
+        node.cloud_init.static_routes_v6 = cloud_init_static_routes_v6
 
         # Render inline for packaging into yaml
         # TODO: no longer used, but keep as reference for later templates that require this format
