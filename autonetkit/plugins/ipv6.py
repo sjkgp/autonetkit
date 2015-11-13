@@ -40,6 +40,8 @@ def assign_asn_to_interasn_cds(G_ip):
 def allocate_loopbacks(g_ip, address_block=None):
     # TODO: handle no block specified
     loopback_blocks = {}
+    if not address_block:
+        address_block = netaddr.IPNetwork('2001:DB8:b::')
     loopback_pool = address_block.subnet(80)
 
     # consume the first address as it is the network address
@@ -64,6 +66,8 @@ def allocate_loopbacks(g_ip, address_block=None):
 
 def allocate_infra(g_ip, address_block=None):
     infra_blocks = {}
+    if not address_block:
+        address_block = netaddr.IPNetwork('2001:DB8:a::')
 
 # TODO: check if need to do network address... possibly only for
 # loopback_pool and infra_pool so maps to asn
@@ -119,6 +123,8 @@ def allocate_infra(g_ip, address_block=None):
 
 def allocate_secondary_loopbacks(g_ip, address_block=None):
     secondary_loopback_blocks = {}
+    if not address_block:
+        address_block = netaddr.IPNetwork('2001:DB8:c::')
     secondary_loopback_pool = address_block.subnet(80)
     # consume the first address as it is the network address
     # network address
