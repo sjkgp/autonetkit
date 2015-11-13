@@ -84,7 +84,7 @@ def allocate_infra(g_ip, address_block=None):
         ptp_subnet = subnets.next().subnet(126)
         ptp_subnet.next()  # network address
         all_bcs = set(d for d in devices if d.broadcast_domain
-            and d.allocate)
+                      and d.allocate)
         ptp_bcs = [bc for bc in all_bcs if bc.degree() == 2]
 
         for bc in sorted(ptp_bcs):
@@ -94,8 +94,9 @@ def allocate_infra(g_ip, address_block=None):
             hosts.next()
             bc.subnet = subnet
             # TODO: check: should sort by default on dst as tie-breaker
-            for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
-                edge.ip = hosts.next()
+            for iface in sorted(bc.neighbor_interfaces()):
+                iface.ip_address = hosts.next()
+                iface.subnet = subnet
 
         non_ptp_cds = all_bcs - set(ptp_bcs)
 
@@ -107,8 +108,10 @@ def allocate_infra(g_ip, address_block=None):
             # drop .0 as a host address (valid but can be confusing)
             hosts.next()
             bc.subnet = subnet
-            for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
-                edge.ip = hosts.next()
+            # for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
+            for iface in sorted(bc.neighbor_interfaces()):
+                iface.ip_address = hosts.next()
+                iface.subnet = subnet
 
     g_ip.data.infra_blocks = dict((asn, [subnet]) for (asn, subnet) in
                                   infra_blocks.items())

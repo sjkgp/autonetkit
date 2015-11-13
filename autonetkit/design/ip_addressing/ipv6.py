@@ -310,14 +310,6 @@ def build_ipv6(anm):
         ipv6.allocate_infra(g_ipv6, infra_block)
         # TODO: see if this is still needed or if can allocate direct from the
         # ipv6 allocation plugin
-        for node in g_ipv6.l3devices():
-            for interface in node:
-                edges = list(interface.edges())
-                if len(edges):
-                    edge = edges[0]  # first (only) edge
-                    # TODO: make this consistent
-                    interface.ip_address = edge.ip
-                    interface.subnet = edge.dst.subnet  # from collision domain
 
     ipv6.allocate_secondary_loopbacks(g_ipv6, secondary_loopback_block)
     for node in g_ipv6:
