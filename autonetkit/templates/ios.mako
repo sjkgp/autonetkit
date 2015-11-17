@@ -54,13 +54,17 @@ enable secret 4 ${node.enable_secret}
 ip classless
 ip subnet-zero
 no ip domain lookup
+ip domain name virl.info
+crypto key generate rsa modulus 768
+ip ssh server algorithm authentication password
+username cisco privilege 15 secret cisco
 line vty 0 4
 % if node.transport_input_ssh_telnet:
  transport input ssh telnet
 %endif
  exec-timeout 720 0
  password cisco
- login
+ login local
 line con 0
  password cisco
 % if node.use_cdp is True:
