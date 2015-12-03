@@ -285,7 +285,7 @@ def prepare_json_anm_nidb(anm, nidb=None):
     for node in anm['phy']:
         phy_int_ids[node.node_id] = {}
         for interface in node.interfaces():
-            int_name = interface.get("id") or "" #TODO: handle loopbacks here
+            int_name = interface.get("id") or interface.get("description") #TODO: handle loopbacks here
             phy_int_ids[node.node_id][interface.interface_id] = {"id": int_name,
                                         "id_brief": shortened_interface(int_name)}
 
@@ -372,14 +372,14 @@ def prepare_json_anm_nidb(anm, nidb=None):
                 if node in phy_int_ids:
                     # copy from phy
                     try:
-                        ports = {k:v for k, v in nm_graph.node[node]["_ports"].items()}
-
+                        ports = dict(nm_graph.node[node]["_ports"])
                     except KeyError:
                         pass #TODO: log to debug
                     else:
                         for index in ports:
-                            if node in phy_int_ids and index in phy_int_ids[node]:
-                                ports[index].update(phy_int_ids[node][index])
+                            pass
+                            #TODO: check what this code was used for - and if still needed using new repr formats relates to VIRLDEV-3247
+                            ports[index].update(phy_int_ids[node][index])
 
                 elif overlay_id == "graphics":
                     pass #TODO: remove this workaround once retire graphics overlay
