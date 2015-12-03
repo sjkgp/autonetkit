@@ -372,14 +372,14 @@ def prepare_json_anm_nidb(anm, nidb=None):
                 if node in phy_int_ids:
                     # copy from phy
                     try:
-                        ports = dict(nm_graph.node[node]["_ports"])
+                        ports = {k:v for k, v in nm_graph.node[node]["_ports"].items()}
+
                     except KeyError:
                         pass #TODO: log to debug
                     else:
                         for index in ports:
-                            pass
-                            #TODO: check what this code was used for - and if still needed using new repr formats relates to VIRLDEV-3247
-                            # ports[index].update(phy_int_ids[node][index])
+                            if node in phy_int_ids and index in phy_int_ids[node]:
+                                ports[index].update(phy_int_ids[node][index])
 
                 elif overlay_id == "graphics":
                     pass #TODO: remove this workaround once retire graphics overlay
