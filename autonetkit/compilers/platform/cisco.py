@@ -17,26 +17,16 @@ from autonetkit.nidb import ConfigStanza
 
 
 class CiscoCompiler(PlatformCompiler):
-
-    used_macs = set()
-
-    def randomMac(self):
-        import random
-        from netaddr import EUI, mac_cisco
-        # fa-16-3e-00-00-01
-        start = 274973436411904 + 1
-        # fa-16-3e-ff-ff-fe
-        stop = 274973453189119 - 1
-
-        while True:
-            candidate = random.randint(start, stop)
-            if candidate not in self.used_macs:
-                self.used_macs.add(candidate)
-                break
-
-        return EUI(candidate, dialect=mac_cisco)
-
     """Platform compiler for Cisco"""
+
+    @staticmethod
+    def macAddressGenerator():
+        from netaddr import EUI, mac_cisco
+        # fa-16-3e-00-00-00
+        start = 274973436411904
+        for candidate in itertools.count(1):
+            yield  EUI(start + candidate, dialect=mac_cisco)
+
 
     @staticmethod
     def numeric_to_interface_label_ios(x):
@@ -47,7 +37,7 @@ class CiscoCompiler(PlatformCompiler):
     @staticmethod
     def numeric_to_interface_label_ra(x):
         """Starts at Gi0/1
-        #TODO: check"""
+        # TODO: check"""
         x = x + 1
         return "GigabitEthernet%s" % x
 
@@ -146,7 +136,7 @@ class CiscoCompiler(PlatformCompiler):
                 if phy_specified_id is not None:
                     interface.id = phy_specified_id
 
-                #interface.id = self.numeric_to_interface_label_linux(interface.numeric_id)
+                # interface.id = self.numeric_to_interface_label_linux(interface.numeric_id)
                 # print "numeric", interface.numeric_id, interface.id
                 DmNode.ip.use_ipv4 = phy_node.use_ipv4
                 DmNode.ip.use_ipv6 = phy_node.use_ipv6
@@ -285,8 +275,12 @@ class CiscoCompiler(PlatformCompiler):
 
     def compile_nxos(self):
         nxos_compiler = self.nxos_compiler
-        for phy_node in self.anm['phy'].routers(host=self.host, syntax='nx_os'):
+        macSequence = self.macAddressGenerator()
+
+        nxos_nodes = sorted(self.anm['phy'].routers(host=self.host, syntax='nx_os'))
+        for phy_node in nxos_nodes:
             DmNode = self.nidb.node(phy_node)
+            # fh.write(str(DmNode) + "\n")
             DmNode.add_stanza("render")
             DmNode.render.template = os.path.join("templates", "nx_os.mako")
             if self.to_memory:
@@ -298,8 +292,10 @@ class CiscoCompiler(PlatformCompiler):
 
             # Assign interfaces
             int_ids = self.interface_ids_nxos()
-            for interface in DmNode.physical_interfaces():
-                interface.mac_address = self.randomMac()
+            for interface in sorted(DmNode.physical_interfaces()):
+                # fh.write(str(interface) + "\n")
+                interface.mac_address = macSequence.next()
+                # fh.write(str(interface.mac_address) + "\n")
                 if not interface.id:
                     interface.id = self.numeric_to_interface_label_nxos(
                         interface.numeric_id)
@@ -314,7 +310,7 @@ class CiscoCompiler(PlatformCompiler):
                 mgmt_int_id = "mgmt0"
                 mgmt_int = DmNode.add_interface(management=True)
                 mgmt_int.id = mgmt_int_id
-                mgmt_int.mac_address = self.randomMac()
+                mgmt_int.mac_address = macSequence.next()
 
     #@call_log
     def compile_devices(self):
@@ -349,7 +345,7 @@ class CiscoCompiler(PlatformCompiler):
             DmNode.indices = phy_node.indices
 
             for interface in DmNode.loopback_interfaces():
-                #TODO: create iterator that skips loopback zero
+                # TODO: create iterator that skips loopback zero
                 if interface != DmNode.loopback_zero:
                     interface.id = loopback_ids.next()
 
@@ -376,7 +372,6 @@ class CiscoCompiler(PlatformCompiler):
         self.compile_xr()
 
         self.compile_nxos()
-
 
     def assign_management_interfaces(self):
         use_mgmt_interfaces = self.anm['phy'].data.mgmt_interfaces_enabled

@@ -88,6 +88,7 @@ class RouterCompiler(DeviceCompiler):
 
     def compile(self, node):
         #TODO: call this from parent
+        super(RouterCompiler, self).compile(node)
         node.do_render = True  # turn on rendering
 
         phy_node = self.anm['phy'].node(node)
@@ -108,8 +109,10 @@ class RouterCompiler(DeviceCompiler):
 
         node.label = naming.network_hostname(phy_node)
         node.input_label = phy_node.id
-        if node.ip.use_ipv4:
+        # Always copy loopback over - even for ipv6 - as used for router-id e.g. in OSPFv3
+        if node.ip.use_ipv4 or node.ip.use_ipv6:
             node.loopback = ipv4_node.loopback
+        if node.ip.use_ipv4:
             node.loopback_subnet = netaddr.IPNetwork(node.loopback)
             node.loopback_subnet.prefixlen = 32
 

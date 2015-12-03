@@ -40,6 +40,8 @@ def assign_asn_to_interasn_cds(G_ip):
 def allocate_loopbacks(g_ip, address_block=None):
     # TODO: handle no block specified
     loopback_blocks = {}
+    if not address_block:
+        address_block = netaddr.IPNetwork('2001:DB8:b::')
     loopback_pool = address_block.subnet(80)
 
     # consume the first address as it is the network address
@@ -64,6 +66,8 @@ def allocate_loopbacks(g_ip, address_block=None):
 
 def allocate_infra(g_ip, address_block=None):
     infra_blocks = {}
+    if not address_block:
+        address_block = netaddr.IPNetwork('2001:DB8:a::')
 
 # TODO: check if need to do network address... possibly only for
 # loopback_pool and infra_pool so maps to asn
@@ -84,7 +88,7 @@ def allocate_infra(g_ip, address_block=None):
         ptp_subnet = subnets.next().subnet(126)
         ptp_subnet.next()  # network address
         all_bcs = set(d for d in devices if d.broadcast_domain
-            and d.allocate)
+                      and d.allocate)
         ptp_bcs = [bc for bc in all_bcs if bc.degree() == 2]
 
         for bc in sorted(ptp_bcs):
@@ -94,8 +98,9 @@ def allocate_infra(g_ip, address_block=None):
             hosts.next()
             bc.subnet = subnet
             # TODO: check: should sort by default on dst as tie-breaker
-            for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
-                edge.ip = hosts.next()
+            for iface in sorted(bc.neighbor_interfaces()):
+                iface.ip_address = hosts.next()
+                iface.subnet = subnet
 
         non_ptp_cds = all_bcs - set(ptp_bcs)
 
@@ -107,8 +112,10 @@ def allocate_infra(g_ip, address_block=None):
             # drop .0 as a host address (valid but can be confusing)
             hosts.next()
             bc.subnet = subnet
-            for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
-                edge.ip = hosts.next()
+            # for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
+            for iface in sorted(bc.neighbor_interfaces()):
+                iface.ip_address = hosts.next()
+                iface.subnet = subnet
 
     g_ip.data.infra_blocks = dict((asn, [subnet]) for (asn, subnet) in
                                   infra_blocks.items())
@@ -116,6 +123,8 @@ def allocate_infra(g_ip, address_block=None):
 
 def allocate_secondary_loopbacks(g_ip, address_block=None):
     secondary_loopback_blocks = {}
+    if not address_block:
+        address_block = netaddr.IPNetwork('2001:DB8:c::')
     secondary_loopback_pool = address_block.subnet(80)
     # consume the first address as it is the network address
     # network address

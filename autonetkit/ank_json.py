@@ -372,12 +372,14 @@ def prepare_json_anm_nidb(anm, nidb=None):
                 if node in phy_int_ids:
                     # copy from phy
                     try:
-                        ports = nm_graph.node[node]["_ports"]
+                        ports = {k:v for k, v in nm_graph.node[node]["_ports"].items()}
+
                     except KeyError:
                         pass #TODO: log to debug
                     else:
                         for index in ports:
-                            ports[index].update(phy_int_ids[node][index])
+                            if node in phy_int_ids and index in phy_int_ids[node]:
+                                ports[index].update(phy_int_ids[node][index])
 
                 elif overlay_id == "graphics":
                     pass #TODO: remove this workaround once retire graphics overlay
@@ -473,4 +475,7 @@ def jsonify_nidb(nidb):
 
 
 def dumps(anm, nidb=None, indent=4):
-    return jsonify_anm_with_graphics(anm, nidb)
+    log.debug("Building JSON")
+    result = jsonify_anm_with_graphics(anm, nidb)
+    log.debug("Built JSON")
+    return result

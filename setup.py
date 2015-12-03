@@ -4,7 +4,7 @@ import sys
 
 setup (
      name = "autonetkit",
-     version = "0.20.0",
+     version = "0.20.10",
      description = 'Automatic configuration generation for emulated networks',
      long_description = 'Automatic configuration generation for emulated networks',
 
@@ -33,7 +33,7 @@ setup (
          'mako==0.8',
          'networkx==1.7',
          'configobj==4.7.1',
-         'tornado>=3.0.1,<=3.2.2',
+         'tornado',
          #'textfsm', 'pika',
          # 'exscript==0.0.1'
          ],
