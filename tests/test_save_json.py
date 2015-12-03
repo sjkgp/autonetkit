@@ -83,8 +83,6 @@ def test():
     body = autonetkit.ank_json.dumps(anm)
 
     data = json.loads(body)
-    import ipdb
-    # ipdb.set_trace()
 
     j_phy = data["phy"]
     for node in j_phy["nodes"]:
