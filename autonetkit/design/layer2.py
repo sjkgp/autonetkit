@@ -205,18 +205,44 @@ class Layer2Builder(object):
 
         no_vlan_ints = []
         for switch in managed_switches:
+            for interface in switch.interfaces():
+                if len(interface.neighbors()) > 1:
+                    log.warn("Interface %s is connected to multiple endpoints. Please check resulting configuration is as intended",interface)
             for edge in switch.edges():
                 neigh_int = edge.dst_int
                 local_int = edge.src_int
+
+                # first look at local interfaces
+                vlan = local_int['input'].vlan
+                if vlan is not None:
+                    if vlan.isdigit():
+                        # use directly for next stage
+                        pass
+                    elif vlan == "1-4095":
+                        local_int.trunk = True
+                        continue
+                    else:
+                        # not integer, set as trunk
+                        local_int.trunk = True
+                        local_int.allowed_vlans = vlan
+                        continue
+
+                # TODO: store vlans on node to add to vlan a, b, c stanza
+
+                #TODO: use the vlans on the node to then
+
+
                 if neigh_int.node in managed_switches:
-                    neigh_int.trunk = True
+                    local_int.trunk = True
                     continue
 
-                if neigh_int['input'].vlan is None:
-                    vlan = default_vlan
-                    no_vlan_ints.append(neigh_int)
-                else:
-                    vlan = neigh_int['input'].vlan
+                if vlan is None:
+                    # no locally specified VLAN, try from neighbor
+                    if neigh_int['input'].vlan is None:
+                        vlan = default_vlan
+                        no_vlan_ints.append(neigh_int)
+                    else:
+                        vlan = neigh_int['input'].vlan
 
                 try:
                     vlan = int(vlan)
@@ -236,6 +262,15 @@ class Layer2Builder(object):
         if len(no_vlan_ints):
             log.info("Setting default VLAN %s to interfaces connected to a managed "
                "switch with no VLAN: %s", default_vlan, no_vlan_ints)
+
+        # and map the vlans the node is in onto the node
+        for switch in managed_switches:
+            switch.vlans = []
+            for interface in switch:
+                if interface.vlan:
+                    switch.vlans.append(interface.vlan)
+
+            switch.vlans = list(set(switch.vlans)) # unique-ify
 
 
     def build_vlans(self):
@@ -279,8 +314,9 @@ class Layer2Builder(object):
         bcs_to_trim = set()
 
         subs = ank_utils.connected_subgraphs(g_vtp, managed_switches)
-        for sub in subs:
+        for sub_index, sub in enumerate(subs):
             # identify the VLANs on these switches
+
             vlans = defaultdict(list)
             sub_neigh_ints = set()
             for switch in sub:
@@ -292,10 +328,14 @@ class Layer2Builder(object):
 
                 sub_neigh_ints.update(neigh_ints)
 
+                for interface in switch:
+                    interface.vlan_domain = sub_index
+
             for interface in sub_neigh_ints:
                 # store keyed by vlan id
                 vlan = interface['vtp'].vlan
                 vlans[vlan].append(interface)
+                interface['vtp'].vlan_domain = sub_index
 
             log.debug("Vlans for sub %s are %s", sub, vlans)
             # create a virtual switch for each
@@ -341,10 +381,17 @@ class Layer2Builder(object):
             # if need, work backwards from the router iface and its connectivity
 
             # and add the trunks
-            # TODO: these need annotations!
+            # TODO: these need annotations! ???
             # create trunks
             edges_to_add = list(itertools.combinations(vswitches, 2))
             # TODO: ensure only once
             # TODO: filter so only one direction
             # g_vlan.add_edges_from(edges_to_add, trunk=True)
             g_vtp.add_edges_from(edges_to_add, trunk=True)
+
+        for node in g_vtp:
+            node.vlans_by_domain = defaultdict(list)
+            for interface in node:
+                domain = interface.vlan_domain
+                if interface.vlan and interface.vlan not in node.vlans_by_domain[domain]:
+                    node.vlans_by_domain[domain].append(interface.vlan)
