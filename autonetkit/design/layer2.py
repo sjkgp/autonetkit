@@ -207,7 +207,7 @@ class Layer2Builder(object):
         for switch in managed_switches:
             for interface in switch.interfaces():
                 if len(interface.neighbors()) > 1:
-                    log.warn("Interface %s is connected to multiple endpoints. Please check resulting configuration is as intended",interface)
+                    log.warning("Interface %s is connected to multiple endpoints. Please check resulting configuration is as intended",interface)
             for edge in switch.edges():
                 neigh_int = edge.dst_int
                 local_int = edge.src_int
