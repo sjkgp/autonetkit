@@ -214,6 +214,9 @@ class Layer2Builder(object):
 
                 # first look at local interfaces
                 vlan = local_int['input'].vlan
+                neigh_vlan = neigh_int['input'].vlan
+                if vlan and neigh_vlan and vlan != neigh_vlan:
+                    log.warning("VLAN mismatch: VLAN %s on %s does not match VLAN %s on remote interface %s. Using local VLAN %s", vlan, interface, neigh_vlan, neigh_int, vlan)
                 if vlan is not None:
                     if vlan.isdigit():
                         # use directly for next stage
@@ -238,11 +241,21 @@ class Layer2Builder(object):
 
                 if vlan is None:
                     # no locally specified VLAN, try from neighbor
-                    if neigh_int['input'].vlan is None:
+                    if neigh_vlan is None:
                         vlan = default_vlan
                         no_vlan_ints.append(neigh_int)
                     else:
-                        vlan = neigh_int['input'].vlan
+                        if neigh_vlan.isdigit():
+                            # use directly for next stage
+                            vlan = neigh_vlan
+                        elif neigh_vlan == "1-4095":
+                            local_int.trunk = True
+                            continue
+                        else:
+                            # not integer, set as trunk
+                            local_int.trunk = True
+                            local_int.allowed_vlans = neigh_vlan
+                            continue
 
                 try:
                     vlan = int(vlan)
