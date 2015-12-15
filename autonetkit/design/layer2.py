@@ -351,6 +351,11 @@ class Layer2Builder(object):
                 interface['vtp'].vlan_domain = sub_index
 
             log.debug("Vlans for sub %s are %s", sub, vlans)
+
+            # and record on the node for creating the bridges
+            for switch in sub:
+                switch.domain_vlans = vlans.keys()
+
             # create a virtual switch for each
             # TODO: naming: if this is the only pair then name after these, else
             # use the switch names too
