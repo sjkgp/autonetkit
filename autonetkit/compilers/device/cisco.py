@@ -851,6 +851,8 @@ class NxOsCompiler(IosBaseCompiler):
         self.mpls_oam(node)
         self.mpls_ldp(node)
 
+        node.allocate_interfaces = ["Ethernet2/1-48", "Ethernet3/1-48"]
+
     def mpls_te(self, node):
         g_mpls_te = self.anm['mpls_te']
         if node not in g_mpls_te:
@@ -909,6 +911,8 @@ class NxOsCompiler(IosBaseCompiler):
         # need to aggregate areas
 
         super(NxOsCompiler, self).interfaces(node)
+        for interface in node.physical_interfaces():
+            interface.full_duplex = True
 
     def rip(self, node):
         super(NxOsCompiler, self).rip(node)
