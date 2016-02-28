@@ -161,31 +161,32 @@ def render_node(node):
             )
 
     if render_base:
-        log.info("render base: %s" %render_base)
         # TODO: revert to shutil copy
         if render_base:
             render_base = resource_path(render_base)
-            fs_mako_templates = []
+            fs_jinja_templates = []
             for root, _, filenames in os.walk(render_base):
-                for filename in fnmatch.filter(filenames, '*.mako'):
+                for filename in fnmatch.filter(filenames, '*.jinja'):
                     # relative to fs root
                     rel_root = os.path.relpath(root, render_base)
-                    fs_mako_templates.append(os.path.join(rel_root, filename))
+                    fs_jinja_templates.append(os.path.join(rel_root, filename))
 
             try:
                 shutil.rmtree(render_base_output_dir)
             except OSError:
                 pass  # doesn't exist
             shutil.copytree(render_base, render_base_output_dir,
-                            ignore=shutil.ignore_patterns('*.mako'))
-            for template_file in fs_mako_templates:
+                            ignore=shutil.ignore_patterns('*.jinja'))
+            for template_file in fs_jinja_templates:
                 template_file_path = os.path.normpath(
                     os.path.join(render_base, template_file))
-                mytemplate = mako.template.Template(filename=template_file_path,
-                                                    )
+                mytemplate = JINJA.get_template(os.path.join(
+                        os.path.sep.join(node.render.base.split(os.path.sep)[1:]), # remove leading template folder
+                        template_file))
                 dst_file = os.path.normpath(
                     (os.path.join(render_base_output_dir, template_file)))
-                dst_file, _ = os.path.splitext(dst_file)  # remove .mako suffix
+                dst_file, _ = os.path.splitext(dst_file)  # remove .jinja suffix
+                log.info('dst file: %s' %dst_file)
                 with open(dst_file, 'wb') as dst_fh:
                     dst_fh.write(mytemplate.render(
                         node=node,
