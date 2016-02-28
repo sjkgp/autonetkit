@@ -6,9 +6,7 @@ import time
 import autonetkit.log as log
 import mako
 import pkg_resources
-from mako.exceptions import SyntaxException
-from mako.lookup import TemplateLookup
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError
 
 # TODO: have same error handling block for each template render call
 
@@ -39,20 +37,8 @@ def initialise_jinja():
                              lstrip_blocks=True)
     return jinja2_env
 
-
-def initialise_lookup():
-    retval = TemplateLookup(directories=[resource_path("")],
-                            #module_directory= template_cache_dir,
-                            cache_type='memory',
-                            cache_enabled=True,
-                            )
-    retval.directories.append(os.getcwd())
-
-    return retval
-
 # TODO: make lookup initialised once rather than global for module import
 # and allow users to append to the lookup
-# TEMPLATE_LOOKUP = initialise_lookup()
 JINJA = initialise_jinja()
 
 def format_version_banner():
@@ -83,11 +69,9 @@ def render_inline(node, render_template_file, to_memory=True,
 
     if render_template_file:
         try:
-            # render_template = TEMPLATE_LOOKUP.get_template(
-            #     render_template_file)
             render_template = JINJA.get_template(
                     render_template_file)
-        except SyntaxException, error:
+        except TemplateSyntaxError, error:
             log.warning("Unable to render %s: "
                         "Syntax error in template: %s" % (node, error))
             return
@@ -141,11 +125,9 @@ def render_node(node):
 
     if render_template_file:
         try:
-            #render_template = TEMPLATE_LOOKUP.get_template(
-            #    render_template_file)
             render_template = JINJA.get_template(render_template_file)
 
-        except SyntaxException, error:
+        except TemplateSyntaxError, error:
             log.warning("Unable to render %s: "
                         "Syntax error in template: %s" % (node, error))
             return
@@ -162,19 +144,13 @@ def render_node(node):
                 except KeyError, error:
                     log.warning("Unable to render %s:"
                                 " %s not set" % (node, error))
-                    from mako import exceptions
-                    log.debug(exceptions.text_error_template().render())
                 except AttributeError, error:
                     log.warning("Unable to render %s: %s " % (node, error))
-                    from mako import exceptions
-                    log.debug(exceptions.text_error_template().render())
                 except NameError, error:
                     log.warning("Unable to render %s: %s. "
                                 "Check all variables used are defined" % (node, error))
                 except TypeError, error:
                     log.warning("Unable to render %s: %s." % (node, error))
-                    from mako import exceptions
-                    log.debug(exceptions.text_error_template().render())
 
         if node.render.to_memory:
             # Render directly to DeviceModel
@@ -252,9 +228,8 @@ def render_topology(topology):
         return
 
     try:
-        #render_template = TEMPLATE_LOOKUP.get_template(render_template_file)
         render_template = JINJA.get_template(render_template_file)
-    except SyntaxException, error:
+    except TemplateSyntaxError, error:
         log.warning(
             "Unable to render %s: Syntax error in template: %s" % (topology, error))
         return
