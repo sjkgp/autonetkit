@@ -17,7 +17,8 @@ version = 0.8.3.1
         slot{{ index }} = PA-2FE-TX
         {% endfor %}
         {% for interface in router.interfaces %}
-        {{ interface['src_port'] }} = {{ interface['dst'] }} {{ interface['dst_port'] }}
+        {# as mentioned here http://jinja.pocoo.org/docs/dev/templates/#variables #}
+        {{ interface.src_port }} = {{ interface.dst }} {{ interface.dst_port }}
         {% endfor %}
         x = {{ router.x }}
         y = {{ router.y }}
