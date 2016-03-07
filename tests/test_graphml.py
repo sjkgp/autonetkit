@@ -28,8 +28,8 @@ def compare_output_expected(topology_name, automated = True):
     #TODO: check the output files
 
 topologies = [
-"small_internet",
-"Aarnet",
+# "small_internet",
+# "Aarnet",
 "multigraph",
 ]
 
