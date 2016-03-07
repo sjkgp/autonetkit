@@ -17,6 +17,8 @@ doc/build
 
 *.log
 
+.idea
+
 autonetkit.log.*
 autonetkit.cfg
 

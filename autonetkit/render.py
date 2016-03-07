@@ -6,8 +6,7 @@ import time
 import autonetkit.log as log
 import mako
 import pkg_resources
-from mako.exceptions import SyntaxException
-from mako.lookup import TemplateLookup
+from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError
 
 # TODO: have same error handling block for each template render call
 
@@ -25,21 +24,22 @@ template_cache_dir = "cache"
 # disable cache for cleaner folder structure
 
 
-def initialise_lookup():
-    retval = TemplateLookup(directories=[resource_path("")],
-                            #module_directory= template_cache_dir,
-                            cache_type='memory',
-                            cache_enabled=True,
-                            )
+def initialise_jinja():
+    loader = FileSystemLoader
+    try:
+        from ank_csco.render import CiscoFileSystemLoader
+        loader = CiscoFileSystemLoader
+    except ImportError:
+        pass
 
-    retval.directories.append(os.getcwd())
-
-    return retval
+    jinja2_env = Environment(loader=loader(resource_path("templates")),
+                             trim_blocks=True,
+                             lstrip_blocks=True)
+    return jinja2_env
 
 # TODO: make lookup initialised once rather than global for module import
 # and allow users to append to the lookup
-TEMPLATE_LOOKUP = initialise_lookup()
-
+JINJA = initialise_jinja()
 
 def format_version_banner():
     try:
@@ -69,9 +69,9 @@ def render_inline(node, render_template_file, to_memory=True,
 
     if render_template_file:
         try:
-            render_template = TEMPLATE_LOOKUP.get_template(
-                render_template_file)
-        except SyntaxException, error:
+            render_template = JINJA.get_template(
+                    render_template_file)
+        except TemplateSyntaxError, error:
             log.warning("Unable to render %s: "
                         "Syntax error in template: %s" % (node, error))
             return
@@ -125,9 +125,9 @@ def render_node(node):
 
     if render_template_file:
         try:
-            render_template = TEMPLATE_LOOKUP.get_template(
-                render_template_file)
-        except SyntaxException, error:
+            render_template = JINJA.get_template(render_template_file)
+
+        except TemplateSyntaxError, error:
             log.warning("Unable to render %s: "
                         "Syntax error in template: %s" % (node, error))
             return
@@ -144,19 +144,13 @@ def render_node(node):
                 except KeyError, error:
                     log.warning("Unable to render %s:"
                                 " %s not set" % (node, error))
-                    from mako import exceptions
-                    log.debug(exceptions.text_error_template().render())
                 except AttributeError, error:
                     log.warning("Unable to render %s: %s " % (node, error))
-                    from mako import exceptions
-                    log.debug(exceptions.text_error_template().render())
                 except NameError, error:
                     log.warning("Unable to render %s: %s. "
                                 "Check all variables used are defined" % (node, error))
                 except TypeError, error:
                     log.warning("Unable to render %s: %s." % (node, error))
-                    from mako import exceptions
-                    log.debug(exceptions.text_error_template().render())
 
         if node.render.to_memory:
             # Render directly to DeviceModel
@@ -170,27 +164,29 @@ def render_node(node):
         # TODO: revert to shutil copy
         if render_base:
             render_base = resource_path(render_base)
-            fs_mako_templates = []
+            fs_jinja_templates = []
             for root, _, filenames in os.walk(render_base):
-                for filename in fnmatch.filter(filenames, '*.mako'):
+                for filename in fnmatch.filter(filenames, '*.jinja'):
                     # relative to fs root
                     rel_root = os.path.relpath(root, render_base)
-                    fs_mako_templates.append(os.path.join(rel_root, filename))
+                    fs_jinja_templates.append(os.path.join(rel_root, filename))
 
             try:
                 shutil.rmtree(render_base_output_dir)
             except OSError:
                 pass  # doesn't exist
             shutil.copytree(render_base, render_base_output_dir,
-                            ignore=shutil.ignore_patterns('*.mako'))
-            for template_file in fs_mako_templates:
+                            ignore=shutil.ignore_patterns('*.jinja'))
+            for template_file in fs_jinja_templates:
                 template_file_path = os.path.normpath(
                     os.path.join(render_base, template_file))
-                mytemplate = mako.template.Template(filename=template_file_path,
-                                                    )
+                mytemplate = JINJA.get_template(os.path.join(
+                        os.path.sep.join(node.render.base.split(os.path.sep)[1:]), # remove leading template folder
+                        template_file))
                 dst_file = os.path.normpath(
                     (os.path.join(render_base_output_dir, template_file)))
-                dst_file, _ = os.path.splitext(dst_file)  # remove .mako suffix
+                dst_file, _ = os.path.splitext(dst_file)  # remove .jinja suffix
+                log.info('dst file: %s' %dst_file)
                 with open(dst_file, 'wb') as dst_fh:
                     dst_fh.write(mytemplate.render(
                         node=node,
@@ -233,8 +229,8 @@ def render_topology(topology):
         return
 
     try:
-        render_template = TEMPLATE_LOOKUP.get_template(render_template_file)
-    except SyntaxException, error:
+        render_template = JINJA.get_template(render_template_file)
+    except TemplateSyntaxError, error:
         log.warning(
             "Unable to render %s: Syntax error in template: %s" % (topology, error))
         return

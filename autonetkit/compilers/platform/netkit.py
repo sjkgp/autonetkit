@@ -39,8 +39,7 @@ class NetkitCompiler(PlatformCompiler):
             dm_node.add_stanza("render")
             # TODO: order by folder and file template src/dst
             dm_node.render.base = os.path.join("templates", "quagga")
-            dm_node.render.template = os.path.join("templates",
-                                                   "netkit_startup.mako")
+            dm_node.render.template = "netkit_startup.jinja"
             dm_node.render.dst_folder = os.path.join("rendered",
                                                      self.host, "netkit")
             dm_node.render.base_dst_folder = os.path.join("rendered",
@@ -111,8 +110,7 @@ class NetkitCompiler(PlatformCompiler):
     def allocate_lab_topology(self):
         # TODO: replace name/label and use attribute from subgraph
         lab_topology = self.nidb.topology(self.host)
-        lab_topology.render_template = os.path.join("templates",
-                                                    "netkit_lab_conf.mako")
+        lab_topology.render_template = "netkit_lab_conf.jinja"
         lab_topology.render_dst_folder = os.path.join("rendered",
                                                       self.host, "netkit")
         lab_topology.render_dst_file = "lab.conf"
