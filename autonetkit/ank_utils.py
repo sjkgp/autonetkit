@@ -73,8 +73,8 @@ def merge_quagga_conf():
     templates_path = pkg_resources.resource_filename(__name__, "templates")
     zebra_dir = os.path.join(templates_path, "quagga", "etc", "zebra")
     # TODO: check the ordering - seems to matter
-    conf_files = ["zebra.conf.mako", "bgpd.conf.mako",
-                  "ospfd.conf.mako", "isisd.conf.mako"]
+    conf_files = ["zebra.conf.jinja", "bgpd.conf.jinja",
+                  "ospfd.conf.jinja", "isisd.conf.jinja"]
     timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
     data = ["##Merged by AutoNetkit merge_quagga_conf on %s" % timestamp]
     # TODO: replace newlines with !
@@ -83,7 +83,7 @@ def merge_quagga_conf():
         with open(filename) as fh:
             data.append(fh.read())
 
-    ospfd_conf = os.path.join(templates_path, "quagga.conf.mako")
+    ospfd_conf = os.path.join(templates_path, "quagga.conf.jinja")
     with open(ospfd_conf, "w") as fh:
         fh.write("\n".join(data))
 

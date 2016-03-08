@@ -11,11 +11,12 @@ versions/*
 
 doc/build
 
-*.graphml
 
 *.gz
 
 *.log
+
+.idea
 
 autonetkit.log.*
 autonetkit.cfg
@@ -46,7 +47,6 @@ example/rendered/*
 cache/*
 
 test.*
-*.graphml*
 
 .coverage
 htmlcov/*

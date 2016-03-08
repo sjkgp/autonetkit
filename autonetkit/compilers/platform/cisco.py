@@ -173,7 +173,7 @@ class CiscoCompiler(PlatformCompiler):
 
             if not phy_node.dont_configure_static_routing:
                 DmNode.render.template = os.path.join(
-                    "templates", "linux", "static_route.mako")
+                    "linux", "static_route.jinja")
                 if self.to_memory:
                     DmNode.render.to_memory = True
                 else:
@@ -192,7 +192,7 @@ class CiscoCompiler(PlatformCompiler):
         for phy_node in ios_nodes:
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
-            DmNode.render.template = os.path.join("templates", "ios.mako")
+            DmNode.render.template = "ios.jinja"
             if self.to_memory:
                 DmNode.render.to_memory = True
             else:
@@ -246,8 +246,7 @@ class CiscoCompiler(PlatformCompiler):
         for phy_node in self.anm['phy'].routers(host=self.host, syntax='ios_xr'):
             DmNode = self.nidb.node(phy_node)
             DmNode.add_stanza("render")
-            DmNode.render.template = os.path.join(
-                "templates", "ios_xr", "router.conf.mako")
+            DmNode.render.template = os.path.join("ios_xr", "router.conf.jinja")
             if self.to_memory:
                 DmNode.render.to_memory = True
             else:
@@ -282,7 +281,7 @@ class CiscoCompiler(PlatformCompiler):
             DmNode = self.nidb.node(phy_node)
             # fh.write(str(DmNode) + "\n")
             DmNode.add_stanza("render")
-            DmNode.render.template = os.path.join("templates", "nx_os.mako")
+            DmNode.render.template = "nx_os.jinja"
             if self.to_memory:
                 DmNode.render.to_memory = True
             else:
