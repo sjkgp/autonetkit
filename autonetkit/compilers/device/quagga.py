@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from autonetkit.compilers.device.router_base import RouterCompiler
-from autonetkit.nidb import ConfigStanza
 
 
 class QuaggaCompiler(RouterCompiler):
@@ -46,13 +45,11 @@ class QuaggaCompiler(RouterCompiler):
             if self.anm.has_overlay('ebgp_v4'):
                 bgp_int = self.anm['ebgp_v4'].interface(interface)
                 if bgp_int.is_bound:  # ebgp interface
-                    node.ospf.passive_interfaces.append(
-                        ConfigStanza(id=interface.id))
+                    node.ospf.passive_interfaces.append({'id': interface.id})
                     subnet = bgp_int['ipv4'].subnet
                     default_ebgp_area = 0
-                    node.ospf.ospf_links.append(
-                        ConfigStanza(network=subnet,
-                                     area=default_ebgp_area))
+                    node.ospf.ospf_links.append({'network': subnet,
+                                                 'area': default_ebgp_area})
 
     def isis(self, node):
         """Sets ISIS links

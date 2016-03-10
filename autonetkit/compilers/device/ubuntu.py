@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import autonetkit.log as log
 from autonetkit.compilers.device.server_base import ServerCompiler
-from autonetkit.nidb import ConfigStanza
 
 
 class UbuntuCompiler(ServerCompiler):
@@ -98,7 +97,6 @@ class UbuntuCompiler(ServerCompiler):
                                     'description': 'Route to infra subnet in AS %s via %s'
                                     % (asn, gateway),
                                 }
-                                route_entry = ConfigStanza(**route_entry)
                                 if infra_route.prefixlen == 32:
                                     host_routes_v4.append(route_entry)
                                 else:
@@ -117,7 +115,6 @@ class UbuntuCompiler(ServerCompiler):
                                     'description': 'Route to loopback subnet in AS %s via %s'
                                     % (asn, gateway),
                                 }
-                                route_entry = ConfigStanza(**route_entry)
                                 if asn_route.prefixlen == 32:
                                     host_routes_v4.append(route_entry)
                                 else:
@@ -128,11 +125,11 @@ class UbuntuCompiler(ServerCompiler):
 
                         for entry in host_routes_v4:
                             formatted = 'route add -host %s gw %s dev %s' \
-                                % (entry.prefix, entry.gw, entry.interface)
+                                % (entry['prefix'], entry['gw'], entry['interface'])
                             cloud_init_static_routes_v4.append(formatted)
                         for entry in static_routes_v4:
                             formatted = 'route add -net %s gw %s dev %s' \
-                                % (entry.network, entry.gw, entry.interface)
+                                % (entry['network'], entry['gw'], entry['interface'])
                             cloud_init_static_routes_v4.append(formatted)
 
             # IGP advertised infrastructure pool from same AS
@@ -157,7 +154,6 @@ class UbuntuCompiler(ServerCompiler):
                                 'description': 'Route to infra subnet in AS %s via %s'
                                 % (asn, gateway),
                             }
-                            route_entry = ConfigStanza(**route_entry)
                             if infra_route.prefixlen == 32:
                                 host_routes_v6.append(route_entry)
                             else:
@@ -176,7 +172,6 @@ class UbuntuCompiler(ServerCompiler):
                                 'description': 'Route to loopback subnet in AS %s via %s'
                                 % (asn, gateway),
                             }
-                            route_entry = ConfigStanza(**route_entry)
                             if asn_route.prefixlen == 32:
                                 host_routes_v6.append(route_entry)
                             else:
@@ -193,7 +188,7 @@ class UbuntuCompiler(ServerCompiler):
 
                     for entry in static_routes_v6:
                         formatted = 'route -A inet6 add %s gw %s dev %s' \
-                            % (entry.network, entry.gw, entry.interface)
+                            % (entry['network'], entry['gw'], entry['interface'])
                         cloud_init_static_routes_v6.append(formatted)
 
         node.add_stanza("cloud_init")

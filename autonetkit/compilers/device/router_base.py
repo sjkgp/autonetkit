@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 from autonetkit.compiler import sort_sessions
 from autonetkit.compilers.device.device_base import DeviceCompiler
-from autonetkit.nidb import ConfigStanza
-
 import autonetkit.plugins.naming as naming
 import autonetkit.log as log
 import netaddr
@@ -150,12 +148,10 @@ class RouterCompiler(DeviceCompiler):
             ipv4_node = self.anm['ipv4'].node(node)
             if ipv4_node and ipv4_node.static_routes:
                 for route in ipv4_node.static_routes:
-                    stanza = ConfigStanza(
-                        prefix=route.prefix,
-                        netmask=route.netmask,
-                        nexthop=route.nexthop,
-                        metric=route.metric,
-                    )
+                    stanza = {'prefix' : route.prefix,
+                              'netmask' : route.netmask,
+                              'nexthop' : route.nexthop,
+                              'metric' : route.metric}
                     node.ipv4_static_routes.append(stanza)
 
         node.ipv6_static_routes = []
@@ -163,11 +159,9 @@ class RouterCompiler(DeviceCompiler):
             ipv6_node = self.anm['ipv6'].node(node)
             if ipv6_node and ipv6_node.static_routes:
                 for route in ipv6_node.static_routes:
-                    stanza = ConfigStanza(
-                        prefix=route.prefix,
-                        nexthop=route.nexthop,
-                        metric=route.metric,
-                    )
+                    stanza = {'prefix' : route.prefix,
+                              'nexthop' : route.nexthop,
+                              'metric' : route.metric}
                     node.ipv6_static_routes.append(stanza)
 
     def interfaces(self, node):
@@ -247,15 +241,16 @@ class RouterCompiler(DeviceCompiler):
                 except TypeError:
                     #TODO: log warning here
                     cost = 1
-                stanza = ConfigStanza(id=interface.id,
-                                      cost=cost, passive=False)
+                stanza = {'id' : interface.id,
+                          'cost' : cost,
+                          'passive' : False}
 
                 if node.ip.use_ipv4:
-                    stanza.ipv4_address = ospf_int['ipv4'].ip_address
-                    stanza.ipv4_subnet = ospf_int['ipv4'].subnet
+                    stanza['ipv4_address'] = ospf_int['ipv4'].ip_address
+                    stanza['ipv4_subnet'] = ospf_int['ipv4'].subnet
                 if node.ip.use_ipv6:
-                    stanza.ipv6_address = ospf_int['ipv6'].ip_address
-                    stanza.ipv6_subnet = ospf_int['ipv6'].subnet
+                    stanza['ipv6_address'] = ospf_int['ipv6'].ip_address
+                    stanza['ipv6_subnet'] = ospf_int['ipv6'].subnet
 
                 interfaces_by_area[area].append(stanza)
 
@@ -264,11 +259,12 @@ class RouterCompiler(DeviceCompiler):
         router_area = ospf_loopback_zero.area  # area assigned to router
         # can't serialize IPAddress object to JSON
         router_area = str(router_area)
-        stanza = ConfigStanza(id=node.loopback_zero.id,
-                              cost=0, passive=True)
+        stanza = {'id' : node.loopback_zero.id,
+                  'cost' : 0,
+                  'passive' :True}
         interfaces_by_area[router_area].append(stanza)
 
-        node.ospf.interfaces_by_area = ConfigStanza(**interfaces_by_area)
+        node.ospf.interfaces_by_area = interfaces_by_area
 
         # TODO: split this into a generic IGP function
         added_networks = set()
@@ -297,8 +293,10 @@ class RouterCompiler(DeviceCompiler):
             if ospf_int and ospf_int.is_bound and network \
                     not in added_networks:  # don't add more than once
                 added_networks.add(network)
-                link_stanza = ConfigStanza(
-                    network=network, interface=interface, area=ospf_int.area)
+                link_stanza = {'network' : network,
+                               'interface' : interface,
+                               'area' : ospf_int.area}
+
                 node.ospf.ospf_links.append(link_stanza)
 
         for interface in node.loopback_interfaces():
@@ -321,8 +319,9 @@ class RouterCompiler(DeviceCompiler):
                     "to IGP", interface)
                 continue
 
-            link_stanza = ConfigStanza(
-             network=network, interface=interface, area=area)
+            link_stanza = {'network' : network,
+                           'interface' : interface,
+                           'area' : area}
             node.ospf.ospf_links.append(link_stanza)
 
             # also add networks for subnets to servers in the same AS
@@ -363,7 +362,7 @@ class RouterCompiler(DeviceCompiler):
                 continue
 
             data = self.ibgp_session_data(session, ip_version=4)
-            bgp_stanza = ConfigStanza(**data)
+            bgp_stanza = data
 
             direction = session.direction
             if direction == 'down':
@@ -383,7 +382,7 @@ class RouterCompiler(DeviceCompiler):
                     # exclude from regular ibgp config (eg VRF, VPLS, etc)
                     continue
                 data = self.ibgp_session_data(session, ip_version=6)
-                bgp_stanza = ConfigStanza(**data)
+                bgp_stanza = data
 
                 direction = session.direction
                 if direction == 'down':
@@ -409,7 +408,7 @@ class RouterCompiler(DeviceCompiler):
                 # exclude from regular ibgp config (eg VRF, VPLS, etc)
                 continue
             data = self.ebgp_session_data(session, ip_version=4)
-            bgp_stanza = ConfigStanza(**data)
+            bgp_stanza = data
             ebgp_neighbors.append(bgp_stanza)
 
         if node.ip.use_ipv6:
@@ -420,10 +419,10 @@ class RouterCompiler(DeviceCompiler):
                     # exclude from regular ibgp config (eg VRF, VPLS, etc)
                     continue
                 data = self.ebgp_session_data(session, ip_version=6)
-                bgp_stanza = ConfigStanza(**data)
+                bgp_stanza = data
                 ebgp_neighbors.append(bgp_stanza)
 
-        ebgp_neighbors = sorted(ebgp_neighbors, key=lambda x: x.asn)
+        ebgp_neighbors = sorted(ebgp_neighbors, key=lambda x: x['asn'])
         node.bgp.ebgp_neighbors = ebgp_neighbors
 
         return

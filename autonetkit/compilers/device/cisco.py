@@ -7,7 +7,6 @@ import netaddr
 from autonetkit.ank import sn_preflen_to_network
 from autonetkit.compiler import sort_sessions
 from autonetkit.compilers.device.router_base import RouterCompiler
-from autonetkit.nidb import ConfigStanza
 
 
 class IosBaseCompiler(RouterCompiler):
@@ -102,13 +101,11 @@ class IosBaseCompiler(RouterCompiler):
             node_ext_conn = g_ext_conn.node(node)
             ext_int = node_ext_conn.interface(interface)
             for sub_int in ext_int.sub_int or []:
-                stanza = ConfigStanza(
-                    id=sub_int['id'],
-                    ipv4_address=sub_int['ipv4_address'],
-                    ipv4_prefixlen=sub_int['ipv4_prefixlen'],
-                    ipv4_subnet=sub_int['ipv4_subnet'],
-                    dot1q=sub_int['dot1q'],
-                )
+                stanza = {'id': sub_int['id'],
+                          'ipv4_address': sub_int['ipv4_address'],
+                          'ipv4_prefixlen': sub_int['ipv4_prefixlen'],
+                          'ipv4_subnet': sub_int['ipv4_subnet'],
+                          'dot1q': sub_int['dot1q']}
                 interface.sub_ints.append(stanza)
 
     def mpls_oam(self, node):
@@ -146,12 +143,10 @@ class IosBaseCompiler(RouterCompiler):
             infra_blocks = self.anm['ipv4'].data['infra_blocks'
                                                  ].get(phy_node.asn) or []
             for infra_route in infra_blocks:
-                stanza = ConfigStanza(
-                    prefix=str(infra_route.network),
-                    netmask=str(infra_route.netmask),
-                    nexthop="Null0",
-                    metric=254,
-                )
+                stanza = {'prefix': str(infra_route.network),
+                          'netmask': str(infra_route.netmask),
+                          'nexthop': "Null0",
+                          'metric' : 254}
                 node.ipv4_static_routes.append(stanza)
 
         if node.is_ebgp_v6 and node.ip.use_ipv6:
@@ -159,11 +154,9 @@ class IosBaseCompiler(RouterCompiler):
                                                  ].get(phy_node.asn) or []
             # TODO: setup schema with defaults
             for infra_route in infra_blocks:
-                stanza = ConfigStanza(
-                    prefix=str(infra_route),
-                    nexthop="Null0",
-                    metric=254,
-                )
+                stanza = {'prefix': str(infra_route),
+                          'nexthop': "Null0",
+                          'metric': 254}
                 node.ipv6_static_routes.append(stanza)
 
     def bgp(self, node):
@@ -231,15 +224,13 @@ class IosBaseCompiler(RouterCompiler):
             for session in sort_sessions(g_ibgp_v4.edges(vrf_node)):
                 if session.exclude and session.vrf:
                     data = self.ibgp_session_data(session, ip_version=4)
-                    stanza = ConfigStanza(data)
-                    vrf_ibgp_neighbors[session.vrf].append(stanza)
+                    vrf_ibgp_neighbors[session.vrf].append(data)
 
             g_ibgp_v6 = self.anm['ibgp_v6']
             for session in sort_sessions(g_ibgp_v6.edges(vrf_node)):
                 if session.exclude and session.vrf:
                     data = self.ibgp_session_data(session, ip_version=6)
-                    stanza = ConfigStanza(data)
-                    vrf_ibgp_neighbors[session.vrf].append(stanza)
+                    vrf_ibgp_neighbors[session.vrf].append(data)
 
             # eBGP sessions for this VRF
 
@@ -248,26 +239,22 @@ class IosBaseCompiler(RouterCompiler):
             for session in sort_sessions(g_ebgp_v4.edges(vrf_node)):
                 if session.exclude and session.vrf:
                     data = self.ebgp_session_data(session, ip_version=4)
-                    stanza = ConfigStanza(data)
-                    vrf_ebgp_neighbors[session.vrf].append(stanza)
+                    vrf_ebgp_neighbors[session.vrf].append(data)
 
             for session in sort_sessions(g_ebgp_v6.edges(vrf_node)):
                 if session.exclude and session.vrf:
                     data = self.ebgp_session_data(session, ip_version=6)
-                    stanza = ConfigStanza(data)
-                    vrf_ebgp_neighbors[session.vrf].append(stanza)
+                    vrf_ebgp_neighbors[session.vrf].append(data)
 
             for vrf in vrf_node.node_vrf_names:
                 rd_index = vrf_node.rd_indices[vrf]
                 rd = '%s:%s' % (node.asn, rd_index)
-                stanza = ConfigStanza(
-                    vrf=vrf,
-                    rd=rd,
-                    use_ipv4=node.ip.use_ipv4,
-                    use_ipv6=node.ip.use_ipv6,
-                    vrf_ebgp_neighbors=vrf_ebgp_neighbors[vrf],
-                    vrf_ibgp_neighbors=vrf_ibgp_neighbors[vrf],
-                )
+                stanza = {'vrf': vrf,
+                          'rd': rd,
+                          'use_ipv4': node.ip.use_ipv4,
+                          'use_ipv6': node.ip.use_ipv6,
+                          'vrf_ebgp_neighbors': vrf_ebgp_neighbors[vrf],
+                          'vrf_ibgp_neighbors': vrf_ibgp_neighbors[vrf]}
                 node.bgp.vrfs.append(stanza)
 
         # Retain route_target if in ibgp_vpn_v4 and RR or HRR (set in design)
@@ -277,7 +264,7 @@ class IosBaseCompiler(RouterCompiler):
             retain = False
             if vpnv4_node.retain_route_target:
                 retain = True
-            node.bgp.vpnv4 = ConfigStanza(retain_route_target=retain)
+            node.bgp.vpnv4 = {'retain_route_target': retain}
 
     def vrf_igp_interfaces(self, node):
 
@@ -304,8 +291,9 @@ class IosBaseCompiler(RouterCompiler):
                 rd_index = vrf_node.rd_indices[vrf]
                 rd = '%s:%s' % (node.asn, rd_index)
 
-                stanza = ConfigStanza(
-                    vrf=vrf, rd=rd, route_target=route_target)
+                stanza = {'vrf': vrf,
+                          'rd': rd,
+                          'route_target': route_target}
                 node.vrf.vrfs.append(stanza)
 
             for interface in node.interfaces:
@@ -321,7 +309,7 @@ class IosBaseCompiler(RouterCompiler):
 
         node.vrf.use_ipv4 = node.ip.use_ipv4
         node.vrf.use_ipv6 = node.ip.use_ipv6
-        node.vrf.vrfs = sorted(node.vrf.vrfs, key=lambda x: x.vrf)
+        node.vrf.vrfs = sorted(node.vrf.vrfs, key=lambda x: x['vrf'])
 
     def mpls_ldp(self, node):
         g_mpls_ldp = self.anm['mpls_ldp']
@@ -534,26 +522,26 @@ class IosClassicCompiler(IosBaseCompiler):
         gre_node = g_gre_tunnel.node(node)
         neighbors = gre_node.neighbors()
         for index, neigh in enumerate(neighbors, start=1):
-            stanza = ConfigStanza(id=index, endpoint=neigh)
+            stanza = {'id': index, 'endpoint': neigh}
 
             # TODO: try/except here
             # TODO: Explain logic here
             src_int = g_gre_tunnel.edge(node, neigh).src_int
             tunnel_source = node.interface(src_int).id
-            stanza.source = tunnel_source
-            stanza.destination = "0.0.0.0"  # placeholder for user to replace
+            stanza['source'] = tunnel_source
+            stanza['destination'] = "0.0.0.0"  # placeholder for user to replace
 
             if neigh.tunnel_enabled_ipv4:
                 ip_address = neigh.tunnel_ipv4_address
                 cidr = neigh.tunnel_ipv4_cidr
-                stanza.ipv4_address = ip_address
-                stanza.ipv4_subnet = cidr
-                stanza.use_ipv4 = True
+                stanza['ipv4_address'] = ip_address
+                stanza['ipv4_subnet'] = cidr
+                stanza['use_ipv4'] = True
 
             if neigh.tunnel_enabled_ipv6:
                 cidr = neigh.tunnel_ipv6_cidr
-                stanza.ipv4_subnet = cidr
-                stanza.use_ipv6 = True
+                stanza['ipv4_subnet'] = cidr
+                stanza['use_ipv6'] = True
 
             node.gre_tunnels.append(stanza)
 
@@ -578,16 +566,16 @@ class IosClassicCompiler(IosBaseCompiler):
 
         node.pseudowire_classes = []
         for pwc in l2tp_v3_node.pseudowire_classes:
-            stanza = ConfigStanza()
-            stanza.name = pwc['name']
-            stanza.encapsulation = pwc['encapsulation']
-            stanza.protocol = pwc['protocol']
-            stanza.l2tp_class_name = pwc['l2tp_class_name']
+            stanza = {}
+            stanza['name'] = pwc['name']
+            stanza['encapsulation'] = pwc['encapsulation']
+            stanza['protocol'] = pwc['protocol']
+            stanza['l2tp_class_name'] = pwc['l2tp_class_name']
             local_interface = pwc['local_interface']
 
             # Lookup the interface ID allocated for this loopback by compiler
             local_interface_id = node.interface(local_interface).id
-            stanza.local_interface = local_interface_id
+            stanza['local_interface'] = local_interface_id
 
             node.pseudowire_classes.append(stanza)
 
@@ -597,13 +585,13 @@ class IosClassicCompiler(IosBaseCompiler):
                 continue # no l2tpv3 encap, no need to do anything
 
             tunnel_int = l2tp_v3_node.interface(interface)
-            stanza = ConfigStanza()
-            stanza.remote_ip = tunnel_int.xconnect_remote_ip
-            stanza.vc_id = tunnel_int.xconnect_vc_id
-            stanza.encapsulation = "l2tpv3"
+            stanza = {}
+            stanza['remote_ip'] = tunnel_int.xconnect_remote_ip
+            stanza['vc_id'] = tunnel_int.xconnect_vc_id
+            stanza['encapsulation'] = "l2tpv3"
             #TODO: need to be conscious of support for other xconnect types
             # in templates since pw_class may not apply if not l2tpv3, et
-            stanza.pw_class = tunnel_int.xconnect_pw_class
+            stanza['pw_class'] = tunnel_int.xconnect_pw_class
 
             interface.xconnect = stanza
 
@@ -649,51 +637,47 @@ class IosClassicCompiler(IosBaseCompiler):
         # TODO: sort the peer list by peer IP
 
         for peer in node.bgp.ibgp_neighbors:
-            peer = ConfigStanza(peer)
-            peer.remote_ip = peer.loopback
-            if peer.use_ipv4:
+            peer['remote_ip'] = peer['loopback']
+            if peer['use_ipv4']:
                 if node.is_ebgp_v4:
-                    peer.next_hop_self = True
+                    peer['next_hop_self'] = True
                 ipv4_peers.append(peer)
-            if peer.use_ipv6:
+            if peer['use_ipv6']:
                 if node.is_ebgp_v6:
-                    peer.next_hop_self = True
+                    peer['next_hop_self'] = True
                 ipv6_peers.append(peer)
 
         for peer in node.bgp.ibgp_rr_parents:
-            peer = ConfigStanza(peer)
-            peer.remote_ip = peer.loopback
-            if peer.use_ipv4:
+            peer['remote_ip'] = peer['loopback']
+            if peer['use_ipv4']:
                 if node.is_ebgp_v4:
-                    peer.next_hop_self = True
+                    peer['next_hop_self'] = True
                 ipv4_peers.append(peer)
-            if peer.use_ipv6:
+            if peer['use_ipv6']:
                 if node.is_ebgp_v6:
-                    peer.next_hop_self = True
+                    peer['next_hop_self'] = True
                 ipv6_peers.append(peer)
 
         for peer in node.bgp.ibgp_rr_clients:
-            peer = ConfigStanza(peer)
-            peer.rr_client = True
-            peer.remote_ip = peer.loopback
-            if peer.use_ipv4:
+            peer['rr_client'] = True
+            peer['remote_ip'] = peer['loopback']
+            if peer['use_ipv4']:
                 if node.is_ebgp_v4:
-                    peer.next_hop_self = True
+                    peer['next_hop_self'] = True
                 ipv4_peers.append(peer)
-            if peer.use_ipv6:
+            if peer['use_ipv6']:
                 if node.is_ebgp_v6:
-                    peer.next_hop_self = True
+                    peer['next_hop_self'] = True
                 ipv6_peers.append(peer)
 
         for peer in node.bgp.ebgp_neighbors:
-            peer = ConfigStanza(peer)
-            peer.is_ebgp = True
-            peer.remote_ip = peer.dst_int_ip
-            if peer.use_ipv4:
-                peer.next_hop_self = True
+            peer['is_ebgp'] = True
+            peer['remote_ip'] = peer['dst_int_ip']
+            if peer['use_ipv4']:
+                peer['next_hop_self'] = True
                 ipv4_peers.append(peer)
-            if peer.use_ipv6:
-                peer.next_hop_self = True
+            if peer['use_ipv6']:
+                peer['next_hop_self'] = True
                 ipv6_peers.append(peer)
 
         node.bgp.ipv4_peers = ipv4_peers
@@ -702,24 +686,20 @@ class IosClassicCompiler(IosBaseCompiler):
         vpnv4_neighbors = []
         if node.bgp.vpnv4:
             for neigh in node.bgp.ibgp_neighbors:
-                if not neigh.use_ipv4:
+                if not neigh['use_ipv4']:
                     continue
-
-                neigh_data = ConfigStanza(neigh)
-                vpnv4_neighbors.append(neigh_data)
+                vpnv4_neighbors.append(neigh)
 
             for neigh in node.bgp.ibgp_rr_clients:
-                if not neigh.use_ipv4:
+                if not neigh['use_ipv4']:
                     continue
-                neigh_data = ConfigStanza(neigh)
-                neigh_data.rr_client = True
-                vpnv4_neighbors.append(neigh_data)
+                neigh['rr_client'] = True
+                vpnv4_neighbors.append(neigh)
 
             for neigh in node.bgp.ibgp_rr_parents:
-                if not neigh.use_ipv4:
+                if not neigh['use_ipv4']:
                     continue
-                neigh_data = ConfigStanza(neigh)
-                vpnv4_neighbors.append(neigh_data)
+                vpnv4_neighbors.append(neigh)
 
         vpnv4_neighbors = sorted(vpnv4_neighbors, key=lambda x:
                                  x['loopback'])
@@ -746,8 +726,8 @@ class IosXrCompiler(IosBaseCompiler):
 
         for interface in mpls_te_node.physical_interfaces():
             nidb_interface = self.nidb.interface(interface)
-            stanza = ConfigStanza(id=nidb_interface.id,
-                                  bandwidth_percent=100)
+            stanza = {'id' : nidb_interface.id,
+                      'bandwidth_percent' : 100}
             rsvp_interfaces.append(stanza)
 
             mpls_te_interfaces.append(nidb_interface.id)
@@ -769,15 +749,13 @@ class IosXrCompiler(IosBaseCompiler):
             rip_int = g_rip.interface(interface)
             if rip_int and rip_int.is_bound:
                 data = {'id': interface.id, 'passive': False}
-                stanza = ConfigStanza(**data)
                 if node.rip.use_ipv4:
-                    ipv4_interfaces.append(stanza)
+                    ipv4_interfaces.append(data)
 
         loopback_zero = node.loopback_zero
         data = {'id': node.loopback_zero.id, 'passive': True}
-        stanza = ConfigStanza(**data)
         if node.rip.use_ipv4:
-            ipv4_interfaces.append(stanza)
+            ipv4_interfaces.append(data)
 
 
         node.rip.ipv4_interfaces = ipv4_interfaces
@@ -800,19 +778,17 @@ class IosXrCompiler(IosBaseCompiler):
             if eigrp_int and eigrp_int.is_bound:
                 # TODO: for here and below use stanza directly
                 data = {'id': interface.id, 'passive': False}
-                stanza = ConfigStanza(**data)
                 if node.eigrp.use_ipv4:
-                    ipv4_interfaces.append(stanza)
+                    ipv4_interfaces.append(data)
                 if node.eigrp.use_ipv6:
-                    ipv6_interfaces.append(stanza)
+                    ipv6_interfaces.append(data)
 
         loopback_zero = node.loopback_zero
         data = {'id': node.loopback_zero.id, 'passive': True}
-        stanza = ConfigStanza(**data)
         if node.eigrp.use_ipv4:
-            ipv4_interfaces.append(stanza)
+            ipv4_interfaces.append(data)
         if node.eigrp.use_ipv6:
-            ipv6_interfaces.append(stanza)
+            ipv6_interfaces.append(data)
 
         node.eigrp.ipv4_interfaces = ipv4_interfaces
         node.eigrp.ipv6_interfaces = ipv6_interfaces
@@ -838,9 +814,7 @@ class IosXrCompiler(IosBaseCompiler):
                 if interface.isis.mtu is not None:
                     data['mtu'] = interface.isis.hello_padding_disable
 
-                # TODO: make stanza
-                stanza = ConfigStanza(**data)
-                node.isis.isis_links.append(stanza)
+                node.isis.isis_links.append(data)
 
 
 class NxOsCompiler(IosBaseCompiler):
