@@ -20,15 +20,17 @@ def test():
     if __name__ == "__main__":
         automated = False
 
+    import os
     dirname, filename = os.path.split(os.path.abspath(__file__))
 
+    import autonetkit
     anm =  autonetkit.NetworkModel()
     input_file = os.path.join(dirname, "small_internet.graphml")
     input_graph = graphml.load_graphml(input_file)
 
     import autonetkit.build_network as build_network
     anm = build_network.initialise(input_graph)
-    aplicator = build_network.DesignRulesAplicator(anm)
+    aplicator = build_network.DesignRulesApplicator(anm)
     anm = aplicator.design()
 
     import autonetkit.console_script as console_script
@@ -42,7 +44,6 @@ def test():
     import autonetkit.render
     autonetkit.render.render(nidb)
 
-    import os
     dst_folder = nidb.topology['localhost'].render_dst_folder
 
     # test folder structure
