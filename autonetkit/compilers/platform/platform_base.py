@@ -27,9 +27,9 @@ class PlatformCompiler(object):
         for node in self.nidb.l3devices(host=self.host):
             phy_node = self.anm['phy'].node(node)
 
-            node.add_stanza("ip")
-            node.ip.use_ipv4 = phy_node.use_ipv4 or False
-            node.ip.use_ipv6 = phy_node.use_ipv6 or False
+            node.add_scope("ip")
+            node.ip['use_ipv4'] = phy_node.use_ipv4 or False
+            node.ip['use_ipv6'] = phy_node.use_ipv6 or False
 
             for interface in node.interfaces:
                 phy_int = phy_node.interface(interface)

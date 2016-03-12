@@ -44,9 +44,8 @@ class AnkEncoder(json.JSONEncoder):
             log.warning(
                 "%s is anm overlay_edge. Use attribute rather than object in compiler." % obj)
             return str(obj)
-        if isinstance(obj, autonetkit.nidb.ConfigStanza):
-            retval = obj.to_json()
-            return retval
+        if isinstance(obj, dict):
+            return obj
         if isinstance(obj, autonetkit.render2.NodeRender):
             retval = obj.to_json()
             return retval
@@ -129,8 +128,7 @@ def ank_json_custom_loads(data):
             except AttributeError:
                 pass  # not a string
 # handle lists of IP addresses
-            if isinstance(val, dict) and val.get("_ConfigStanza") == True:
-                val = autonetkit.nidb.ConfigStanza(**val)
+            if isinstance(val, dict):
                 inst[key] = val  # update with (possibly) updated list
 
             if isinstance(val, list):

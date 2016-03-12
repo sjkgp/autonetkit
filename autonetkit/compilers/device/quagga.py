@@ -36,7 +36,7 @@ class QuaggaCompiler(RouterCompiler):
 
         # add eBGP link subnets
 
-        node.ospf.passive_interfaces = []
+        node.ospf['passive_interfaces'] = []
 
         for interface in node.physical_interfaces():
             if interface.exclude_igp:
@@ -45,10 +45,10 @@ class QuaggaCompiler(RouterCompiler):
             if self.anm.has_overlay('ebgp_v4'):
                 bgp_int = self.anm['ebgp_v4'].interface(interface)
                 if bgp_int.is_bound:  # ebgp interface
-                    node.ospf.passive_interfaces.append({'id': interface.id})
+                    node.ospf['passive_interfaces'].append({'id': interface.id})
                     subnet = bgp_int['ipv4'].subnet
                     default_ebgp_area = 0
-                    node.ospf.ospf_links.append({'network': subnet,
+                    node.ospf['ospf_links'].append({'network': subnet,
                                                  'area': default_ebgp_area})
 
     def isis(self, node):
@@ -57,5 +57,5 @@ class QuaggaCompiler(RouterCompiler):
 
         g_isis = self.anm['isis']
         isis_node = g_isis.node(node)
-        node.isis.net = isis_node.net
-        node.isis.process_id = isis_node.process_id
+        node.isis['net'] = isis_node.net
+        node.isis['process_id'] = isis_node.process_id

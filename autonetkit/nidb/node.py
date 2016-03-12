@@ -6,7 +6,6 @@ import doctest
 
 import autonetkit.log as log
 from autonetkit.log import CustomAdapter
-from autonetkit.nidb.config_stanza import ConfigStanza
 from autonetkit.nidb.interface import DmInterface
 import autonetkit.log as log
 
@@ -43,23 +42,23 @@ class DmNode(object):
 
     # TODO: add a dump method - needed with str()?
 
-    def add_stanza(self, name, **kwargs):
-        """Adding stanza"""
+    def add_scope(self, name, **kwargs):
+        """Adding scope"""
         # TODO: decide if want shortcut for *args to set to True
         if self.get(name):
             value = self.get(name)
-            if isinstance(value, ConfigStanza):
+            if isinstance(value, dict):
                 # Don't recreate
-                self.log.debug("Stanza %s already exists" % name)
+                self.log.debug("Scope %s already exists" % name)
                 return value
             else:
                 # TODO: remove? - as shouldn't reach here now? GH-186
                 log.warning(
-                    "Creating stanza: %s already set as %s for %s" % (name, type(value), self))
+                    "Creating Scope: %s already set as %s for %s" % (name, type(value), self))
 
-        stanza = ConfigStanza(**kwargs)
-        self.__setattr__(name, stanza)
-        return stanza
+        value = kwargs if kwargs else {}
+        self.__setattr__(name, value)
+        return value
 
     def __hash__(self):
         """Returns hashed value of node id
@@ -509,11 +508,6 @@ class DmNode(object):
     def __getattr__(self, key):
         """Returns edge property"""
         data = self._node_data.get(key)
-
-        # TODO: remove once deprecated DmNode_category
-        if isinstance(data, ConfigStanza):
-            return data
-
         return data
 
     def __setattr__(self, key, val):

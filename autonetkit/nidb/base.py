@@ -149,17 +149,17 @@ class DmBase(object):
     def copy_graphics(self, network_model):
         """Transfers graphics data from anm to nidb"""
         for node in self:
-            node.add_stanza("graphics")
+            node.add_scope("graphics")
             #TODO: deprecate g_graphics overlay, store on phy
             if (network_model.has_overlay("graphics")
                 and node in network_model['graphics']):
                 source_node = network_model['graphics'].node(node)
             else:
                 source_node = network_model['phy'].node(node)
-            node.graphics.x = source_node.x
-            node.graphics.y = source_node.y
-            node.graphics.device_type = source_node.device_type
-            node.graphics.device_subtype = source_node.device_subtype
+            node.graphics['x'] = source_node.x
+            node.graphics['y'] = source_node.y
+            node.graphics['device_type'] = source_node.device_type
+            node.graphics['device_subtype'] = source_node.device_subtype
             node.device_type = source_node.device_type
             node.device_subtype = source_node.device_subtype
 

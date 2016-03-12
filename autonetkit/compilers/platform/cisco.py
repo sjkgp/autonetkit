@@ -13,7 +13,6 @@ from autonetkit.compilers.device.cisco import (IosBaseCompiler,
                                                IosXrCompiler, NxOsCompiler,
                                                )
 from autonetkit.compilers.platform.platform_base import PlatformCompiler
-from autonetkit.nidb import ConfigStanza
 
 
 class CiscoCompiler(PlatformCompiler):
@@ -127,8 +126,8 @@ class CiscoCompiler(PlatformCompiler):
         ubuntu_compiler = self.ubuntu_compiler
         for phy_node in self.anm['phy'].servers(host=self.host, syntax="ubuntu"):
             DmNode = self.nidb.node(phy_node)
-            DmNode.add_stanza("render")
-            DmNode.add_stanza("ip")
+            DmNode.add_scope("render")
+            DmNode.add_scope("ip")
 
             # TODO: look at server syntax also, same as for routers
             for interface in DmNode.physical_interfaces():
@@ -138,8 +137,8 @@ class CiscoCompiler(PlatformCompiler):
 
                 # interface.id = self.numeric_to_interface_label_linux(interface.numeric_id)
                 # print "numeric", interface.numeric_id, interface.id
-                DmNode.ip.use_ipv4 = phy_node.use_ipv4
-                DmNode.ip.use_ipv6 = phy_node.use_ipv6
+                DmNode.ip['use_ipv4'] = phy_node.use_ipv4
+                DmNode.ip['use_ipv6'] = phy_node.use_ipv6
 
                 # TODO: clean up interface handling
             numeric_int_ids = self.numeric_interface_ids()
@@ -172,13 +171,13 @@ class CiscoCompiler(PlatformCompiler):
             ubuntu_compiler.compile(DmNode)
 
             if not phy_node.dont_configure_static_routing:
-                DmNode.render.template = os.path.join(
+                DmNode.render['template'] = os.path.join(
                     "linux", "static_route.jinja")
                 if self.to_memory:
-                    DmNode.render.to_memory = True
+                    DmNode.render['to_memory'] = True
                 else:
-                    DmNode.render.dst_folder = self.dst_folder
-                    DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
+                    DmNode.render['dst_folder'] = self.dst_folder
+                    DmNode.render['dst_file'] = "%s.conf" % naming.network_hostname(
                         phy_node)
 
     @property
@@ -191,13 +190,13 @@ class CiscoCompiler(PlatformCompiler):
         ios_nodes = (n for n in host_routers if n.syntax in ("ios", "ios_xe"))
         for phy_node in ios_nodes:
             DmNode = self.nidb.node(phy_node)
-            DmNode.add_stanza("render")
-            DmNode.render.template = "ios.jinja"
+            DmNode.add_scope("render")
+            DmNode.render['template'] = "ios.jinja"
             if self.to_memory:
-                DmNode.render.to_memory = True
+                DmNode.render['to_memory'] = True
             else:
-                DmNode.render.dst_folder = self.dst_folder
-                DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
+                DmNode.render['dst_folder'] = self.dst_folder
+                DmNode.render['dst_file'] = "%s.conf" % naming.network_hostname(
                     phy_node)
 
             # TODO: write function that assigns interface number excluding
@@ -245,13 +244,13 @@ class CiscoCompiler(PlatformCompiler):
         ios_xr_compiler = self.xr_compiler
         for phy_node in self.anm['phy'].routers(host=self.host, syntax='ios_xr'):
             DmNode = self.nidb.node(phy_node)
-            DmNode.add_stanza("render")
-            DmNode.render.template = os.path.join("ios_xr", "router.conf.jinja")
+            DmNode.add_scope("render")
+            DmNode.render['template'] = os.path.join("ios_xr", "router.conf.jinja")
             if self.to_memory:
-                DmNode.render.to_memory = True
+                DmNode.render['to_memory'] = True
             else:
-                DmNode.render.dst_folder = self.dst_folder
-                DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
+                DmNode.render['dst_folder'] = self.dst_folder
+                DmNode.render['dst_file'] = "%s.conf" % naming.network_hostname(
                     phy_node)
 
             # Assign interfaces
@@ -280,13 +279,13 @@ class CiscoCompiler(PlatformCompiler):
         for phy_node in nxos_nodes:
             DmNode = self.nidb.node(phy_node)
             # fh.write(str(DmNode) + "\n")
-            DmNode.add_stanza("render")
-            DmNode.render.template = "nx_os.jinja"
+            DmNode.add_scope("render")
+            DmNode.render['template'] = "nx_os.jinja"
             if self.to_memory:
-                DmNode.render.to_memory = True
+                DmNode.render['to_memory'] = True
             else:
-                DmNode.render.dst_folder = self.dst_folder
-                DmNode.render.dst_file = "%s.conf" % naming.network_hostname(
+                DmNode.render['dst_folder'] = self.dst_folder
+                DmNode.render['dst_file'] = "%s.conf" % naming.network_hostname(
                     phy_node)
 
             # Assign interfaces
@@ -299,8 +298,9 @@ class CiscoCompiler(PlatformCompiler):
                     interface.id = self.numeric_to_interface_label_nxos(
                         interface.numeric_id)
 
-            DmNode.supported_features = ConfigStanza(
-                mpls_te=False, mpls_oam=False, vrf=False)
+            DmNode.supported_features = {'mpls_te': False,
+                                         'mpls_oam': False,
+                                         'vrf': False}
 
             nxos_compiler.compile(DmNode)
             # TODO: make this work other way around
@@ -340,7 +340,7 @@ class CiscoCompiler(PlatformCompiler):
             loopback_ids = self.loopback_interface_ids()
             # allocate loopbacks to routes (same for all ios variants)
             DmNode = self.nidb.node(phy_node)
-            DmNode.add_stanza("render")
+            DmNode.add_scope("render")
             DmNode.indices = phy_node.indices
 
             for interface in DmNode.loopback_interfaces():
@@ -396,7 +396,7 @@ class CiscoCompiler(PlatformCompiler):
                     interface.physical = True
                     interface.mgmt = True
                     interface.comment = "Configured on launch"
-                    if DmNode.ip.use_ipv4:
+                    if DmNode.ip.get('use_ipv4'):
                         # want a "no ip address" stanza
                         interface.use_ipv4 = False
                     if DmNode.use_cdp:

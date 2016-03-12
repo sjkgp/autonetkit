@@ -68,7 +68,7 @@ class UbuntuCompiler(ServerCompiler):
                 seen.add(gateway_interface)
 
                 gateway_ipv4 = gateway_ipv6 = None
-                node.add_stanza("ip")
+                node.add_scope("ip")
 
                 # TODO: look at aggregation
                 # TODO: catch case of ip addressing being disabled
@@ -76,7 +76,7 @@ class UbuntuCompiler(ServerCompiler):
                 # TODO: handle both ipv4 and ipv6
 
                 # IGP advertised infrastructure pool from same AS
-                if node.ip.use_ipv4:
+                if node.ip.get('use_ipv4'):
                     gateway_ipv4 = gateway_interface['ipv4'].ip_address
                     if gateway_ipv4 is None:
                         log.warning("No gateway IPv4 for %s to %s", node, gateway)
@@ -134,7 +134,7 @@ class UbuntuCompiler(ServerCompiler):
 
             # IGP advertised infrastructure pool from same AS
 
-            if node.ip.use_ipv6:
+            if node.ip.get('use_ipv6'):
                 gateway_ipv6 = gateway_interface['ipv6'].ip_address
                 if gateway_ipv6 is None:
                     log.warning("No gateway IPv6 for %s to %s", node, gateway)
@@ -191,9 +191,9 @@ class UbuntuCompiler(ServerCompiler):
                             % (entry['network'], entry['gw'], entry['interface'])
                         cloud_init_static_routes_v6.append(formatted)
 
-        node.add_stanza("cloud_init")
-        node.cloud_init.static_routes_v4 = cloud_init_static_routes_v4
-        node.cloud_init.static_routes_v6 = cloud_init_static_routes_v6
+        node.add_scope("cloud_init")
+        node.cloud_init['static_routes_v4'] = cloud_init_static_routes_v4
+        node.cloud_init['static_routes_v6'] = cloud_init_static_routes_v6
 
         # Render inline for packaging into yaml
         # TODO: no longer used, but keep as reference for later templates that require this format
