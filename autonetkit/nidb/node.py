@@ -354,7 +354,7 @@ class DmNode(object):
         >>> nidb = autonetkit.DeviceModel(anm)
         >>> r1 = nidb.node("r1")
         >>> r1._node_data
-        {'Network': None, '_ports': {0: {'category': 'loopback', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to sw1'}, 2: {'category': 'physical', 'description': 'r1 to r2'}, 3: {'category': 'physical', 'description': 'r1 to r3'}}, 'update': None, 'syntax': None, 'host': None, 'device_type': 'router', 'graphics': [('x', 500), ('y', 300), ('device_type', 'router'), ('device_subtype', None)], 'asn': 1, 'device_subtype': None, 'label': 'r1', 'platform': None}
+        {'Network': None, '_ports': {0: {'category': 'loopback', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to sw1'}, 2: {'category': 'physical', 'description': 'r1 to r2'}, 3: {'category': 'physical', 'description': 'r1 to r3'}}, 'update': None, 'syntax': None, 'host': None, 'device_type': 'router', 'graphics': {'y': 300, 'x': 500, 'device_type': 'router', 'device_subtype': None}, 'asn': 1, 'device_subtype': None, 'label': 'r1', 'platform': None}
         """
         return self.nidb.raw_graph().node[self.node_id]
 
@@ -373,7 +373,10 @@ class DmNode(object):
          'asn': 1,
          'device_subtype': None,
          'device_type': 'router',
-         'graphics': [('x', 500), ('y', 300), ('device_type', 'router'), ('device_subtype', None)],
+         'graphics': {'device_subtype': None,
+                      'device_type': 'router',
+                      'x': 500,
+                      'y': 300},
          'host': None,
          'label': 'r1',
          'platform': None,
