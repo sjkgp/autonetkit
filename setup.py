@@ -34,7 +34,7 @@ setup (
          'networkx==1.7',
          'configobj==4.7.1',
          'tornado',
-         "jinja2"
+         "jinja2==2.8"
          #'textfsm', 'pika',
          # 'exscript==0.0.1'
          ],
