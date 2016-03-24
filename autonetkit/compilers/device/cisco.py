@@ -429,6 +429,8 @@ class IosBaseCompiler(RouterCompiler):
             if src_type == 'IOS XRv':
                 if dst_type == 'IOSv':
                     interface.isis.hello_padding_disable = True
+                elif dst_type == 'IOL':
+                    interface.isis.hello_padding_disable = True
                 elif dst_type == 'CSR1000v':
                     interface.isis.hello_padding_disable = True
                 elif dst_type == 'NX-OSv':
@@ -441,12 +443,16 @@ class IosBaseCompiler(RouterCompiler):
             if src_type == 'CSR1000v':
                 if dst_type == 'IOS XRv':
                     interface.isis.mtu = 1430
+                if dst_type == 'IOL':
+                    interface.isis.mtu = 1430
 
             if src_type == 'NX-OSv':
                 if dst_type == 'IOS XRv':
                     interface.mtu = 1430  # for all of interface
                     interface.isis.hello_padding_disable = True
                 elif dst_type == 'IOSv':
+                    interface.isis.hello_padding_disable = True
+                elif dst_type == 'IOL':
                     interface.isis.hello_padding_disable = True
                 elif dst_type == 'CSR1000v':
                     interface.isis.hello_padding_disable = True
@@ -467,7 +473,7 @@ class IosClassicCompiler(IosBaseCompiler):
         self.l2tp_v3(node)
 
         phy_node = self.anm['phy'].node(node)
-        if phy_node.device_subtype == 'IOSv':
+        if phy_node.device_subtype == 'IOSv' or phy_node.device_subtype == 'IOL':
 
             # only copy across for certain reference platforms
 
