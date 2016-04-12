@@ -39,7 +39,7 @@ class RouterCompiler(DeviceCompiler):
             'use_ipv4': use_ipv4,
             'use_ipv6': use_ipv6,
             'asn': neigh.asn,
-            'loopback': neigh_ip.loopback,
+            'loopback': neigh_ip.get('loopback'),
             'update_source': node.loopback_zero.id,
         }
         return data
@@ -67,8 +67,8 @@ class RouterCompiler(DeviceCompiler):
             'neighbor': neigh.label,
             'use_ipv4': use_ipv4,
             'use_ipv6': use_ipv6,
-            'asn': neigh.asn,
-            'loopback': neigh_ip.loopback,
+            'asn': neigh.get('asn'),
+            'loopback': neigh_ip.get('loopback'),
             'local_int_ip': local_int_ip,
             'dst_int_ip': dst_int_ip,
             'update_source': node.loopback_zero.id,
@@ -90,11 +90,11 @@ class RouterCompiler(DeviceCompiler):
         phy_node = self.anm['phy'].node(node)
         ipv4_node = self.anm['ipv4'].node(node)
 
-        node.global_custom_config = phy_node.custom_config
+        node.global_custom_config = phy_node.get('custom_config')
 
         node.add_scope("ip")
-        node.ip['use_ipv4'] = phy_node.use_ipv4 or False
-        node.ip['use_ipv6'] = phy_node.use_ipv6 or False
+        node.ip['use_ipv4'] = phy_node.get('use_ipv4') or False
+        node.ip['use_ipv6'] = phy_node.get('use_ipv6') or False
         if not (node.ip['use_ipv4'] and node.ip['use_ipv6']):
             node.log.debug(
                 'Neither IPv4 nor IPv6 specified: using default IPv4')
@@ -107,14 +107,14 @@ class RouterCompiler(DeviceCompiler):
         node.input_label = phy_node.id
         # Always copy loopback over - even for ipv6 - as used for router-id e.g. in OSPFv3
         if node.ip.get('use_ipv4') or node.ip.get('use_ipv6'):
-            node.loopback = ipv4_node.loopback
+            node.loopback = ipv4_node.get('loopback')
         if node.ip.get('use_ipv4'):
             node.loopback_subnet = netaddr.IPNetwork(node.loopback)
             node.loopback_subnet.prefixlen = 32
 
         if self.anm['phy'].data.enable_routing:
             # applies even if ipv4 disabled, used for eg eigrp, bgp, ...
-            node.router_id = ipv4_node.loopback
+            node.router_id = ipv4_node.get('loopback')
 
         self.interfaces(node)
         if self.anm.has_overlay('ospf') and node in self.anm['ospf']:
@@ -144,8 +144,8 @@ class RouterCompiler(DeviceCompiler):
         node.ipv4_static_routes = []
         if self.anm.has_overlay("ipv4"):
             ipv4_node = self.anm['ipv4'].node(node)
-            if ipv4_node and ipv4_node.static_routes:
-                for route in ipv4_node.static_routes:
+            if ipv4_node and ipv4_node.get('static_routes'):
+                for route in ipv4_node.get('static_routes'):
                     stanza = {'prefix' : route.prefix,
                               'netmask' : route.netmask,
                               'nexthop' : route.nexthop,
@@ -155,8 +155,8 @@ class RouterCompiler(DeviceCompiler):
         node.ipv6_static_routes = []
         if self.anm.has_overlay("ipv6"):
             ipv6_node = self.anm['ipv6'].node(node)
-            if ipv6_node and ipv6_node.static_routes:
-                for route in ipv6_node.static_routes:
+            if ipv6_node and ipv6_node.get('static_routes'):
+                for route in ipv6_node.get('static_routes'):
                     stanza = {'prefix' : route.prefix,
                               'nexthop' : route.nexthop,
                               'metric' : route.metric}
@@ -172,7 +172,7 @@ class RouterCompiler(DeviceCompiler):
 
         if node.ip.get('use_ipv4'):
             ipv4_node = self.anm['ipv4'].node(node)
-            node.loopback_zero.ipv4_address = ipv4_node.loopback
+            node.loopback_zero.ipv4_address = ipv4_node.get('loopback')
             node.loopback_zero.ipv4_subnet = node.loopback_subnet
 
         # TODO: bne consistent wit hcidr name so can use in cisco ios xr templates
@@ -207,14 +207,14 @@ class RouterCompiler(DeviceCompiler):
         ospf_node = g_ospf.node(node)
         ospf_stanza = node.add_scope("ospf")
 
-        ospf_stanza['custom_config'] = ospf_node.custom_config
+        ospf_stanza['custom_config'] = ospf_node.get('custom_config')
 
         # default, inherited enable if necessary
         node.ospf['ipv4_mpls_te'] = False
 
-        node.ospf['loopback_area'] = g_ospf.node(node).area or 0
+        node.ospf['loopback_area'] = g_ospf.node(node).get('area') or 0
 
-        node.ospf['process_id'] = ospf_node.process_id
+        node.ospf['process_id'] = ospf_node.get('process_id')
         node.ospf['lo_interface'] = self.lo_interface
 
         node.ospf['ospf_links'] = []
@@ -333,7 +333,7 @@ class RouterCompiler(DeviceCompiler):
         node.asn = asn
         bgp_stanza = node.add_scope("bgp")
         if self.anm.has_overlay("bgp"):
-            bgp_stanza['custom_config'] = phy_node['bgp'].custom_config
+            bgp_stanza['custom_config'] = phy_node['bgp'].get('custom_config')
         else:
             bgp_stanza['custom_config'] = ""
 
@@ -429,8 +429,8 @@ class RouterCompiler(DeviceCompiler):
         g_rip = self.anm['rip']
         g_ipv4 = self.anm['ipv4']
         rip_node = self.anm['rip'].node(node)
-        node.rip['process_id'] = rip_node.process_id
-        node.rip['custom_config'] = rip_node.custom_config
+        node.rip['process_id'] = rip_node.get('process_id')
+        node.rip['custom_config'] = rip_node.get('custom_config')
 
         ipv4_networks = set()
         for interface in node.physical_interfaces():
@@ -451,8 +451,8 @@ class RouterCompiler(DeviceCompiler):
     def isis(self, node):
         g_isis = self.anm['isis']
         isis_node = g_isis.node(node)
-        process_id = isis_node.process_id
-        node.isis['custom_config'] = isis_node.custom_config
+        process_id = isis_node.get('process_id')
+        node.isis['custom_config'] = isis_node.get('custom_config')
 
         # default, inherited enable if necessary
         node.isis['ipv4_mpls_te'] = False
@@ -478,7 +478,7 @@ class RouterCompiler(DeviceCompiler):
 
         g_isis = self.anm['isis']
         isis_node = self.anm['isis'].node(node)
-        node.isis['net'] = isis_node.net
+        node.isis['net'] = isis_node.get('net')
 
         # TODO: generalise loopbacks to allow more than one per device
 
@@ -497,8 +497,8 @@ class RouterCompiler(DeviceCompiler):
         g_eigrp = self.anm['eigrp']
         g_ipv4 = self.anm['ipv4']
         eigrp_node = self.anm['eigrp'].node(node)
-        node.eigrp['process_id'] = eigrp_node.process_id
-        node.eigrp['custom_config'] = eigrp_node.custom_config
+        node.eigrp['process_id'] = eigrp_node.get('process_id')
+        node.eigrp['custom_config'] = eigrp_node.get('custom_config')
 
         ipv4_networks = set()
         for interface in node.physical_interfaces():

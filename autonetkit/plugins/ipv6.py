@@ -58,7 +58,7 @@ def allocate_loopbacks(g_ip, address_block=None):
         loopback_hosts.next()
         l3hosts = set(d for d in devices if d.is_l3device())
         for host in sorted(l3hosts, key=lambda x: x.label):
-            host.loopback = loopback_hosts.next()
+            host.set('loopback', loopback_hosts.next())
 
     g_ip.data.loopback_blocks = dict((asn, [subnet]) for (asn,
                                                           subnet) in loopback_blocks.items())
@@ -87,8 +87,8 @@ def allocate_infra(g_ip, address_block=None):
         subnets.next()  # network address
         ptp_subnet = subnets.next().subnet(126)
         ptp_subnet.next()  # network address
-        all_bcs = set(d for d in devices if d.broadcast_domain
-                      and d.allocate)
+        all_bcs = set(d for d in devices if d.get('broadcast_domain')
+                      and d.get('allocate'))
         ptp_bcs = [bc for bc in all_bcs if bc.degree() == 2]
 
         for bc in sorted(ptp_bcs):
@@ -111,7 +111,7 @@ def allocate_infra(g_ip, address_block=None):
             hosts = subnet.iter_hosts()
             # drop .0 as a host address (valid but can be confusing)
             hosts.next()
-            bc.subnet = subnet
+            bc.set('subnet', subnet)
             # for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
             for iface in sorted(bc.neighbor_interfaces()):
                 iface.ip_address = hosts.next()

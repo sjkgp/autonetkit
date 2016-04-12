@@ -18,7 +18,7 @@ def mpls_te(anm):
     # compilers
 
     g_mpls_te = anm.add_overlay('mpls_te')
-    if not any(True for n in g_in.routers() if n.mpls_te_enabled):
+    if not any(True for n in g_in.routers() if n.get('mpls_te_enabled')):
         log.debug('No nodes with mpls_te_enabled set')
         return
 
@@ -29,7 +29,7 @@ def mpls_te(anm):
     # build up edge list sequentially, to provide meaningful messages for
     # multipoint links
 
-    multipoint_edges = [e for e in g_l3.edges() if e.multipoint]
+    multipoint_edges = [e for e in g_l3.edges() if e.get('multipoint')]
     if len(multipoint_edges):
         log.info('Excluding multi-point edges from MPLS TE topology: %s'
                  % ', '.join(str(e) for e in multipoint_edges))
@@ -64,7 +64,7 @@ def vrf_pre_process(anm):
     g_vrf = anm['vrf']
     for node in g_vrf.nodes(vrf_role="CE"):
         log.debug("Marking CE node %s as non-ibgp" % node)
-        node['input'].ibgp_role = "Disabled"
+        node['input'].set('ibgp_role', 'Disabled')
 
 #@call_log
 
@@ -75,18 +75,18 @@ def allocate_vrf_roles(g_vrf):
     # TODO: might be clearer like ibgp with is_p is_pe etc booleans?  - final
     # step to translate to role for vis
     for node in g_vrf.nodes(vrf_role="CE"):
-        if not node.vrf:
-            node.vrf = "default_vrf"
+        if not node.get('vrf'):
+            node.set('vrf', 'default_vrf')
 
     ce_set_nodes = []
     for node in sorted(g_vrf.nodes('vrf')):
-        node.vrf_role = "CE"
+        node.set('vrf_role', "CE")
         ce_set_nodes.append(node)
     if len(ce_set_nodes):
         message = ", ".join(str(n) for n in sorted(ce_set_nodes))
         g_vrf.log.info("VRF role set to CE for %s" % message)
 
-    non_ce_nodes = [node for node in g_vrf if node.vrf_role != "CE"]
+    non_ce_nodes = [node for node in g_vrf if node.get('vrf_role') != "CE"]
 
     pe_set_nodes = []
     p_set_nodes = []
@@ -97,12 +97,12 @@ def allocate_vrf_roles(g_vrf):
         # TODO: does this do anything?
         phy_neighbors = [neigh for neigh in phy_neighbors]
         # filter to just this asn
-        if any(g_vrf.node(neigh).vrf_role == "CE" for neigh in phy_neighbors):
+        if any(g_vrf.node(neigh).get('vrf_role') == "CE" for neigh in phy_neighbors):
             # phy neigh has vrf set in this graph
-            node.vrf_role = "PE"
+            node.set('vrf_role', 'PE')
             pe_set_nodes.append(node)
         else:
-            node.vrf_role = "P"  # default role
+            node.set('vrf_role', 'P')  # default role
             p_set_nodes.append(node)
 
     if len(pe_set_nodes):
@@ -119,11 +119,11 @@ def add_vrf_loopbacks(g_vrf):
     """Adds loopbacks for VRFs, and stores VRFs connected to PE router"""
     # autonetkit.update_vis(anm)
     for node in g_vrf.nodes(vrf_role="PE"):
-        node_vrf_names = {n.vrf for n in node.neighbors(vrf_role="CE")}
-        node.node_vrf_names = node_vrf_names
-        node.rd_indices = {}
+        node_vrf_names = {n.get('vrf') for n in node.neighbors(vrf_role="CE")}
+        node.set('node_vrf_names', node_vrf_names)
+        node.set('rd_indices', {})
         for index, vrf_name in enumerate(node_vrf_names, 1):
-            node.rd_indices[vrf_name] = index
+            node.get('rd_indices')[vrf_name] = index
             node.add_loopback(vrf_name=vrf_name,
                               description="loopback for vrf %s" % vrf_name)
 
@@ -147,7 +147,7 @@ def build_ibgp_vpn_v4(anm):
     g_ibgp_vpn_v4 = anm.add_overlay("ibgp_vpn_v4", directed=True)
 
     v6_vrf_nodes = [n for n in g_vrf
-                    if n.vrf is not None and n['phy'].use_ipv6 is True]
+                    if n.get('vrf') is not None and n['phy'].get('use_ipv6') is True]
     if len(v6_vrf_nodes):
         message = ", ".join(str(s) for s in v6_vrf_nodes)
         log.warning("This version of AutoNetkit does not support IPv6 MPLS VPNs. "
@@ -156,7 +156,7 @@ def build_ibgp_vpn_v4(anm):
     ibgp_v4_nodes = list(g_ibgp_v4.nodes())
     pe_nodes = set(g_vrf.nodes(vrf_role="PE"))
     pe_rrc_nodes = {n for n in ibgp_v4_nodes if
-                    n in pe_nodes and n.ibgp_role == "RRC"}
+                    n in pe_nodes and n.get('ibgp_role') == "RRC"}
     # TODO: warn if pe_rrc_nodes?
     ce_nodes = set(g_vrf.nodes(vrf_role="CE"))
 
@@ -174,8 +174,8 @@ def build_ibgp_vpn_v4(anm):
     g_ibgp_vpn_v4.add_edges_from(g_ibgp_v4.edges(), retain="direction")
 
     for node in g_ibgp_vpn_v4:
-        if node.ibgp_role in ("HRR", "RR"):
-            node.retain_route_target = True
+        if node.get('ibgp_role') in ("HRR", "RR"):
+            node.set('retain_route_target', True)
 
     ce_edges = [e for e in g_ibgp_vpn_v4.edges()
                 if e.src in ce_nodes or e.dst in ce_nodes]
@@ -184,13 +184,13 @@ def build_ibgp_vpn_v4(anm):
     ce_pe_edges = []
     pe_ce_edges = []
     for edge in g_ibgp_vpn_v4.edges():
-        if (edge.src.vrf_role, edge.dst.vrf_role) == ("CE", "PE"):
-            edge.direction = "up"
-            edge.vrf = edge.src.vrf
+        if (edge.src.get('vrf_role'), edge.dst.get('vrf_role')) == ("CE", "PE"):
+            edge.set('direction', 'up')
+            edge.set('vrf', edge.src.get('vrf'))
             ce_pe_edges.append(edge)
-        elif (edge.src.vrf_role, edge.dst.vrf_role) == ("PE", "CE"):
-            edge.direction = "down"
-            edge.vrf = edge.dst.vrf
+        elif (edge.src.get('vrf_role'), edge.dst.get('vrf_role')) == ("PE", "CE"):
+            edge.set('direction', 'down')
+            edge.set('vrf', edge.dst.get('vrf'))
             pe_ce_edges.append(edge)
 
     # TODO: Document this
@@ -205,9 +205,9 @@ def build_ibgp_vpn_v4(anm):
     for edge in pe_ce_edges:
         # mark as exclude so don't include in standard ibgp config stanzas
         if g_ibgpv4.has_edge(edge):
-            edge['ibgp_v4'].exclude = True
+            edge['ibgp_v4'].set('exclude', True)
         if g_ibgpv6.has_edge(edge):
-            edge['ibgp_v6'].exclude = True
+            edge['ibgp_v6'].set('exclude', True)
 
 # legacy
     g_bgp = anm['bgp']
@@ -227,15 +227,15 @@ def build_mpls_ldp(anm):
     g_layer3 = anm['layer3']
     g_mpls_ldp = anm.add_overlay("mpls_ldp")
     nodes_to_add = [n for n in g_in.routers()
-                    if n['vrf'].vrf_role in ("PE", "P")]
+                    if n['vrf'].get('vrf_role') in ("PE", "P")]
     g_mpls_ldp.add_nodes_from(nodes_to_add)
     ank_utils.copy_attr_from(g_vrf, g_mpls_ldp, "vrf_role", dst_attr="role")
     ank_utils.copy_attr_from(g_vrf, g_mpls_ldp, "vrf")
 
-    nodes_to_add = [n for n in g_in.routers() if n.LDP]
+    nodes_to_add = [n for n in g_in.routers() if n.get('LDP')]
     g_mpls_ldp.add_nodes_from(nodes_to_add)
     for node in nodes_to_add:
-        node["mpls_ldp"].role = "P" # set as P nodes
+        node["mpls_ldp"].set('role', 'P') # set as P nodes
 
     # store as set for faster lookup
     pe_nodes = set(g_mpls_ldp.nodes(role="PE"))
@@ -266,14 +266,14 @@ def mark_ebgp_vrf(anm):
     for edge in g_ebgpv4.edges():
         if edge.src in pe_nodes and edge.dst in ce_nodes:
             # exclude from "regular" ebgp (as put into vrf stanza)
-            edge.exclude = True
-            edge.vrf = edge.dst['vrf'].vrf
+            edge.set('exclude', True)
+            edge.set('vrf', edge.dst['vrf'].get('vrf'))
 
     for edge in g_ebgpv6.edges():
         if edge.src in pe_nodes and edge.dst in ce_nodes:
              # exclude from "regular" ebgp (as put into vrf stanza)
-            edge.exclude = True
-            edge.vrf = edge.dst['vrf'].vrf
+            edge.set('exclude', True)
+            edge.set('vrf', edge.dst['vrf'].get('vrf'))
 
 #@call_log
 
@@ -287,7 +287,7 @@ def build_vrf(anm):
     import autonetkit
     autonetkit.ank.set_node_default(g_in, vrf=None)
 
-    if not any(True for n in g_in.routers() if n.vrf):
+    if not any(True for n in g_in.routers() if n.get('vrf')):
         log.debug("No VRFs set")
         return
 
@@ -300,8 +300,8 @@ def build_vrf(anm):
         if not(edge.src in g_vrf and edge.dst in g_vrf):
             return False
 
-        src_vrf_role = g_vrf.node(edge.src).vrf_role
-        dst_vrf_role = g_vrf.node(edge.dst).vrf_role
+        src_vrf_role = g_vrf.node(edge.src).get('vrf_role')
+        dst_vrf_role = g_vrf.node(edge.dst).get('vrf_role')
         return (src_vrf_role, dst_vrf_role) in (("PE", "CE"), ("CE", "PE"))
 
     vrf_add_edges = (e for e in g_layer3.edges()
@@ -312,8 +312,8 @@ def build_vrf(anm):
     def is_pe_p_edge(edge):
         if not(edge.src in g_vrf and edge.dst in g_vrf):
             return False
-        src_vrf_role = g_vrf.node(edge.src).vrf_role
-        dst_vrf_role = g_vrf.node(edge.dst).vrf_role
+        src_vrf_role = g_vrf.node(edge.src).get('vrf_role')
+        dst_vrf_role = g_vrf.node(edge.dst).get('vrf_role')
         return (src_vrf_role, dst_vrf_role) in (("PE", "P"), ("P", "PE"))
     vrf_add_edges = (e for e in g_layer3.edges()
                      if is_pe_p_edge(e))
@@ -326,7 +326,7 @@ def build_vrf(anm):
     # This could later look at connected components for each ASN
     route_targets = {}
     for asn, devices in ank_utils.groupby("asn", g_vrf.nodes(vrf_role="PE")):
-        asn_vrfs = [d.node_vrf_names for d in devices]
+        asn_vrfs = [d.get('node_vrf_names') for d in devices]
         # flatten list to unique set
         asn_vrfs = set(itertools.chain.from_iterable(asn_vrfs))
         route_targets[asn] = {vrf: "%s:%s" % (asn, index)
@@ -342,9 +342,9 @@ def build_vrf(anm):
     for edge in g_vrf.edges():
         # Set the vrf of the edge to be that of the CE device (either src or
         # dst)
-        edge.vrf = edge.src.vrf if edge.src.vrf_role is "CE" else edge.dst.vrf
+        edge.set('vrf', edge.src.get('vrf') if edge.src.get('vrf_role') is "CE" else edge.dst.get('vrf'))
 
     # map attributes to interfaces
     for edge in g_vrf.edges():
         for interface in edge.interfaces():
-            interface.vrf_name = edge.vrf
+            interface.set('vrf_name', edge.vrf)

@@ -26,7 +26,7 @@ class QuaggaCompiler(RouterCompiler):
         if phy_node.is_l3device():
             node.loopback_zero.id = self.lo_interface
             node.loopback_zero.description = 'Loopback'
-            node.loopback_zero.ipv4_address = ipv4_node.loopback
+            node.loopback_zero.ipv4_address = ipv4_node.get('loopback')
             node.loopback_zero.ipv4_subnet = node.loopback_subnet
 
     def ospf(self, node):
@@ -57,5 +57,5 @@ class QuaggaCompiler(RouterCompiler):
 
         g_isis = self.anm['isis']
         isis_node = g_isis.node(node)
-        node.isis['net'] = isis_node.net
-        node.isis['process_id'] = isis_node.process_id
+        node.isis['net'] = isis_node.get('net')
+        node.isis['process_id'] = isis_node.get('process_id')

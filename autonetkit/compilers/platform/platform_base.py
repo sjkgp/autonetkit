@@ -28,15 +28,15 @@ class PlatformCompiler(object):
             phy_node = self.anm['phy'].node(node)
 
             node.add_scope("ip")
-            node.ip['use_ipv4'] = phy_node.use_ipv4 or False
-            node.ip['use_ipv6'] = phy_node.use_ipv6 or False
+            node.ip['use_ipv4'] = phy_node.get('use_ipv4') or False
+            node.ip['use_ipv6'] = phy_node.get('use_ipv6') or False
 
             for interface in node.interfaces:
                 phy_int = phy_node.interface(interface)
                 if phy_int.exclude_igp is not None:
                     interface.exclude_igp = phy_int.exclude_igp
 
-                if phy_node.use_ipv4:
+                if phy_node.get('use_ipv4'):
                     ipv4_int = phy_int['ipv4']
 
                     """
@@ -74,7 +74,7 @@ class PlatformCompiler(object):
                         log.debug(error)
                     else:
                         interface.use_ipv4 = True
-                if phy_node.use_ipv6:
+                if phy_node.get('use_ipv6'):
                     ipv6_int = phy_int['ipv6']
                     if node.is_server() and interface.is_loopback:
                         continue

@@ -32,7 +32,7 @@ def check_for_selfloops(anm):
 def all_nodes_have_asn(anm):
     g_phy = anm['phy']
     for node in g_phy.l3devices():
-        if node.asn is None:
+        if node.get('asn') is None:
             log.warning("No ASN set for physical device %s" % node)
 
 
@@ -147,7 +147,7 @@ def validate_ipv4(anm):
 
     for bc in g_ipv4.nodes("broadcast_domain"):
         bc.log.debug("Verifying subnet and interface IPs")
-        if not bc.allocate:
+        if not bc.get('allocate'):
             log.debug("Skipping validation of manually allocated broadcast "
                 "domain %s" % bc)
             continue

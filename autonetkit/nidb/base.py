@@ -156,12 +156,12 @@ class DmBase(object):
                 source_node = network_model['graphics'].node(node)
             else:
                 source_node = network_model['phy'].node(node)
-            node.graphics['x'] = source_node.x
-            node.graphics['y'] = source_node.y
-            node.graphics['device_type'] = source_node.device_type
-            node.graphics['device_subtype'] = source_node.device_subtype
-            node.device_type = source_node.device_type
-            node.device_subtype = source_node.device_subtype
+            node.graphics['x'] = source_node.get('x')
+            node.graphics['y'] = source_node.get('y')
+            node.graphics['device_type'] = source_node.get('device_type')
+            node.graphics['device_subtype'] = source_node.get('device_subtype')
+            node.device_type = source_node.get('device_type')
+            node.device_subtype = source_node.get('device_subtype')
 
     def __len__(self):
         """Returns length of the graph

@@ -42,7 +42,7 @@ def build_ospf(anm):
     # add regardless, so allows quick check of node in anm['ospf'] in compilers
     g_ospf = anm.add_overlay("ospf")
 
-    if not any(n.igp == "ospf" for n in g_phy):
+    if not any(n.get('igp') == "ospf" for n in g_phy):
         g_ospf.log.debug("No OSPF nodes")
         return
 
@@ -50,114 +50,114 @@ def build_ospf(anm):
         g_ospf.log.info("Routing disabled, not configuring OSPF")
         return
 
-    ospf_nodes = [n for n in g_l3 if n['phy'].igp == "ospf"]
+    ospf_nodes = [n for n in g_l3 if n['phy'].get('igp') == "ospf"]
     g_ospf.add_nodes_from(ospf_nodes)
     g_ospf.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_ospf, "multipoint")
 
     for node in g_ospf:
         for interface in node.physical_interfaces():
-            interface.cost = 1
+            interface.set('cost', 1)
 
     ank_utils.copy_attr_from(g_in, g_ospf, "ospf_area", dst_attr="area")
     ank_utils.copy_attr_from(
         g_in, g_ospf, "custom_config_ospf", dst_attr="custom_config")
 
     g_ospf.remove_edges_from([link for link in g_ospf.edges(
-    ) if link.src.asn != link.dst.asn])  # remove inter-AS links
+    ) if link.src.get('asn') != link.dst.get('asn')])  # remove inter-AS links
 
     area_zero_ip = netaddr.IPAddress("0.0.0.0")
     area_zero_int = 0
     area_zero_ids = {area_zero_ip, area_zero_int}
     default_area = area_zero_int
-    if any(router.area == "0.0.0.0" for router in g_ospf):
+    if any(router.get('area') == "0.0.0.0" for router in g_ospf):
         # string comparison as hasn't yet been cast to IPAddress
         default_area = area_zero_ip
 
     for router in g_ospf:
-        if not router.area or router.area == "None":
-            router.area = default_area
+        if not router.get('area') or router.get('area') == "None":
+            router.set('area', default_area)
             # check if 0.0.0.0 used anywhere, if so then use 0.0.0.0 as format
         else:
             try:
-                router.area = int(router.area)
+                router.set('area', int(router.get('area')))
             except ValueError:
                 try:
-                    router.area = netaddr.IPAddress(router.area)
+                    router.set('area', netaddr.IPAddress(router.get('area')))
                 except netaddr.core.AddrFormatError:
                     router.log.warning("Invalid OSPF area %s. Using default"
-                                       " of %s" % (router.area, default_area))
-                    router.area = default_area
+                                       " of %s" % (router.get('area'), default_area))
+                    router.set('area', default_area)
 
     # TODO: use interfaces throughout, rather than edges
     for router in g_ospf:
         # and set area on interface
         for edge in router.edges():
-            if edge.area:
+            if edge.get('area'):
                 continue  # allocated (from other "direction", as undirected)
-            if router.area == edge.dst.area:
-                edge.area = router.area  # intra-area
+            if router.get('area') == edge.dst.get('area'):
+                edge.set('area', router.get('area'))  # intra-area
                 continue
 
-            if router.area in area_zero_ids or edge.dst.area in area_zero_ids:
+            if router.get('area') in area_zero_ids or edge.dst.get('area') in area_zero_ids:
                 # backbone to other area
-                if router.area in area_zero_ids:
+                if router.get('area') in area_zero_ids:
                     # router in backbone, use other area
-                    edge.area = edge.dst.area
+                    edge.set('area', edge.dst.get('area'))
                 else:
                     # router not in backbone, use its area
-                    edge.area = router.area
+                    edge.set('area', router.get('area'))
 
     for router in g_ospf:
-        areas = {edge.area for edge in router.edges()}
-        router.areas = list(areas)  # edges router participates in
+        areas = {edge.get('area') for edge in router.edges()}
+        router.set('areas', list(areas))  # edges router participates in
 
         if len(areas) in area_zero_ids:
-            router.type = "backbone"  # no ospf edges (eg single node in AS)
+            router.set('type', "backbone") # no ospf edges (eg single node in AS)
         elif len(areas) == 1:
             # single area: either backbone (all 0) or internal (all nonzero)
             if len(areas & area_zero_ids):
                 # intersection has at least one element -> router has area zero
-                router.type = "backbone"
+                router.set('type', 'backbone')
             else:
-                router.type = "internal"
+                router.set('type', 'internal')
 
         else:
             # multiple areas
             if len(areas & area_zero_ids):
                 # intersection has at least one element -> router has area zero
-                router.type = "backbone ABR"
-            elif router.area in area_zero_ids:
+                router.set('type', 'backbone ABR')
+            elif router.get('area') in area_zero_ids:
                 router.log.debug(
                     "Router belongs to area %s but has no area zero interfaces",
-                    router.area)
-                router.type = "backbone ABR"
+                    router.get('area'))
+                router.set('type', 'backbone ABR')
             else:
                 router.log.warning(
                     "spans multiple areas but is not a member of area 0")
-                router.type = "INVALID"
+                router.set('type', 'INVALID')
 
-    if (any(area_zero_int in router.areas for router in g_ospf) and
-            any(area_zero_ip in router.areas for router in g_ospf)):
+    if (any(area_zero_int in router.get('areas') for router in g_ospf) and
+            any(area_zero_ip in router.get('areas') for router in g_ospf)):
         router.log.warning("Using both area 0 and area 0.0.0.0")
 
     for link in g_ospf.edges():
-        if not link.cost:
-            link.cost = 1
+        if not link.get('cost'):
+            link.set('cost', 1)
 
     # map areas and costs onto interfaces
     # TODO: later map them directly rather than with edges - part of
     # the transition
     for edge in g_ospf.edges():
         for interface in edge.interfaces():
-            interface.cost = edge.cost
-            interface.area = edge.area
-            interface.multipoint = edge.multipoint
+            interface.set('cost', edge.get('cost'))
+            interface.set('area', edge.get('area'))
+            interface.set('multipoint', edge.get('multipoint'))
 
     for router in g_ospf:
-        router.loopback_zero.area = router.area
-        router.loopback_zero.cost = 0
-        router.process_id = router.asn
+        router.loopback_zero.set('area', router.get('area'))
+        router.loopback_zero.set('cost', 0)
+        router.set('process_id', router.get('asn'))
 
 def ip_to_net_ent_title_ios(ip_addr):
     """ Converts an IP address into an OSI Network Entity Title
@@ -189,7 +189,7 @@ def build_eigrp(anm):
     g_eigrp = anm.add_overlay("eigrp")
     g_phy = anm['phy']
 
-    if not any(n.igp == "eigrp" for n in g_phy):
+    if not any(n.get('igp') == "eigrp" for n in g_phy):
         log.debug("No EIGRP nodes")
         return
 
@@ -197,7 +197,7 @@ def build_eigrp(anm):
         g_eigrp.log.info("Routing disabled, not configuring EIGRP")
         return
 
-    eigrp_nodes = [n for n in g_l3 if n['phy'].igp == "eigrp"]
+    eigrp_nodes = [n for n in g_l3 if n['phy'].get('igp') == "eigrp"]
     g_eigrp.add_nodes_from(eigrp_nodes)
     g_eigrp.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_eigrp, "multipoint")
@@ -210,28 +210,28 @@ def build_eigrp(anm):
     exploded_edges = ank_utils.explode_nodes(g_eigrp,
                                              g_eigrp.switches())
     for edge in exploded_edges:
-        edge.multipoint = True
+        edge.set('multipoint', True)
 
     g_eigrp.remove_edges_from(
-        [link for link in g_eigrp.edges() if link.src.asn != link.dst.asn])
+        [link for link in g_eigrp.edges() if link.src.get('asn') != link.dst.get('asn')])
 
     for node in g_eigrp:
-        node.process_id = node.asn
+        node.set('process_id', node.get('asn'))
 
     for link in g_eigrp.edges():
-        link.metric = 1  # default
+        link.set('metric', 1)  # default
 
     for edge in g_eigrp.edges():
         for interface in edge.interfaces():
-            interface.metric = edge.metric
-            interface.multipoint = edge.multipoint
+            interface.set('metric', edge.get('metric'))
+            interface.set('multipoint', edge.get('multipoint'))
 
 def build_network_entity_title(anm):
     g_isis = anm['isis']
     g_ipv4 = anm['ipv4']
     for node in g_isis.routers():
         ip_node = g_ipv4.node(node)
-        node.net = ip_to_net_ent_title_ios(ip_node.loopback)
+        node.set('net', ip_to_net_ent_title_ios(ip_node.get('loopback')))
 
 
 def build_rip(anm):
@@ -241,7 +241,7 @@ def build_rip(anm):
     g_rip = anm.add_overlay("rip")
     g_phy = anm['phy']
 
-    if not any(n.igp == "rip-v2" for n in g_phy):
+    if not any(n.get('igp') == "rip-v2" for n in g_phy):
         log.debug("No rip nodes")
         return
 
@@ -249,7 +249,7 @@ def build_rip(anm):
         g_rip.log.info("Routing disabled, not configuring RIP")
         return
 
-    rip_nodes = [n for n in g_l3 if n['phy'].igp == "rip-v2"]
+    rip_nodes = [n for n in g_l3 if n['phy'].get('igp') == "rip-v2"]
     g_rip.add_nodes_from(rip_nodes)
     g_rip.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_rip, "multipoint")
@@ -258,18 +258,18 @@ def build_rip(anm):
         g_in, g_rip, "custom_config_rip", dst_attr="custom_config")
 
     g_rip.remove_edges_from(
-        [link for link in g_rip.edges() if link.src.asn != link.dst.asn])
+        [link for link in g_rip.edges() if link.src.get('asn') != link.dst.get('asn')])
 
     for node in g_rip:
-        node.process_id = node.asn
+        node.set('process_id', node.get('asn'))
 
     for link in g_rip.edges():
-        link.metric = 1  # default
+        link.set('metric', 1)  # default
 
     for edge in g_rip.edges():
         for interface in edge.interfaces():
-            interface.metric = edge.metric
-            interface.multipoint = edge.multipoint
+            interface.set('metric', edge.get('metric'))
+            interface.set('multipoint', edge.get('multipoint'))
 
 
 def build_isis(anm):
@@ -280,7 +280,7 @@ def build_isis(anm):
     g_phy = anm['phy']
     g_isis = anm.add_overlay("isis")
 
-    if not any(n.igp == "isis" for n in g_phy):
+    if not any(n.get('igp') == "isis" for n in g_phy):
         g_isis.log.debug("No ISIS nodes")
         return
 
@@ -288,7 +288,7 @@ def build_isis(anm):
         g_isis.log.info("Routing disabled, not configuring ISIS")
         return
 
-    isis_nodes = [n for n in g_l3 if n['phy'].igp == "isis"]
+    isis_nodes = [n for n in g_l3 if n['phy'].get('igp') == "isis"]
     g_isis.add_nodes_from(isis_nodes)
     g_isis.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_isis, "multipoint")
@@ -297,17 +297,17 @@ def build_isis(anm):
         g_in, g_isis, "custom_config_isis", dst_attr="custom_config")
 
     g_isis.remove_edges_from(
-        [link for link in g_isis.edges() if link.src.asn != link.dst.asn])
+        [link for link in g_isis.edges() if link.src.get('asn') != link.dst.get('asn')])
 
     build_network_entity_title(anm)
 
     for node in g_isis.routers():
-        node.process_id = node.asn
+        node.set('process_id', node.get('asn'))
 
     for link in g_isis.edges():
-        link.metric = 1  # default
+        link.set('metric', 1)  # default
 
     for edge in g_isis.edges():
         for interface in edge.interfaces():
-            interface.metric = edge.metric
-            interface.multipoint = edge.multipoint
+            interface.set('metric', edge.get('metric'))
+            interface.set('multipoint', edge.get('multipoint'))

@@ -53,7 +53,7 @@ def fqdn(node):
     'r2.1'
 
     """
-    return '%s.%s' % (node.label, node.asn)
+    return '%s.%s' % (node.label, node.get('asn'))
 
 
 def name_folder_safe(foldername):
@@ -89,18 +89,18 @@ def set_node_default(nm_graph, nbunch=None, **kwargs):
     >>> anm = autonetkit.topos.house()
     >>> g_phy = anm['phy']
     >>> r1 = g_phy.node("r1")
-    >>> r1.color = "blue"
-    >>> [(n, n.color) for n in g_phy]
+    >>> r1.set("color", "blue")
+    >>> [(n, n.get("color")) for n in g_phy]
     [(r4, None), (r5, None), (r1, 'blue'), (r2, None), (r3, None)]
     >>> set_node_default(g_phy, color="red")
-    >>> [(n, n.color) for n in g_phy]
+    >>> [(n, n.get("color")) for n in g_phy]
     [(r4, 'red'), (r5, 'red'), (r1, 'blue'), (r2, 'red'), (r3, 'red')]
 
     Can also set for a specific bunch of nodes
 
     >>> nodes = ["r1", "r2", "r3"]
     >>> set_node_default(g_phy, nodes, role="core")
-    >>> [(n, n.role) for n in g_phy]
+    >>> [(n, n.get("role")) for n in g_phy]
     [(r4, None), (r5, None), (r1, 'core'), (r2, 'core'), (r3, 'core')]
 
     """
@@ -129,11 +129,11 @@ def copy_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
     >>> anm = autonetkit.topos.house()
     >>> g_in = anm['input']
     >>> g_phy = anm['phy']
-    >>> [n.color for n in g_phy]
+    >>> [n.get("color") for n in g_phy]
     [None, None, None, None, None]
     >>> set_node_default(g_in, color="red")
     >>> copy_attr_from(g_in, g_phy, "color")
-    >>> [n.color for n in g_phy]
+    >>> [n.get("color") for n in g_phy]
     ['red', 'red', 'red', 'red', 'red']
 
     Can specify a default value if unset
@@ -141,7 +141,7 @@ def copy_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
     >>> nodes = ["r1", "r2", "r3"]
     >>> set_node_default(g_in, nodes, role="core")
     >>> copy_attr_from(g_in, g_phy, "role", default="edge")
-    >>> [(n, n.role) for n in g_phy]
+    >>> [(n, n.get("role")) for n in g_phy]
     [(r4, 'edge'), (r5, 'edge'), (r1, 'core'), (r2, 'core'), (r3, 'core')]
 
 
@@ -153,7 +153,7 @@ def copy_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
 
     >>> g_in.update(memory = "32")
     >>> copy_attr_from(g_in, g_phy, "memory", type=int)
-    >>> [n.memory for n in g_phy]
+    >>> [n.get("memory") for n in g_phy]
     [32, 32, 32, 32, 32]
 
     """
@@ -451,7 +451,6 @@ def split(nm_graph, edges, retain=None, id_prepend=''):
             dst_data['_ports'] = {dst.node_id: dst_int_id}
 
         # Note: don't retain ekey since adding to a new node
-
         append = (src.node_id, new_id, src_data)
         edges_to_add.append(append)
         append = (dst.node_id, new_id, dst_data)

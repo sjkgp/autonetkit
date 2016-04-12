@@ -200,8 +200,8 @@ class NmGraph(OverlayBase):
 
         # Initialise loopback zero on node
         for node in self:
-            node.raw_interfaces = {0:
-                                   {'description': 'loopback', 'category': 'loopback'}}
+            node.set('raw_interfaces', {0:
+                                   {'description': 'loopback', 'category': 'loopback'}})
 
         ebunch = sorted(self.edges())
         for edge in ebunch:

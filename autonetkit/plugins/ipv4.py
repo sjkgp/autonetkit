@@ -62,7 +62,7 @@ class TreeNode(object):
         return 'TreeNode: %s' % self.node
 
     def is_broadcast_domain(self):
-        return self.host and self.host.broadcast_domain
+        return self.host and self.host.get('broadcast_domain')
 
     def is_loopback_group(self):
         return self.loopback_group
@@ -268,7 +268,7 @@ class IpTree(object):
                 continue
 
             for item in sorted(items):
-                if item.broadcast_domain:
+                if item.get('broadcast_domain'):
                     subgraph.add_node(self.next_node_id, prefixlen=32
                                       - subnet_size(item.degree()), host=item)
                 if item.is_l3device():
@@ -579,13 +579,12 @@ class IpTree(object):
 
         # for host_tree_node in host_tree_nodes:
         # print host_tree_node, host_tree_node.subnet
-
         for host_tree_node in host_tree_nodes:
-            host_tree_node.host.loopback = host_tree_node.subnet
+            host_tree_node.host.set('loopback', host_tree_node.subnet)
 
         cds = [n for n in self if n.is_broadcast_domain()]
         for cd in cds:
-            cd.host.subnet = cd.subnet
+            cd.host.set('subnet', cd.subnet)
 
         interfaces = [n for n in self if n.is_interface()]
         for n in interfaces:
@@ -594,18 +593,18 @@ class IpTree(object):
 
                 # primary loopback
 
-                interface.loopback = n.ip_address
+                interface.set('loopback', n.ip_address)
             elif interface.is_loopback \
                     and not interface.is_loopback_zero:
 
                 # secondary loopback
 
-                interface.loopback = n.ip_address
+                interface.set('loopback', n.ip_address)
                 loopback_255 = netaddr.IPNetwork("%s/32" % n.ip_address)
-                interface.subnet = loopback_255
+                interface.set('subnet', loopback_255)
             elif interface.is_physical:
-                interface.ip_address = n.ip_address
-                interface.subnet = n.subnet
+                interface.set('ip_address', n.ip_address)
+                interface.set('subnet', n.subnet)
 
 
 def assign_asn_to_interasn_cds(g_ip, address_block=None):
@@ -631,11 +630,11 @@ class NonPtpSubnets(AutoNetkitException):
 def allocate_single_as_ptp_infra(g_ip, address_block=None):
     infra_blocks = {}
 
-    unique_asns = set(n.asn for n in g_ip)
+    unique_asns = set(n.get('asn') for n in g_ip)
     if len(unique_asns) > 1:
         raise MultipleASNs
 
-    all_bcs = set(d for d in g_ip if d.broadcast_domain and d.allocate)
+    all_bcs = set(d for d in g_ip if d.get('broadcast_domain') and d.get('allocate'))
     if any(bc.degree() > 2 for bc in all_bcs):
         raise NonPtpSubnets
 
@@ -677,7 +676,7 @@ def allocate_infra(g_ip, address_block=None):
     ip_tree = IpTree(address_block)
     assign_asn_to_interasn_cds(g_ip)
     nodes_to_allocate = sorted(n for n in g_ip.nodes('broadcast_domain')
-        if n.allocate)
+        if n.get('allocate'))
     ip_tree.add_nodes(nodes_to_allocate)
     ip_tree.build()
 

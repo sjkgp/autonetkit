@@ -18,10 +18,10 @@ def manual_ipv6_loopback_allocation(anm):
 
     for l3_device in g_ipv6.l3devices():
         try:
-            l3_device.loopback = IPAddress(l3_device['input'].loopback_v6)
+            l3_device.set('loopback', IPAddress(l3_device['input'].get('loopback_v6')))
         except netaddr.AddrFormatError:
             log.debug("Unable to parse IP address %s on %s",
-                l3_device['input'].loopback_v6, l3_device)
+                l3_device['input'].get('loopback_v6'), l3_device)
 
     # also need to form aggregated IP blocks (used for e.g. routing prefix
     # advertisement)
@@ -34,8 +34,8 @@ def manual_ipv6_loopback_allocation(anm):
         log.info("Unable to parse specified ipv4 loopback subnets %s/%s")
     else:
         mismatched_nodes = [n for n in g_ipv6.l3devices()
-                            if n.loopback and
-                            n.loopback not in loopback_block]
+                            if n.get('loopback') and
+                            n.get('loopback') not in loopback_block]
         if len(mismatched_nodes):
             log.warning("IPv6 loopbacks set on nodes %s are not in global "
                         "loopback allocation block %s"
@@ -44,7 +44,7 @@ def manual_ipv6_loopback_allocation(anm):
     loopback_blocks = {}
     for (asn, devices) in g_ipv6.groupby('asn').items():
         routers = [d for d in devices if d.is_router()]
-        loopbacks = [r.loopback for r in routers]
+        loopbacks = [r.get('loopback') for r in routers]
         loopback_blocks[asn] = netaddr.cidr_merge(loopbacks)
 
     g_ipv6.data.loopback_blocks = loopback_blocks
@@ -140,7 +140,7 @@ def manual_ipv6_infrastructure_allocation(anm):
             cidr_string = '%s/%s' % (ip_address, prefixlen)
             interface.subnet = netaddr.IPNetwork(cidr_string)
 
-    broadcast_domains = [d for d in g_ipv6 if d.broadcast_domain]
+    broadcast_domains = [d for d in g_ipv6 if d.get('broadcast_domain')]
 
     # TODO: allow this to work with specified ip_address/subnet as well as
     # ip_address/prefixlen
@@ -158,7 +158,7 @@ def manual_ipv6_infrastructure_allocation(anm):
     mismatched_interfaces = []
 
     for coll_dom in broadcast_domains:
-        if coll_dom.allocate is False:
+        if coll_dom.get('allocate') is False:
             continue
         connected_interfaces = [edge.dst_int for edge in
                                 coll_dom.edges()]
@@ -183,12 +183,12 @@ def manual_ipv6_infrastructure_allocation(anm):
             log.warning('Non matching subnets from collision domain %s: %s',
                         coll_dom, mismatch_subnets)
         else:
-            coll_dom.subnet = cd_subnets[0]  # take first entry
+            coll_dom.set('subnet', cd_subnets[0])  # take first entry
 
         # apply to remote interfaces
 
         for edge in coll_dom.edges():
-            edge.dst_int.subnet = coll_dom.subnet
+            edge.dst_int.subnet = coll_dom.get('subnet')
 
     # also need to form aggregated IP blocks (used for e.g. routing prefix
     # advertisement)
@@ -201,9 +201,9 @@ def manual_ipv6_infrastructure_allocation(anm):
 
     infra_blocks = {}
     for (asn, devices) in g_ipv6.groupby('asn').items():
-        broadcast_domains = [d for d in devices if d.broadcast_domain]
-        subnets = [cd.subnet for cd in broadcast_domains
-                   if cd.subnet is not None]  # only if subnet is set
+        broadcast_domains = [d for d in devices if d.get('broadcast_domain')]
+        subnets = [cd.get('subnet') for cd in broadcast_domains
+                   if cd.get('subnet') is not None]  # only if subnet is set
         infra_blocks[asn] = netaddr.cidr_merge(subnets)
 
     g_ipv6.data.infra_blocks = infra_blocks
@@ -243,7 +243,7 @@ def build_ipv6(anm):
 
     # TODO: replace this with direct allocation to interfaces in ip alloc
     # plugin
-    allocated = sorted([n for n in g_ip.routers() if n['input'].loopback_v6])
+    allocated = sorted([n for n in g_ip.routers() if n['input'].get('loopback_v6')])
     if len(allocated) == len(g_ip.routers()):
         # all allocated
         # TODO: need to infer subnetomanual_ipv6_loopback_allocation
@@ -259,7 +259,7 @@ def build_ipv6(anm):
 
         ipv6.allocate_loopbacks(g_ipv6, loopback_block)
 
-    l3_devices = [d for d in g_in if d.device_type in ('router', 'firewall', 'server')]
+    l3_devices = [d for d in g_in if d.get('device_type') in ('router', 'firewall', 'server')]
 
 
     manual_alloc_devices = set()
@@ -313,12 +313,12 @@ def build_ipv6(anm):
 
     ipv6.allocate_secondary_loopbacks(g_ipv6, secondary_loopback_block)
     for node in g_ipv6:
-        node.static_routes = []
+        node.set('static_routes', [])
 
     for node in g_ipv6.routers():
         # TODO: test this code
-        node.loopback_zero.ip_address = node.loopback
-        node.loopback_zero.subnet = netaddr.IPNetwork("%s/32" % node.loopback)
+        node.loopback_zero.ip_address = node.get('loopback')
+        node.loopback_zero.subnet = netaddr.IPNetwork("%s/32" % node.get('loopback'))
         for interface in node.loopback_interfaces():
             if not interface.is_loopback_zero:
                 # TODO: fix this inconsistency elsewhere

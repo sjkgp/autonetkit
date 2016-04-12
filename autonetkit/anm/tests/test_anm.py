@@ -118,8 +118,8 @@ def test():
 
     # test ANM
     test_node = g_phy.node("r1")
-    assert(test_node.asn == 1)
-    assert(test_node.device_type == "router")
+    assert(test_node.get('asn') == 1)
+    assert(test_node.get('device_type') == "router")
     # TODO: also need to test for servers
     assert(test_node.is_l3device())
     assert(test_node.is_router())
@@ -129,7 +129,7 @@ def test():
     assert(str(sorted(list(test_node.neighbor_interfaces())))
            == "[eth0.r2, eth0.r3]")
     # Test getting from another overlay
-    assert(test_node['input'].asn == 1)
+    assert(test_node['input'].get('asn') == 1)
 
     assert(str(sorted(g_phy.nodes())) == "[r1, r2, r3, r4, r5]")
 

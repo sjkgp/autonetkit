@@ -551,8 +551,8 @@ class OverlayBase(AnkElement):
         def filter_func(node):
             """Filter based on args and kwargs"""
 
-            return all(getattr(node, key) for key in args) \
-                and all(getattr(node, key) == val for (key, val) in
+            return all(node.get(key) for key in args) \
+                and all(node.get(key) == val for (key, val) in
                         kwargs.items())
 
         return [n for n in nbunch if filter_func(n)]

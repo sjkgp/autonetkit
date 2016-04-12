@@ -27,7 +27,7 @@ class Layer1Builder(object):
         hubs = g_l1.nodes(device_type="hub")
 
         for hub in hubs:
-            hub.collision_domain = True
+            hub.set('collision_domain', True)
 
     def build_layer1_conn(self):
         anm = self.anm
@@ -41,9 +41,9 @@ class Layer1Builder(object):
 
         # explode each seperately?
         for edge in exploded_edges:
-            edge.multipoint = True
-            edge.src_int.multipoint = True
-            edge.dst_int.multipoint = True
+            edge.set('multipoint', True)
+            edge.src_int.set('multipoint', True)
+            edge.dst_int.set('multipoint', True)
 
         # TODO: tidy up partial repetition of collision_domain attribute and
         # device type
@@ -61,15 +61,15 @@ class Layer1Builder(object):
         # TODO: debug the edges to split
         # print "edges to split", edges_to_split
         for edge in edges_to_split:
-            edge.split = True  # mark as split for use in building nidb
+            edge.set('split', True)  # mark as split for use in building nidb
 
         split_created_nodes = list(ank_utils.split(g_l1, edges_to_split,
                                                    retain=['split'],
                                                    id_prepend='cd_'))
 
         for node in split_created_nodes:
-            node.device_type = "collision_domain"
-            node.collision_domain = True
+            node.set('device_type', 'collision_domain')
+            node.set('collision_domain', True)
 
         # TODO: if parallel nodes, offset
         # TODO: remove graphics, assign directly
@@ -81,20 +81,20 @@ class Layer1Builder(object):
             co_ords_overlay = g_phy  # source from phy overlay
 
         for node in split_created_nodes:
-            node['graphics'].x = ank_utils.neigh_average(g_l1, node, 'x',
-                                                         co_ords_overlay) + 0.1
+            node['graphics'].set('x', ank_utils.neigh_average(g_l1, node, 'x',
+                                                         co_ords_overlay) + 0.1)
 
             # temporary fix for gh-90
 
-            node['graphics'].y = ank_utils.neigh_average(g_l1, node, 'y',
-                                                         co_ords_overlay) + 0.1
+            node['graphics'].set('y', ank_utils.neigh_average(g_l1, node, 'y',
+                                                         co_ords_overlay) + 0.1)
 
             # temporary fix for gh-90
 
             asn = ank_utils.neigh_most_frequent(
                 g_l1, node, 'asn', g_phy)  # arbitrary choice
-            node['graphics'].asn = asn
-            node.asn = asn  # need to use asn in IP overlay for aggregating subnets
+            node['graphics'].set('asn', asn)
+            node.set('asn', asn)  # need to use asn in IP overlay for aggregating subnets
 
 
     # TODO: build layer 1 connectivity graph

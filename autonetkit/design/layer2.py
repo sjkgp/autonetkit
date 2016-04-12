@@ -23,9 +23,9 @@ class Layer2Builder(object):
         g_l2.add_edges_from(g_l1.edges())
         # Don't aggregate managed switches
         for node in g_l2:
-            if node['layer1'].collision_domain == True:
-                node.broadcast_domain = True
-                node.device_type = "broadcast_domain"
+            if node['layer1'].get('collision_domain') == True:
+                node.set('broadcast_domain', True)
+                node.set('device_type', 'broadcast_domain')
 
 
     def build_layer2_conn(self):
@@ -40,9 +40,9 @@ class Layer2Builder(object):
 
         # explode each seperately?
         for edge in exploded_edges:
-            edge.multipoint = True
-            edge.src_int.multipoint = True
-            edge.dst_int.multipoint = True
+            edge.set('multipoint', True)
+            edge.src_int.set('multipoint', True)
+            edge.dst_int.set('multipoint', True)
 
 
     def check_layer2(self):
@@ -55,9 +55,9 @@ class Layer2Builder(object):
         for switch in sorted(g_l2.switches()):
             neigh_asns = defaultdict(int)
             for neigh in switch.neighbors():
-                if neigh.asn is None:
+                if neigh.get('asn') is None:
                     continue  # don't add if not set
-                neigh_asns[neigh.asn] += 1
+                neigh_asns[neigh.get('asn')] += 1
 
             # IGP if two or more neighbors share the same ASN
             is_igp = any(asns > 1 for asns in neigh_asns.values())
@@ -94,7 +94,7 @@ class Layer2Builder(object):
                           if edge.src.is_l3device() and edge.dst.is_l3device()]
         # TODO: debug the edges to split
         for edge in edges_to_split:
-            edge.split = True  # mark as split for use in building nidb
+            edge.set('split', True)  # mark as split for use in building nidb
 
         split_created_nodes = list(ank_utils.split(g_l2_bc, edges_to_split,
                                                    retain=['split'],
@@ -108,39 +108,39 @@ class Layer2Builder(object):
             co_ords_overlay = g_phy  # source from phy overlay
 
         for node in split_created_nodes:
-            node['graphics'].x = ank_utils.neigh_average(g_l2_bc, node, 'x',
-                                                         co_ords_overlay) + 0.1
+            node['graphics'].set('x', ank_utils.neigh_average(g_l2_bc, node, 'x',
+                                                         co_ords_overlay) + 0.1)
 
             # temporary fix for gh-90
 
-            node['graphics'].y = ank_utils.neigh_average(g_l2_bc, node, 'y',
-                                                         co_ords_overlay) + 0.1
+            node['graphics'].set('y', ank_utils.neigh_average(g_l2_bc, node, 'y',
+                                                         co_ords_overlay) + 0.1)
 
             # temporary fix for gh-90
 
             asn = ank_utils.neigh_most_frequent(
                 g_l2_bc, node, 'asn', g_phy)  # arbitrary choice
-            node['graphics'].asn = asn
-            node.asn = asn  # need to use asn in IP overlay for aggregating subnets
+            node['graphics'].set('asn', asn)
+            node.set('asn', asn)  # need to use asn in IP overlay for aggregating subnets
 
         # also allocate an ASN for virtual switches
         vswitches = [n for n in g_l2_bc.nodes()
-                     if n['layer2'].device_type == "switch"
-                     and n['layer2'].device_subtype == "virtual"]
+                     if n['layer2'].get('device_type') == "switch"
+                     and n['layer2'].get('device_subtype') == "virtual"]
         for node in vswitches:
             # TODO: refactor neigh_most_frequent to allow fallthrough attributes
             # asn = ank_utils.neigh_most_frequent(g_l2_bc, node, 'asn', g_l2)  #
             # arbitrary choice
-            asns = [n['layer2'].asn for n in node.neighbors()]
+            asns = [n['layer2'].get('asn') for n in node.neighbors()]
             asns = [x for x in asns if x is not None]
             asn = ank_utils.most_frequent(asns)
-            node.asn = asn  # need to use asn in IP overlay for aggregating subnets
+            node.set('asn', asn)  # need to use asn in IP overlay for aggregating subnets
             # also mark as broadcast domain
 
         from collections import defaultdict
         coincident_nodes = defaultdict(list)
         for node in split_created_nodes:
-            coincident_nodes[(node['graphics'].x, node['graphics'].y)].append(node)
+            coincident_nodes[(node['graphics'].get('x'), node['graphics'].get('y'))].append(node)
 
         coincident_nodes = {k: v for k, v in coincident_nodes.items()
                             if len(v) > 1}  # trim out single node co-ordinates
@@ -150,8 +150,8 @@ class Layer2Builder(object):
                 index = index + 1
                 x_offset = 25 * math.floor(index / 2) * math.pow(-1, index)
                 y_offset = -1 * 25 * math.floor(index / 2) * math.pow(-1, index)
-                item['graphics'].x = item['graphics'].x + x_offset
-                item['graphics'].y = item['graphics'].y + y_offset
+                item['graphics'].set('x', item['graphics'].get('x') + x_offset)
+                item['graphics'].set('y', item['graphics'].get('y') + y_offset)
 
         switch_nodes = g_l2_bc.switches()  # regenerate due to aggregated
         g_l2_bc.update(switch_nodes, broadcast_domain=True)
@@ -163,8 +163,8 @@ class Layer2Builder(object):
 
         for node in split_created_nodes:
             if ank_utils.neigh_equal(g_l2_bc, node, 'host', g_phy):
-                node.host = ank_utils.neigh_attr(g_l2_bc, node, 'host',
-                                                 g_phy).next()  # first attribute
+                node.set('host', ank_utils.neigh_attr(g_l2_bc, node, 'host',
+                                                 g_phy).next())  # first attribute
 
         # set collision domain IPs
         # TODO; work out why this throws a json exception
@@ -175,21 +175,21 @@ class Layer2Builder(object):
             #graphics_node.device_type = 'broadcast_domain'
             if node.is_switch():
                 # TODO: check not virtual
-                node['phy'].broadcast_domain = True
+                node['phy'].set('broadcast_domain', True)
             if not node.is_switch():
                 # use node sorting, as accomodates for numeric/string names
-                graphics_node.device_type = 'broadcast_domain'
+                graphics_node.set('device_type', 'broadcast_domain')
                 neighbors = sorted(neigh for neigh in node.neighbors())
                 label = '_'.join(neigh.label for neigh in neighbors)
                 cd_label = 'cd_%s' % label  # switches keep their names
-                node.label = cd_label
-                graphics_node.label = cd_label
-                node.device_type = "broadcast_domain"
-                node.label = node.id
-                graphics_node.label = node.id
+                node.set('label', cd_label)
+                graphics_node.set('label', cd_label)
+                node.set('device_type', 'broadcast_domain')
+                node.set('label', node.id)
+                graphics_node.set('label', node.id)
 
         for node in vswitches:
-            node.broadcast_domain = True
+            node.set('broadcast_domain', True)
 
 
     def set_default_vlans(self, default_vlan=2):
@@ -201,7 +201,7 @@ class Layer2Builder(object):
         g_l2 = anm['layer2']
         g_l1_conn = anm['layer1_conn']
         managed_switches = [n for n in g_vtp.switches()
-                            if n.device_subtype == "managed"]
+                            if n.get('device_subtype') == "managed"]
 
         no_vlan_ints = []
         for switch in managed_switches:
@@ -213,8 +213,8 @@ class Layer2Builder(object):
                 local_int = edge.src_int
 
                 # first look at local interfaces
-                vlan = local_int['input'].vlan
-                neigh_vlan = neigh_int['input'].vlan
+                vlan = local_int['input'].get('vlan')
+                neigh_vlan = neigh_int['input'].get('vlan')
                 if vlan and neigh_vlan and vlan != neigh_vlan:
                     log.warning("VLAN mismatch: VLAN %s on %s does not match VLAN %s on remote interface %s. Using local VLAN %s", vlan, interface, neigh_vlan, neigh_int, vlan)
                 if vlan is not None:
@@ -222,12 +222,12 @@ class Layer2Builder(object):
                         # use directly for next stage
                         pass
                     elif vlan == "1-4095":
-                        local_int.trunk = True
+                        local_int.set('trunk', True)
                         continue
                     else:
                         # not integer, set as trunk
-                        local_int.trunk = True
-                        local_int.allowed_vlans = vlan
+                        local_int.set('trunk', True)
+                        local_int.set('allowed_vlans', vlan)
                         continue
 
                 # TODO: store vlans on node to add to vlan a, b, c stanza
@@ -236,7 +236,7 @@ class Layer2Builder(object):
 
 
                 if neigh_int.node in managed_switches:
-                    local_int.trunk = True
+                    local_int.set('trunk', True)
                     continue
 
                 if vlan is None:
@@ -249,12 +249,12 @@ class Layer2Builder(object):
                             # use directly for next stage
                             vlan = neigh_vlan
                         elif neigh_vlan == "1-4095":
-                            local_int.trunk = True
+                            local_int.set('trunk', True)
                             continue
                         else:
                             # not integer, set as trunk
-                            local_int.trunk = True
-                            local_int.allowed_vlans = neigh_vlan
+                            local_int.set('trunk', True)
+                            local_int.set('allowed_vlans', neigh_vlan)
                             continue
 
                 try:
@@ -264,11 +264,11 @@ class Layer2Builder(object):
                         vlan, neigh_int, default_vlan)
                     vlan = default_vlan
 
-                neigh_int.vlan = vlan
-                local_int.vlan = vlan
+                neigh_int.set('vlan', vlan)
+                local_int.set('vlan', vlan)
 
             for interface in switch:
-                if interface.vlan and interface.trunk:
+                if interface.get('vlan') and interface.get('trunk'):
                     log.warning("Interface %s set to trunk and vlan", interface)
 
         # map to layer 2 interfaces
@@ -278,12 +278,12 @@ class Layer2Builder(object):
 
         # and map the vlans the node is in onto the node
         for switch in managed_switches:
-            switch.vlans = []
+            switch.set('vlans', [])
             for interface in switch:
-                if interface.vlan:
-                    switch.vlans.append(interface.vlan)
+                if interface.get('vlan'):
+                    switch.get('vlans').append(interface.vlan)
 
-            switch.vlans = list(set(switch.vlans)) # unique-ify
+            switch.set('vlans', list(set(switch.get('vlans')))) # unique-ify
 
 
     def build_vlans(self):
@@ -297,7 +297,7 @@ class Layer2Builder(object):
         g_vtp = anm.add_overlay('vtp')
         # g_vlan = anm.add_overlay('vlan')
         managed_switches = [n for n in g_l2.switches()
-                            if n.device_subtype == "managed"]
+                            if n.get('device_subtype') == "managed"]
 
         g_vtp.add_nodes_from(g_l1_conn)
         g_vtp.add_edges_from(g_l1_conn.edges())
@@ -342,19 +342,19 @@ class Layer2Builder(object):
                 sub_neigh_ints.update(neigh_ints)
 
                 for interface in switch:
-                    interface.vlan_domain = sub_index
+                    interface.set('vlan_domain', sub_index)
 
             for interface in sub_neigh_ints:
                 # store keyed by vlan id
-                vlan = interface['vtp'].vlan
+                vlan = interface['vtp'].get('vlan')
                 vlans[vlan].append(interface)
-                interface['vtp'].vlan_domain = sub_index
+                interface['vtp'].set('vlan_domain', sub_index)
 
             log.debug("Vlans for sub %s are %s", sub, vlans)
 
             # and record on the node for creating the bridges
             for switch in sub:
-                switch.domain_vlans = vlans.keys()
+                switch.set('domain_vlans', vlans.keys())
 
             # create a virtual switch for each
             # TODO: naming: if this is the only pair then name after these, else
@@ -368,20 +368,20 @@ class Layer2Builder(object):
                 vswitch = g_l2.add_node(vswitch_id)
                 # TODO: check of switch or just broadcast_domain for higher layer
                 # purposes
-                vswitch.device_type = "switch"
-                vswitch.device_subtype = "virtual"
+                vswitch.set('device_type', 'switch')
+                vswitch.set('device_subtype', "virtual")
                 vswitches.append(vswitch)
                 # TODO: layout based on midpoint of previous?
                 # or if same number as real switches, use their co-ordinates?
                 # and then check for coincident?
-                vswitch.x = sum(
-                    i.node['phy'].x for i in interfaces) / len(interfaces) + 50
-                vswitch.y = sum(
-                    i.node['phy'].y for i in interfaces) / len(interfaces) + 50
-                vswitch.vlan = vlan
+                vswitch.set('x', sum(
+                    i.node['phy'].get('x') for i in interfaces) / len(interfaces) + 50)
+                vswitch.set('y', sum(
+                    i.node['phy'].get('y') for i in interfaces) / len(interfaces) + 50)
+                vswitch.set('vlan', vlan)
 
-                vswitch['layer2'].broadcast_domain = True
-                vswitch['layer2'].vlan = vlan
+                vswitch['layer2'].set('broadcast_domain', True)
+                vswitch['layer2'].set('vlan', vlan)
 
                 # and connect from vswitch to the interfaces
                 edges_to_add = [(vswitch, iface) for iface in interfaces]
@@ -408,8 +408,8 @@ class Layer2Builder(object):
             g_vtp.add_edges_from(edges_to_add, trunk=True)
 
         for node in g_vtp:
-            node.vlans_by_domain = defaultdict(list)
+            node.set('vlans_by_domain', defaultdict(list))
             for interface in node:
-                domain = interface.vlan_domain
-                if interface.vlan and interface.vlan not in node.vlans_by_domain[domain]:
-                    node.vlans_by_domain[domain].append(interface.vlan)
+                domain = interface.get('vlan_domain')
+                if interface.get('vlan') and interface.get('vlan') not in node.get('vlans_by_domain')[domain]:
+                    node.get('vlans_by_domain')[domain].append(interface.get('vlan'))

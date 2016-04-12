@@ -16,17 +16,15 @@ class NmNode(AnkElement):
 
     def __init__(self, anm, overlay_id, node_id):
 
-        # Set using this method to bypass __setattr__
-
-        object.__setattr__(self, 'anm', anm)
-        object.__setattr__(self, 'overlay_id', overlay_id)
+        self.anm = anm
+        self.overlay_id = overlay_id
 # should be able to use _graph from here as anm and overlay_id are defined
-        object.__setattr__(self, 'node_id', node_id)
+        self.node_id = node_id
         #logger = logging.getLogger("ANK")
         #logstring = "Node: %s" % str(self)
         #logger = CustomAdapter(logger, {'item': logstring})
         logger = log
-        object.__setattr__(self, 'log', logger)
+        self.log = logger
         self.init_logging("node")
 
     def __hash__(self):
@@ -233,7 +231,7 @@ class NmNode(AnkElement):
                 except ValueError:
                     pass  # not a number
 
-        return (self.asn, self_node_id) < (other.asn, other_node_id)
+        return (self.get('asn'), self_node_id) < (other.get('asn'), other_node_id)
 
     def _next_int_id(self):
         """
@@ -314,7 +312,6 @@ class NmNode(AnkElement):
 
     def add_loopback(self, *args, **kwargs):
         '''Public function to add a loopback interface'''
-
         interface_id = self._add_interface(category='loopback', *args,
                                            **kwargs)
 
@@ -336,8 +333,8 @@ class NmNode(AnkElement):
         def filter_func(interface):
             """Filter based on args and kwargs"""
 
-            return all(getattr(interface, key) for key in args) \
-                and all(getattr(interface, key) == val for (key,
+            return all(interface.get(key) for key in args) \
+                and all(interface.get(key) == val for (key,
                                                             val) in kwargs.items())
 
         all_interfaces = iter(NmPort(self.anm,
@@ -427,6 +424,13 @@ class NmNode(AnkElement):
         except KeyError:
             self.log.debug('No interfaces initialised for')
             return []
+    @_ports.setter
+    def _ports(self, value):
+        try:
+            self._graph.node[self.node_id]['_ports'] = value
+        except KeyError:
+            self.log.debug('No interfaces initialised for')
+            return []
 
     @property
     def _graph(self):
@@ -465,7 +469,7 @@ class NmNode(AnkElement):
         """
         #self.log_info("add int")
 
-        return self.device_type == 'router' or self['phy'].device_type \
+        return self.get('device_type') == 'router' or self['phy'].get('device_type') \
             == 'router'
 
     def is_firewall(self):
@@ -486,7 +490,7 @@ class NmNode(AnkElement):
         #self.log_info("add int")
         # TODO: tidy this logic up to not auto fallback to phy being hard-coded
 
-        return self.device_type == 'firewall' or self['phy'].device_type \
+        return self.get('device_type') == 'firewall' or self['phy'].get('device_type') \
             == 'firewall'
 
     def is_hub(self):
@@ -495,14 +499,14 @@ class NmNode(AnkElement):
         """
         #self.log_info("add int")
 
-        return self.device_type == 'hub' or self['phy'].device_type \
+        return self.get('device_type') == 'hub' or self['phy'].get('device_type') \
             == 'hub'
 
     def is_device_type(self, device_type):
         """Generic user-defined cross-overlay search for device_type
         either from this graph or the physical graph"""
 
-        return self.device_type == device_type or self['phy'].device_type \
+        return self.get('device_type') == device_type or self['phy'].get('device_type') \
             == device_type
 
     def is_switch(self):
@@ -521,7 +525,7 @@ class NmNode(AnkElement):
 
         """
 
-        return self.device_type == 'switch' or self['phy'].device_type \
+        return self.get('device_type') == 'switch' or self['phy'].get('device_type') \
             == 'switch'
 
     def is_server(self):
@@ -540,7 +544,7 @@ class NmNode(AnkElement):
 
         """
 
-        return self.device_type == 'server' or self['phy'].device_type \
+        return self.get('device_type') == 'server' or self['phy'].get('device_type') \
             == 'server'
 
     def is_l3device(self):
@@ -602,7 +606,6 @@ class NmNode(AnkElement):
         try:
             return self._graph.node[self.node_id]['asn']  # not in this graph
         except KeyError:
-
             # try from phy
 
             try:
@@ -797,10 +800,12 @@ class NmNode(AnkElement):
         except AttributeError:
             return self.node_id
 
-    def __getattr__(self, key):
-        """Returns node property
-        This is useful for accesing attributes passed through from graphml"""
-        # TODO: refactor/document this logic
+    def get(self, key):
+        """For consistency, node.get(key) is neater than getattr(node, key)"""
+        if key=='asn':
+            return self.asn
+        if key == 'raw_interfaces':
+            return self.raw_interfaces
 
         try:
             node_data = self._graph.node[self.node_id]
@@ -821,9 +826,9 @@ class NmNode(AnkElement):
                 # TODO: check if in self['phy'[ here]
                 if self.overlay_id != "phy":
                     if key == "device_type":
-                        return self['phy'].device_type
+                        return self['phy'].get('device_type')
                     if key == "device_subtype":
-                        return self['phy'].device_subtype
+                        return self['phy'].get('device_subtype')
 
                 # from http://stackoverflow.com/q/2654113
                 # self.log.debug(
@@ -831,40 +836,20 @@ class NmNode(AnkElement):
                         # self.overlay_id))
                 return
 
-        # map through to phy
-
-    def get(self, key):
-        """For consistency, node.get(key) is neater than getattr(node, key)"""
-
-        return getattr(self, key)
-
-    def __setattr__(self, key, val):
-        """Sets node property
-        This is useful for accesing attributes passed through from graphml"""
-
-        """TODO:
-        TODO: look at mapping the object __dict__ straight to the graph.node[self.node_id]
-        TODO: fix wrt using @x.setter won't work due to following:
-        as per
-        http://docs.python.org/2/reference/datamodel.html#customizing-attribute-access
-        """
-
-        # TODO: fix workaround for asn
+    def set(self, key, val):
+        """For consistency, node.set(key, value) is neater
+        than setattr(node, key, value)"""
 
         if key == 'asn':
-            object.__setattr__(self, 'asn', val)
+            #object.__setattr__(self, 'asn', val)
+            self.asn = val
 
         if key == 'raw_interfaces':
-            object.__setattr__(self, 'raw_interfaces', val)
+            #object.__setattr__(self, 'raw_interfaces', val)
+            self.raw_interfaces = val
 
         try:
             self._graph.node[self.node_id][key] = val
         except KeyError:
             self._graph.add_node(self.node_id)
             self.set(key, val)
-
-    def set(self, key, val):
-        """For consistency, node.set(key, value) is neater
-        than setattr(node, key, value)"""
-
-        return self.__setattr__(key, val)

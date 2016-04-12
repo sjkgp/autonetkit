@@ -23,21 +23,21 @@ def build_ip(anm):
 
     #TODO:
     for bc in g_ip.nodes("broadcast_domain"):
-        bc.allocate = True
+        bc.set('allocate', True)
 
     for bc in g_ip.nodes("broadcast_domain"):
-        if bc.asn is None:
+        if bc.get('asn') is None:
             # arbitrary choice
             asn = ank_utils.neigh_most_frequent( g_l2, bc, 'asn', g_phy)
-            bc.asn = asn
+            bc.set('asn', asn)
 
         for neigh in bc.neighbors():
-            if (neigh.device_type in ("external_connector", "switch")
-                and neigh.device_subtype in ("FLAT", "SNAT")):
-                bc.allocate = False
+            if (neigh.get('device_type') in ("external_connector", "switch")
+                and neigh.get('device_subtype') in ("FLAT", "SNAT")):
+                bc.set('allocate', False)
 
                 for neigh_int in bc.neighbor_interfaces():
-                    neigh_int.allocate = False
+                    neigh_int.set('allocate', False)
 
         # Encapsulated if any neighbor interface has
         for edge in bc.edges():
@@ -46,11 +46,11 @@ def build_ip(anm):
                          "as neighbor %s is L2 encapsulated", bc, edge.dst)
 
                 #g_ip.remove_node(bc)
-                bc.allocate = False
+                bc.set('allocate', False)
 
                 # and mark on connected interfaces
                 for neigh_int in bc.neighbor_interfaces():
-                    neigh_int.allocate = False
+                    neigh_int.set('allocate', False)
 
                 break
 
@@ -58,8 +58,8 @@ def build_ip(anm):
     #TODO: check if loopbck copy attr
     for node in g_ip.l3devices():
         for interface in node.loopback_interfaces():
-            if interface['phy'].allocate is not None:
-                interface['ip'].allocate = interface['phy'].allocate
+            if interface['phy'].get('allocate') is not None:
+                interface['ip'].set('allocate', interface['phy'].get('allocate'))
 
 
 def build_ipv4(anm, infrastructure=True):

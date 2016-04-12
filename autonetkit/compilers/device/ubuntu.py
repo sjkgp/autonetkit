@@ -28,7 +28,7 @@ class UbuntuCompiler(ServerCompiler):
                      % node)
             return
 
-        if self.anm['phy'].node(node).dont_configure_static_routing:
+        if self.anm['phy'].node(node).get('dont_configure_static_routing'):
             log.info('Static routing disabled for server %s' % node)
             return
 

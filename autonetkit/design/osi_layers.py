@@ -26,11 +26,11 @@ def build_layer3(anm):
 
     # also explode virtual switches
     vswitches = [n for n in g_l3.nodes()
-                 if n['layer2'].device_type == "switch"
-                 and n['layer2'].device_subtype == "virtual"]
+                 if n['layer2'].get('device_type') == "switch"
+                 and n['layer2'].get('device_subtype') == "virtual"]
 
     # explode each seperately?
     for edge in exploded_edges:
-        edge.multipoint = True
-        edge.src_int.multipoint = True
-        edge.dst_int.multipoint = True
+        edge.set('multipoint', True)
+        edge.src_int.set('multipoint', True)
+        edge.dst_int.set('multipoint', True)
