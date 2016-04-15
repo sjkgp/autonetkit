@@ -33,8 +33,8 @@ class PlatformCompiler(object):
 
             for interface in node.interfaces:
                 phy_int = phy_node.interface(interface)
-                if phy_int.exclude_igp is not None:
-                    interface.exclude_igp = phy_int.exclude_igp
+                if phy_int.get('exclude_igp') is not None:
+                    interface.exclude_igp = phy_int.get('exclude_igp')
 
                 if phy_node.get('use_ipv4'):
                     ipv4_int = phy_int['ipv4']
@@ -55,7 +55,7 @@ class PlatformCompiler(object):
                         interface.use_ipv4 = False
                         continue
 
-                    if ipv4_int.ip_address is None:
+                    if ipv4_int.get('ip_address') is None:
                         #TODO: put into dev log
                         log.debug("No IP address allocated on %s", interface)
                         interface.use_ipv4 = False
@@ -64,8 +64,8 @@ class PlatformCompiler(object):
                     # TODO: also need to skip layer2 virtual interfaces
                     # interface is connected
                     try:
-                        interface.ipv4_address = ipv4_int.ip_address
-                        interface.ipv4_subnet = ipv4_int.subnet
+                        interface.ipv4_address = ipv4_int.get('ip_address')
+                        interface.ipv4_subnet = ipv4_int.get('subnet')
                         interface.ipv4_cidr = sn_preflen_to_network(interface.ipv4_address,
                                                                     interface.ipv4_subnet.prefixlen)
                     except AttributeError, error:
@@ -84,15 +84,15 @@ class PlatformCompiler(object):
                     if interface.is_physical and not ipv6_int.is_bound:
                         interface.use_ipv6 = False
                         continue
-                    if ipv6_int.ip_address is None:
+                    if ipv6_int.get('ip_address') is None:
                         #TODO: put into dev log
                         log.debug("No IP address allocated on %s", interface)
                         interface.use_ipv6 = False
                         continue
                     try:
                         # TODO: copy ip address as well
-                        interface.ipv6_subnet = ipv6_int.subnet
-                        interface.ipv6_address = sn_preflen_to_network(ipv6_int.ip_address,
+                        interface.ipv6_subnet = ipv6_int.get('subnet')
+                        interface.ipv6_address = sn_preflen_to_network(ipv6_int.get('ip_address'),
                                                                        interface.ipv6_subnet.prefixlen)
                     except AttributeError:
                         log.warning(

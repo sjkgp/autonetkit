@@ -28,7 +28,7 @@ def build_ip(anm):
     for bc in g_ip.nodes("broadcast_domain"):
         if bc.get('asn') is None:
             # arbitrary choice
-            asn = ank_utils.neigh_most_frequent( g_l2, bc, 'asn', g_phy)
+            asn = ank_utils.neigh_most_frequent(g_l2, bc, 'asn', g_phy)
             bc.set('asn', asn)
 
         for neigh in bc.neighbors():
@@ -41,7 +41,7 @@ def build_ip(anm):
 
         # Encapsulated if any neighbor interface has
         for edge in bc.edges():
-            if edge.dst_int['phy'].l2_encapsulated:
+            if edge.dst_int['phy'].get('l2_encapsulated'):
                 log.debug("Removing IP allocation for broadcast_domain %s "
                          "as neighbor %s is L2 encapsulated", bc, edge.dst)
 

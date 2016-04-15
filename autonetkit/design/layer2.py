@@ -281,7 +281,7 @@ class Layer2Builder(object):
             switch.set('vlans', [])
             for interface in switch:
                 if interface.get('vlan'):
-                    switch.get('vlans').append(interface.vlan)
+                    switch.get('vlans').append(interface.get('vlan'))
 
             switch.set('vlans', list(set(switch.get('vlans')))) # unique-ify
 

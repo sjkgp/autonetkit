@@ -566,7 +566,7 @@ class OverlayBase(AnkElement):
         >>> g_phy.edges()
         [(r4, r5), (r4, r2), (r5, r3), (r1, r2), (r1, r3), (r2, r3)]
 
-        >>> g_phy.edge("r1", "r2").color = "red"
+        >>> g_phy.edge("r1", "r2").set('color', "red")
         >>> g_phy.edges(color = "red")
         [(r1, r2)]
 
@@ -587,8 +587,8 @@ class OverlayBase(AnkElement):
         def filter_func(edge):
             """Filter based on args and kwargs"""
 
-            return all(getattr(edge, key) for key in args) \
-                and all(getattr(edge, key) == val for (key, val) in
+            return all(edge.get(key) for key in args) \
+                and all(edge.get(key) == val for (key, val) in
                         kwargs.items())
 
         if self.is_multigraph():

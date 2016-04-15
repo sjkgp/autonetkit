@@ -25,4 +25,4 @@ for node in g_phy:
 
 
 for edge in g_phy.edges():
-    print edge._ports
+    print edge.get('_ports')

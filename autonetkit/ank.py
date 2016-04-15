@@ -200,13 +200,13 @@ def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
     >>> anm = autonetkit.topos.house()
     >>> g_in = anm['input']
     >>> g_phy = anm['phy']
-    >>> [iface.ospf_cost for node in g_phy for iface in node]
+    >>> [iface.get('ospf_cost') for node in g_phy for iface in node]
     [None, None, None, None, None, None, None, None, None, None, None, None]
     >>> for node in g_in:
     ...      for interface in node:
-    ...         interface.ospf_cost = 10
+    ...         interface.set('ospf_cost', 10)
     >>> copy_int_attr_from(g_in, g_phy, "ospf_cost")
-    >>> [iface.ospf_cost for node in g_phy for iface in node]
+    >>> [iface.get('ospf_cost') for node in g_phy for iface in node]
     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 
     """
@@ -255,7 +255,7 @@ def copy_edge_attr_from(overlay_src, overlay_dst, src_attr,
     [(r4, r5), (r4, r2), (r5, r3), (r1, r2), (r1, r3), (r2, r3)]
     >>> g_phy.edges()
     [(r4, r5), (r4, r2), (r5, r3), (r1, r2), (r1, r3), (r2, r3)]
-    >>> g_in.edge("r1", "r2").color = "red"
+    >>> g_in.edge("r1", "r2").set('color', "red")
     >>> g_in.edges(color = "red")
     [(r1, r2)]
     >>> copy_edge_attr_from(g_in, g_phy, 'color')

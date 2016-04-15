@@ -77,7 +77,7 @@ class UbuntuCompiler(ServerCompiler):
 
                 # IGP advertised infrastructure pool from same AS
                 if node.ip.get('use_ipv4'):
-                    gateway_ipv4 = gateway_interface['ipv4'].ip_address
+                    gateway_ipv4 = gateway_interface['ipv4'].get('ip_address')
                     if gateway_ipv4 is None:
                         log.warning("No gateway IPv4 for %s to %s", node, gateway)
 
@@ -135,7 +135,7 @@ class UbuntuCompiler(ServerCompiler):
             # IGP advertised infrastructure pool from same AS
 
             if node.ip.get('use_ipv6'):
-                gateway_ipv6 = gateway_interface['ipv6'].ip_address
+                gateway_ipv6 = gateway_interface['ipv6'].get('ip_address')
                 if gateway_ipv6 is None:
                     log.warning("No gateway IPv6 for %s to %s", node, gateway)
                 else:

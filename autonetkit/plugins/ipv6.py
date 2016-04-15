@@ -99,8 +99,8 @@ def allocate_infra(g_ip, address_block=None):
             bc.subnet = subnet
             # TODO: check: should sort by default on dst as tie-breaker
             for iface in sorted(bc.neighbor_interfaces()):
-                iface.ip_address = hosts.next()
-                iface.subnet = subnet
+                iface.set('ip_address', hosts.next())
+                iface.set('subnet', subnet)
 
         non_ptp_cds = all_bcs - set(ptp_bcs)
 
@@ -114,8 +114,8 @@ def allocate_infra(g_ip, address_block=None):
             bc.set('subnet', subnet)
             # for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
             for iface in sorted(bc.neighbor_interfaces()):
-                iface.ip_address = hosts.next()
-                iface.subnet = subnet
+                iface.set('ip_address', hosts.next())
+                iface.set('subnet', subnet)
 
     g_ip.data.infra_blocks = dict((asn, [subnet]) for (asn, subnet) in
                                   infra_blocks.items())
@@ -147,8 +147,8 @@ def allocate_secondary_loopbacks(g_ip, address_block=None):
         # drop .0 as a host address (valid but can be confusing)
         secondary_loopback_hosts.next()
         for interface in sorted(secondary_loopbacks):
-            interface.loopback = secondary_loopback_hosts.next()
-            interface.subnet = netaddr.IPNetwork("%s/128" % interface.loopback)
+            interface.set('loopback', secondary_loopback_hosts.next())
+            interface.set('subnet', netaddr.IPNetwork("%s/128" % interface.get('loopback')))
 
 
 def allocate_ips(G_ip, infra_block=None, loopback_block=None, secondary_loopback_block=None):

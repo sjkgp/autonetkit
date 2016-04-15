@@ -337,7 +337,7 @@ def build_vrf(anm):
     for node in g_vrf:
         vrf_loopbacks = node.interfaces("is_loopback", "vrf_name")
         for index, interface in enumerate(vrf_loopbacks, start=101):
-            interface.index = index
+            interface.set('index', index)
 
     for edge in g_vrf.edges():
         # Set the vrf of the edge to be that of the CE device (either src or
@@ -347,4 +347,4 @@ def build_vrf(anm):
     # map attributes to interfaces
     for edge in g_vrf.edges():
         for interface in edge.interfaces():
-            interface.set('vrf_name', edge.vrf)
+            interface.set('vrf_name', edge.get('vrf'))

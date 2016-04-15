@@ -79,17 +79,17 @@ def manual_ipv4_infrastructure_allocation(anm):
                 continue  # unbound interface
             if not interface['ipv4'].is_bound:
                 continue
-            if interface['ip'].allocate is False:
+            if interface['ip'].get('allocate') is False:
                 # TODO: copy interface allocate attribute across
                 continue
 
             ip_address = netaddr.IPAddress(interface['input'
-                                                     ].ipv4_address)
-            prefixlen = interface['input'].ipv4_prefixlen
-            interface.ip_address = ip_address
-            interface.prefixlen = prefixlen
+                                                     ].get('ipv4_address'))
+            prefixlen = interface['input'].get('ipv4_prefixlen')
+            interface.set('ip_address', ip_address)
+            interface.set('prefixlen', prefixlen)
             cidr_string = '%s/%s' % (ip_address, prefixlen)
-            interface.subnet = netaddr.IPNetwork(cidr_string)
+            interface.set('subnet', netaddr.IPNetwork(cidr_string))
 
     broadcast_domains = [d for d in g_ipv4 if d.get('broadcast_domain')]
 
@@ -118,15 +118,15 @@ def manual_ipv4_infrastructure_allocation(anm):
         connected_interfaces = [i for i in connected_interfaces
                                 if i.node.is_l3device()]
 
-        cd_subnets = [IPNetwork('%s/%s' % (i.subnet.network,
-                                           i.prefixlen)) for i in connected_interfaces
-                      if i['ip'].allocate is not False]
+        cd_subnets = [IPNetwork('%s/%s' % (i.get('subnet').network,
+                                           i.get('prefixlen'))) for i in connected_interfaces
+                      if i['ip'].get('allocate') is not False]
 
         # mismatched_interfaces += [i for i in connected_interfaces
         # if i.
         if global_infra_block is not None:
             mismatched_interfaces += [i for i in connected_interfaces
-                                      if i.ip_address not in global_infra_block]
+                                      if i.get('ip_address') not in global_infra_block]
 
         if len(cd_subnets) == 0:
             log.warning(
@@ -137,7 +137,7 @@ def manual_ipv4_infrastructure_allocation(anm):
             assert len(set(cd_subnets)) == 1
         except AssertionError:
             mismatch_subnets = '; '.join('%s: %s/%s' % (i,
-                                                        i.subnet.network, i.prefixlen) for i in
+                                                        i.get('subnet').network, i.get('prefixlen')) for i in
                                          connected_interfaces)
             log.warning('Non matching subnets from collision domain %s: %s'
                         % (coll_dom, mismatch_subnets))
@@ -147,7 +147,7 @@ def manual_ipv4_infrastructure_allocation(anm):
         # apply to remote interfaces
 
         for edge in coll_dom.edges():
-            edge.dst_int.subnet = coll_dom.get('subnet')
+            edge.dst_int.set('subnet', coll_dom.get('subnet'))
 
     # also need to form aggregated IP blocks (used for e.g. routing prefix
     # advertisement)
@@ -157,7 +157,6 @@ def manual_ipv4_infrastructure_allocation(anm):
         log.warning("IPv4 Infrastructure IPs %s are not in global "
                     "loopback allocation block %s"
                     % (sorted(mismatched_interfaces), global_infra_block))
-    log.warning('Computing infra blocks')
     infra_blocks = {}
     for (asn, devices) in g_ipv4.groupby('asn').items():
         broadcast_domains = [d for d in devices if d.get('broadcast_domain')]
@@ -263,12 +262,12 @@ def build_ipv4(anm, infrastructure=True):
     for device in l3_devices:
         physical_interfaces = list(device.physical_interfaces())
         allocated = list(
-            interface.ipv4_address for interface in physical_interfaces
-            if interface.is_bound and interface['ipv4'].allocate is not False
+            interface.get('ipv4_address') for interface in physical_interfaces
+            if interface.is_bound and interface['ipv4'].get('allocate') is not False
             and interface['ipv4'].is_bound)
-        if all(interface.ipv4_address for interface in
+        if all(interface.get('ipv4_address') for interface in
                physical_interfaces if interface.is_bound
-               and interface['ip'].allocate is not False
+               and interface['ip'].get('allocate') is not False
                and interface['ip'].is_bound):
             # add as a manual allocated device
             manual_alloc_devices.add(device)
@@ -284,9 +283,9 @@ def build_ipv4(anm, infrastructure=True):
         for node in l3_devices:
             # TODO: make these inverse sets
             allocated += sorted([i for i in node.physical_interfaces()
-                                 if i.is_bound and i.ipv4_address])
+                                 if i.is_bound and i.get('ipv4_address')])
             unallocated += sorted([i for i in node.physical_interfaces()
-                                   if i.is_bound and not i.ipv4_address
+                                   if i.is_bound and not i.get('ipv4_address')
                                    and i['ipv4'].is_bound])
 
         # TODO: what if IP is set but not a prefix?

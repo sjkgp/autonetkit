@@ -9,15 +9,15 @@ from autonetkit.anm.ank_element import AnkElement
 class NmPort(AnkElement):
 
     def __init__(self, anm, overlay_id, node_id, interface_id):
-        object.__setattr__(self, 'anm', anm)
-        object.__setattr__(self, 'overlay_id', overlay_id)
-        object.__setattr__(self, 'node_id', node_id)
-        object.__setattr__(self, 'interface_id', interface_id)
+        self.anm = anm
+        self.overlay_id = overlay_id
+        self.node_id = node_id
+        self.interface_id = interface_id
         #logger = logging.getLogger("ANK")
         #logstring = "Interface: %s" % str(self)
         #logger = CustomAdapter(logger, {'item': logstring})
         logger = log
-        object.__setattr__(self, 'log', logger)
+        self.log = logger
         self.init_logging("port")
 
 
@@ -352,9 +352,9 @@ class NmPort(AnkElement):
         if self.interface_id == 0:
             return 'loopback'
 
-        if self.overlay_id == 'input':
-            return object.__getattr__(self, 'category')
-        elif self.overlay_id != 'phy':
+        #if self.overlay_id == 'input':
+        #    return object.__getattr__(self, 'category')
+        if self.overlay_id != 'phy':
 
                                         # prevent recursion
 
@@ -399,35 +399,22 @@ class NmPort(AnkElement):
         """ 
         return str(self._interface.items())
 
-    def __getattr__(self, key):
-        """Returns interface property"""
-
-        try:
-            return self._interface.get(key)
-        except KeyError:
-            return
-
     def get(self, key):
         """For consistency, node.get(key) is neater
         than getattr(interface, key)"""
+        if hasattr(self,key):
+                return getattr(self, key)
 
-        return getattr(self, key)
-
-    def __setattr__(self, key, val):
-        """Sets interface property"""
-
-        try:
-            self._interface[key] = val
-        except KeyError, e:
-            log.warning(e)
-
-            # self.set(key, val)
+        return self._interface.get(key)
 
     def set(self, key, val):
         """For consistency, node.set(key, value) is neater
         than setattr(interface, key, value)"""
 
-        return self.__setattr__(key, val)
+        try:
+            self._interface[key] = val
+        except KeyError, e:
+            log.warning(e)
 
     def edges(self):
         """Returns all edges from node that have this interface ID

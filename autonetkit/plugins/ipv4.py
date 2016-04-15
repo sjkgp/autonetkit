@@ -617,7 +617,7 @@ def assign_asn_to_interasn_cds(g_ip, address_block=None):
         else:
             # allocate cd to asn with most neighbors in it
             asn = ank_utils.most_frequent(neigh_asn)
-        broadcast_domain.asn = asn
+        broadcast_domain.set('asn', asn)
 
     return
 
@@ -650,13 +650,13 @@ def allocate_single_as_ptp_infra(g_ip, address_block=None):
         subnet = infra_pool.next()
         hosts = subnet.iter_hosts()
         # drop .0 as a host address (valid but can be confusing)
-        bc.subnet = subnet
+        bc.set('subnet', subnet)
         # TODO: check: should sort by default on dst as tie-breaker
         for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
             ip_address = hosts.next()
             interface = edge.dst_int
-            interface.ip_address = ip_address
-            interface.subnet = subnet
+            interface.set('ip_address', ip_address)
+            interface.set('subnet', subnet)
 
     g_ip.data.infra_blocks = dict((asn, [subnet]) for (asn, subnet) in
                                   infra_blocks.items())
@@ -714,7 +714,7 @@ def allocate_secondary_loopbacks(g_ip, address_block=None):
 
     secondary_loopbacks = [i for n in g_ip.l3devices() for i in
                            n.loopback_interfaces()
-                           if not i.is_loopback_zero and i['ip'].allocate is not False]
+                           if not i.is_loopback_zero and i['ip'].get('allocate') is not False]
 
     if not len(secondary_loopbacks):
         return   # nothing to set

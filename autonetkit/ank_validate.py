@@ -131,7 +131,7 @@ def validate_ipv4(anm):
     all_ints = [i for n in g_ipv4.l3devices()
                 for i in n.physical_interfaces()
                 if i.is_bound]  # don't include unbound interfaces
-    all_int_ips = [i.ip_address for i in all_ints if i.ip_address]
+    all_int_ips = [i.get('ip_address') for i in all_ints if i.get('ip_address')]
 
     if all_unique(all_int_ips):
         g_ipv4.log.debug("All interface IPs globally unique")
@@ -154,7 +154,7 @@ def validate_ipv4(anm):
 
         neigh_ints = list(bc.neighbor_interfaces())
         neigh_ints = [i for i in neigh_ints if i.node.is_l3device()]
-        neigh_int_subnets = [i.subnet for i in neigh_ints]
+        neigh_int_subnets = [i.get('subnet') for i in neigh_ints]
         if all_same(neigh_int_subnets):
             # log ok
             pass
@@ -167,7 +167,7 @@ def validate_ipv4(anm):
             # log warning
 
         ip_subnet_mismatches = [i for i in neigh_ints
-                                if i.ip_address not in i.subnet]
+                                if i.get('ip_address') not in i.get('subnet')]
         if len(ip_subnet_mismatches):
             tests_passed = False
             mismatches = ", ".join("%s not in %s on %s" %
@@ -178,7 +178,7 @@ def validate_ipv4(anm):
         else:
             bc.log.debug("All subnets match")
 
-        neigh_int_ips = [i.ip_address for i in neigh_ints]
+        neigh_int_ips = [i.get('ip_address') for i in neigh_ints]
         if all_unique(neigh_int_ips):
             bc.log.debug("All interface IP addresses are unique")
             duplicates = duplicate_items(neigh_int_ips)

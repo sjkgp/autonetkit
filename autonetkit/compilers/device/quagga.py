@@ -46,7 +46,7 @@ class QuaggaCompiler(RouterCompiler):
                 bgp_int = self.anm['ebgp_v4'].interface(interface)
                 if bgp_int.is_bound:  # ebgp interface
                     node.ospf['passive_interfaces'].append({'id': interface.id})
-                    subnet = bgp_int['ipv4'].subnet
+                    subnet = bgp_int['ipv4'].get('subnet')
                     default_ebgp_area = 0
                     node.ospf['ospf_links'].append({'network': subnet,
                                                  'area': default_ebgp_area})

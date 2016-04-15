@@ -16,16 +16,16 @@ class NmEdge(AnkElement):
 
     def __init__(self, anm, overlay_id, src_id, dst_id, ekey=0):
 
-        object.__setattr__(self, 'anm', anm)
-        object.__setattr__(self, 'overlay_id', overlay_id)
-        object.__setattr__(self, 'src_id', src_id)
-        object.__setattr__(self, 'dst_id', dst_id)
-        object.__setattr__(self, 'ekey', ekey)  # for multigraphs
+        self.anm = anm
+        self.overlay_id = overlay_id
+        self.src_id = src_id
+        self.dst_id = dst_id
+        self.ekey = ekey  # for multigraphs
         #logger = logging.getLogger("ANK")
         #logstring = "Interface: %s" % str(self)
         #logger = CustomAdapter(logger, {'item': logstring})
         logger = log
-        object.__setattr__(self, 'log', logger)
+        self.log = logger
         self.init_logging("edge")
 
 
@@ -218,11 +218,11 @@ class NmEdge(AnkElement):
         >>> e2.raw_interfaces
         {'r1': 2, 'r3': 1}
         """
-        return self._ports
+        return self.get('_ports')
 
     @raw_interfaces.setter
     def raw_interfaces(self, value):
-        self._ports = value
+        self.set('_ports', value)
 
     @property
     def _graph(self):
@@ -282,18 +282,19 @@ class NmEdge(AnkElement):
 
         >>> anm = autonetkit.topos.house()
         >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.src_int.color = edge.dst_int.color = "blue"
-        >>> (edge.src_int.color, edge.dst_int.color)
+        >>> edge.src_int.set('color', "blue")
+        >>> edge.dst_int.set('color', "blue")
+        >>> (edge.src_int.get('color'), edge.dst_int.get('color'))
         ('blue', 'blue')
-        >>> edge.color = "red"
+        >>> edge.set('color', "red")
         >>> edge.apply_to_interfaces("color")
-        >>> (edge.src_int.color, edge.dst_int.color)
+        >>> (edge.src_int.get('color'), edge.dst_int.get('color'))
         ('red', 'red')
         """
 
-        val = self.__getattr__(attribute)
-        self.src_int.__setattr__(attribute, val)
-        self.dst_int.__setattr__(attribute, val)
+        val = self.get(attribute)
+        self.src_int.set(attribute, val)
+        self.dst_int.set(attribute, val)
 
     @property
     def src_int(self):
@@ -306,7 +307,7 @@ class NmEdge(AnkElement):
 
         """
 
-        src_int_id = self._ports[self.src_id]
+        src_int_id = self.get('_ports')[self.src_id]
         return NmPort(self.anm, self.overlay_id,
                       self.src_id, src_int_id)
 
@@ -321,7 +322,7 @@ class NmEdge(AnkElement):
 
         """
 
-        dst_int_id = self._ports[self.dst_id]
+        dst_int_id = self.get('_ports')[self.dst_id]
         return NmPort(self.anm, self.overlay_id,
                       self.dst_id, dst_int_id)
 
@@ -344,7 +345,7 @@ class NmEdge(AnkElement):
 
         return [NmPort(self.anm, self.overlay_id,
                        node_id, interface_id) for (node_id,
-                                                   interface_id) in self._ports.items()]
+                                                   interface_id) in self.get('_ports').items()]
 
     #
 
@@ -363,13 +364,15 @@ class NmEdge(AnkElement):
 
         >>> anm = autonetkit.topos.house()
         >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.color = "red"
+        >>> edge.set('color', "red")
         >>> edge.get("color")
         'red'
 
         """
+        if hasattr(self,key):
+            return getattr(self, key)
 
-        return self.__getattr__(key)
+        return self._data.get(key)
 
     def set(self, key, val):
         """For consistency, edge.set(key, value) is neater than
@@ -377,28 +380,17 @@ class NmEdge(AnkElement):
 
         >>> anm = autonetkit.topos.house()
         >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.color = "blue"
-        >>> edge.color
+        >>> edge.set('color', "blue")
+        >>> edge.get('color')
         'blue'
         >>> edge.set("color", "red")
-        >>> edge.color
+        >>> edge.get('color')
         'red'
 
 
         """
 
-        return self.__setattr__(key, val)
-
-    def __getattr__(self, key):
-        """Returns edge property"""
-        return self._data.get(key)
-
-    def __setattr__(self, key, val):
-        """Sets edge property"""
-
         if key == 'raw_interfaces':
-            # TODO: fix workaround for
-            # http://docs.python.org/2/reference/datamodel.html#customizing-attribute-access
-            object.__setattr__(self, 'raw_interfaces', val)
+            self.raw_interfaces = val
 
         self._data[key] = val

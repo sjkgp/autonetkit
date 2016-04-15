@@ -129,16 +129,16 @@ def manual_ipv6_infrastructure_allocation(anm):
                 continue  # unbound interface
             if not interface['ipv6'].is_bound:
                 continue
-            if interface['ip'].allocate is False:
+            if interface['ip'].get('allocate') is False:
                 # TODO: copy interface allocate attribute across
                 continue
             ip_address = netaddr.IPAddress(interface['input'
-                                                     ].ipv6_address)
-            prefixlen = interface['input'].ipv6_prefixlen
-            interface.ip_address = ip_address
-            interface.prefixlen = prefixlen
+                                                     ].get('ipv6_address'))
+            prefixlen = interface['input'].get('ipv6_prefixlen')
+            interface.set('ip_address', ip_address)
+            interface.set('prefixlen', prefixlen)
             cidr_string = '%s/%s' % (ip_address, prefixlen)
-            interface.subnet = netaddr.IPNetwork(cidr_string)
+            interface.set('subnet', netaddr.IPNetwork(cidr_string))
 
     broadcast_domains = [d for d in g_ipv6 if d.get('broadcast_domain')]
 
@@ -162,12 +162,12 @@ def manual_ipv6_infrastructure_allocation(anm):
             continue
         connected_interfaces = [edge.dst_int for edge in
                                 coll_dom.edges()]
-        cd_subnets = [IPNetwork('%s/%s' % (i.subnet.network,
-                                           i.prefixlen)) for i in connected_interfaces]
+        cd_subnets = [IPNetwork('%s/%s' % (i.get('subnet').network,
+                                           i.get('prefixlen'))) for i in connected_interfaces]
 
         if global_infra_block is not None:
             mismatched_interfaces += [i for i in connected_interfaces
-            if i.ip_address not in global_infra_block]
+            if i.get('ip_address') not in global_infra_block]
 
         if len(cd_subnets) == 0:
             log.warning("Collision domain %s is not connected to any nodes",
@@ -178,7 +178,7 @@ def manual_ipv6_infrastructure_allocation(anm):
             assert len(set(cd_subnets)) == 1
         except AssertionError:
             mismatch_subnets = '; '.join('%s: %s/%s' % (i,
-                                                        i.subnet.network, i.prefixlen) for i in
+                                                        i.get('subnet').network, i.get('prefixlen')) for i in
                                          connected_interfaces)
             log.warning('Non matching subnets from collision domain %s: %s',
                         coll_dom, mismatch_subnets)
@@ -188,7 +188,7 @@ def manual_ipv6_infrastructure_allocation(anm):
         # apply to remote interfaces
 
         for edge in coll_dom.edges():
-            edge.dst_int.subnet = coll_dom.get('subnet')
+            edge.dst_int.set('subnet', coll_dom.get('subnet'))
 
     # also need to form aggregated IP blocks (used for e.g. routing prefix
     # advertisement)
@@ -266,17 +266,17 @@ def build_ipv6(anm):
     for device in l3_devices:
         physical_interfaces = list(device.physical_interfaces())
         allocated = list(
-            interface.ipv6_address for interface in physical_interfaces
+            interface.get('ipv6_address') for interface in physical_interfaces
             if interface.is_bound and interface['ipv6'].is_bound
-            and interface['ip'].allocate is not False)
+            and interface['ip'].get('allocate') is not False)
 
         #TODO: check for repeated code
 
 #TODO: copy allocate from g_ip to g_ipv6
-        if all(interface.ipv6_address for interface in
+        if all(interface.get('ipv6_address') for interface in
                physical_interfaces if interface.is_bound
                and interface['ipv6'].is_bound
-               and interface['ip'].allocate is not False):
+               and interface['ip'].get('allocate') is not False):
             # add as a manual allocated device
             manual_alloc_devices.add(device)
 
@@ -291,9 +291,9 @@ def build_ipv6(anm):
         unallocated = []
         for node in l3_devices:
             allocated += sorted([i for i in node.physical_interfaces()
-                                 if i.is_bound and i.ipv6_address])
+                                 if i.is_bound and i.get('ipv6_address')])
             unallocated += sorted([i for i in node.physical_interfaces()
-                                   if i.is_bound and not i.ipv6_address
+                                   if i.is_bound and not i.get('ipv6_address')
                                    and i['ipv6'].is_bound])
 
         # TODO: what if IP is set but not a prefix?
@@ -317,11 +317,11 @@ def build_ipv6(anm):
 
     for node in g_ipv6.routers():
         # TODO: test this code
-        node.loopback_zero.ip_address = node.get('loopback')
-        node.loopback_zero.subnet = netaddr.IPNetwork("%s/32" % node.get('loopback'))
+        node.loopback_zero.set('ip_address', node.get('loopback'))
+        node.loopback_zero.set('subnet', netaddr.IPNetwork("%s/32" % node.get('loopback')))
         for interface in node.loopback_interfaces():
             if not interface.is_loopback_zero:
                 # TODO: fix this inconsistency elsewhere
-                interface.ip_address = interface.loopback
+                interface.set('ip_address', interface.get('loopback'))
 
 #@call_log

@@ -49,19 +49,19 @@ class RouterCompiler(DeviceCompiler):
         neigh = session.dst
         if ip_version == 4:
             neigh_ip = neigh['ipv4']
-            local_int_ip = session.src_int['ipv4'].ip_address
-            dst_int_ip = session.dst_int['ipv4'].ip_address
+            local_int_ip = session.src_int['ipv4'].get('ip_address')
+            dst_int_ip = session.dst_int['ipv4'].get('ip_address')
             use_ipv4 = True
             use_ipv6 = False
         elif ip_version == 6:
             neigh_ip = neigh['ipv6']
-            local_int_ip = session.src_int['ipv6'].ip_address
-            dst_int_ip = session.dst_int['ipv6'].ip_address
+            local_int_ip = session.src_int['ipv6'].get('ip_address')
+            dst_int_ip = session.dst_int['ipv6'].get('ip_address')
             use_ipv4 = False
             use_ipv6 = True
 
-        md5_password = session.md5_password
-        multihop = session.multihop
+        md5_password = session.get('md5_password')
+        multihop = session.get('multihop')
 
         data = {  # TODO: change templates to access from node.bgp.lo_int
             'neighbor': neigh.label,
@@ -168,7 +168,7 @@ class RouterCompiler(DeviceCompiler):
         node.loopback_zero.id = self.lo_interface
         node.loopback_zero.description = 'Loopback'
         phy_node = self.anm['phy'].node(node)
-        node.loopback_zero.custom_config = phy_node.loopback_zero.custom_config
+        node.loopback_zero.custom_config = phy_node.loopback_zero.get('custom_config')
 
         if node.ip.get('use_ipv4'):
             ipv4_node = self.anm['ipv4'].node(node)
@@ -192,9 +192,9 @@ class RouterCompiler(DeviceCompiler):
                 # compile
                 continue
 
-            interface.custom_config = phy_int.custom_config
+            interface.custom_config = phy_int.get('custom_config')
 
-            interface.description = phy_int.description
+            interface.description = phy_int.get('description')
 
             continue
 
@@ -229,13 +229,13 @@ class RouterCompiler(DeviceCompiler):
 
             ospf_int = g_ospf.interface(interface)
             if ospf_int and ospf_int.is_bound:
-                area = ospf_int.area
+                area = ospf_int.get('area')
                 # TODO: can we remove the next line?
                 area = str(area)  # can't serialize IPAddress object to JSON
                 # TODO: put in interface rather than interface.id for
                 # consistency
                 try:
-                    cost = int(ospf_int.cost)
+                    cost = int(ospf_int.get('cost'))
                 except TypeError:
                     #TODO: log warning here
                     cost = 1
@@ -244,17 +244,17 @@ class RouterCompiler(DeviceCompiler):
                           'passive' : False}
 
                 if node.ip.get('use_ipv4'):
-                    stanza['ipv4_address'] = ospf_int['ipv4'].ip_address
-                    stanza['ipv4_subnet'] = ospf_int['ipv4'].subnet
+                    stanza['ipv4_address'] = ospf_int['ipv4'].get('ip_address')
+                    stanza['ipv4_subnet'] = ospf_int['ipv4'].get('subnet')
                 if node.ip.get('use_ipv6'):
-                    stanza['ipv6_address'] = ospf_int['ipv6'].ip_address
-                    stanza['ipv6_subnet'] = ospf_int['ipv6'].subnet
+                    stanza['ipv6_address'] = ospf_int['ipv6'].get('ip_address')
+                    stanza['ipv6_subnet'] = ospf_int['ipv6'].get('subnet')
 
                 interfaces_by_area[area].append(stanza)
 
         loopback_zero = node.loopback_zero
         ospf_loopback_zero = g_ospf.interface(loopback_zero)
-        router_area = ospf_loopback_zero.area  # area assigned to router
+        router_area = ospf_loopback_zero.get('area')  # area assigned to router
         # can't serialize IPAddress object to JSON
         router_area = str(router_area)
         stanza = {'id' : node.loopback_zero.id,
@@ -267,16 +267,16 @@ class RouterCompiler(DeviceCompiler):
         # TODO: split this into a generic IGP function
         added_networks = set()
         for interface in node.physical_interfaces():
-            if interface.exclude_igp:
+            if interface.get('exclude_igp'):
                 continue  # don't configure IGP for this interface
-            if not interface.use_ipv4:
+            if not interface.get('use_ipv4'):
                 continue
             ipv4_int = g_ipv4.interface(interface)
             ospf_int = g_ospf.interface(interface)
             if not ospf_int.is_bound:
                 continue  # not an OSPF interface
             try:
-                ospf_cost = int(ospf_int.cost)
+                ospf_cost = int(ospf_int.get('cost'))
             except TypeError:
                 try:
                     ospf_cost = netaddr.IPAddress(ospf_int.cost)
@@ -285,7 +285,7 @@ class RouterCompiler(DeviceCompiler):
                               ospf_int, node)
                     ospf_cost = 1  # default
             interface.ospf_cost = ospf_cost
-            network = ipv4_int.subnet
+            network = ipv4_int.get('subnet')
 
             #TODO: refactor to allow injecting loopback IPs, etc into IGP
             if ospf_int and ospf_int.is_bound and network \
@@ -293,18 +293,18 @@ class RouterCompiler(DeviceCompiler):
                 added_networks.add(network)
                 link_stanza = {'network' : network,
                                'interface' : interface,
-                               'area' : ospf_int.area}
+                               'area' : ospf_int.get('area')}
 
                 node.ospf['ospf_links'].append(link_stanza)
 
         for interface in node.loopback_interfaces():
             phy_int = self.anm['phy'].interface(interface)
             ipv4_int = g_ipv4.interface(interface)
-            if not phy_int.inject_to_igp:
+            if not phy_int.get('inject_to_igp'):
                 #TODO: need to confirm which area to use
                 continue
 
-            network = ipv4_int.subnet
+            network = ipv4_int.get('subnet')
             if network in added_networks:
                 #TODO: may want to warn here
                 continue # already advertised ("how? - warn if so!)
@@ -329,7 +329,7 @@ class RouterCompiler(DeviceCompiler):
         g_ipv4 = self.anm['ipv4']
         if node.ip.get('use_ipv6'):
             g_ipv6 = self.anm['ipv6']
-        asn = phy_node.asn
+        asn = phy_node.get('asn')
         node.asn = asn
         bgp_stanza = node.add_scope("bgp")
         if self.anm.has_overlay("bgp"):
@@ -354,7 +354,7 @@ class RouterCompiler(DeviceCompiler):
 
         g_ibgp_v4 = self.anm['ibgp_v4']
         for session in sort_sessions(g_ibgp_v4.edges(phy_node)):
-            if session.exclude:
+            if session.get('exclude'):
                 log.debug('Skipping excluded ibgp session %s', session)
                 # exclude from regular ibgp config (eg VRF, VPLS, etc)
                 continue
@@ -362,7 +362,7 @@ class RouterCompiler(DeviceCompiler):
             data = self.ibgp_session_data(session, ip_version=4)
             bgp_stanza = data
 
-            direction = session.direction
+            direction = session.get('direction')
             if direction == 'down':
                 ibgp_rr_clients.append(bgp_stanza)
             elif direction == 'up':
@@ -375,14 +375,14 @@ class RouterCompiler(DeviceCompiler):
         if node.ip.get('use_ipv6'):
             g_ibgp_v6 = self.anm['ibgp_v6']
             for session in sort_sessions(g_ibgp_v6.edges(phy_node)):
-                if session.exclude:
+                if session.get('exclude'):
                     log.debug('Skipping excluded ibgp session %s', session)
                     # exclude from regular ibgp config (eg VRF, VPLS, etc)
                     continue
                 data = self.ibgp_session_data(session, ip_version=6)
                 bgp_stanza = data
 
-                direction = session.direction
+                direction = session.get('direction')
                 if direction == 'down':
                     ibgp_rr_clients.append(bgp_stanza)
                 elif direction == 'up':
@@ -401,7 +401,7 @@ class RouterCompiler(DeviceCompiler):
         ebgp_neighbors = []
         g_ebgp_v4 = self.anm['ebgp_v4']
         for session in sort_sessions(g_ebgp_v4.edges(phy_node)):
-            if session.exclude:
+            if session.get('exclude'):
                 log.debug('Skipping excluded ebgp session %s', session)
                 # exclude from regular ibgp config (eg VRF, VPLS, etc)
                 continue
@@ -412,7 +412,7 @@ class RouterCompiler(DeviceCompiler):
         if node.ip.get('use_ipv6'):
             g_ebgp_v6 = self.anm['ebgp_v6']
             for session in sort_sessions(g_ebgp_v6.edges(phy_node)):
-                if session.exclude:
+                if session.get('exclude'):
                     log.debug('Skipping excluded ebgp session %s', session)
                     # exclude from regular ibgp config (eg VRF, VPLS, etc)
                     continue
@@ -434,17 +434,17 @@ class RouterCompiler(DeviceCompiler):
 
         ipv4_networks = set()
         for interface in node.physical_interfaces():
-            if interface.exclude_igp:
+            if interface.get('exclude_igp'):
                 continue  # discontinue configuring IGP for this interface.
             ipv4_int = g_ipv4.interface(interface)
             rip_int = g_rip.interface(interface)
             if not rip_int.is_bound:
                 continue  # not an rip interface
-            network = ipv4_int.subnet
-            if rip_int and rip_int.is_bound and interface.use_ipv4:
+            network = ipv4_int.get('subnet')
+            if rip_int and rip_int.is_bound and interface.get('use_ipv4'):
                 ipv4_networks.add(network)
 
-        ipv4_networks.add(node.loopback_zero.ipv4_cidr)
+        ipv4_networks.add(node.loopback_zero.get('ipv4_cidr'))
         node.rip['ipv4_networks'] = sorted(list(ipv4_networks))
 
 
@@ -458,7 +458,7 @@ class RouterCompiler(DeviceCompiler):
         node.isis['ipv4_mpls_te'] = False
 
         for interface in node.physical_interfaces():
-            if interface.exclude_igp:
+            if interface.get('exclude_igp'):
                 continue  # don't configure IGP for this interface
 
             phy_int = self.anm['phy'].interface(interface)
@@ -467,11 +467,11 @@ class RouterCompiler(DeviceCompiler):
             if isis_int and isis_int.is_bound:
                 isis_node = g_isis.node(node)
                 interface.isis = {
-                    'metric': isis_int.metric,
+                    'metric': isis_int.get('metric'),
                     'process_id': process_id,
                     'use_ipv4': node.ip.get('use_ipv4'),
                     'use_ipv6': node.ip.get('use_ipv6'),
-                    'multipoint': isis_int.multipoint,
+                    'multipoint': isis_int.get('multipoint'),
                 }
 
                 # TODO: add wrapper for this
@@ -502,19 +502,19 @@ class RouterCompiler(DeviceCompiler):
 
         ipv4_networks = set()
         for interface in node.physical_interfaces():
-            if interface.exclude_igp:
+            if interface.get('exclude_igp'):
                 continue  # don't configure IGP for this interface
             ipv4_int = g_ipv4.interface(interface)
             eigrp_int = g_eigrp.interface(interface)
             if not eigrp_int.is_bound:
                 continue  # not an EIGRP interface
-            network = ipv4_int.subnet
-            if eigrp_int and eigrp_int.is_bound and interface.use_ipv4:
+            network = ipv4_int.get('subnet')
+            if eigrp_int and eigrp_int.is_bound and interface.get('use_ipv4'):
                 ipv4_networks.add(network)
 
         # Loopback zero subnet
 
 
-        ipv4_networks.add(node.loopback_zero.ipv4_cidr)
+        ipv4_networks.add(node.loopback_zero.get('ipv4_cidr'))
 
         node.eigrp['ipv4_networks'] = sorted(list(ipv4_networks))
