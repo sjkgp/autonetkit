@@ -25,7 +25,7 @@ static_route_v6 = namedtuple("static_route_v6",
 def sn_preflen_to_network(address, prefixlen):
     """Workaround for creating an IPNetwork from an address and a prefixlen.
     TODO: check if this is part of netaddr module
-    
+
     >>> sn_preflen_to_network('1', '2')
     IPNetwork('1.0.0.0/2')
     >>> sn_preflen_to_network('1', '4')
@@ -193,7 +193,7 @@ def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
                        nbunch=None, type=None, default=None):
 
     """
-    Copies interger attributes from the source to destination. 
+    Copies interger attributes from the source to destination.
     Supported types are float and int.
 
 
@@ -240,10 +240,10 @@ def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
                 dst_int.set(dst_attr, val)
 
 
-def copy_edge_attr_from(overlay_src, overlay_dst, src_attr, 
-                        dst_attr=None, type=None, default=None): 
-    # note this won't work if merge/aggregate edges 
- 
+def copy_edge_attr_from(overlay_src, overlay_dst, src_attr,
+                        dst_attr=None, type=None, default=None):
+    # note this won't work if merge/aggregate edges
+
     """
     Main purpose is to copy edge attributes from source to the destination. Gets the edge attribute
     from source and copies the set attribute over to the destination edge.
@@ -263,37 +263,37 @@ def copy_edge_attr_from(overlay_src, overlay_dst, src_attr,
     [(r1, r2)]
 
     """
-    if not dst_attr: 
-        dst_attr = src_attr 
- 
-    for edge in overlay_src.edges(): 
-        try: 
+    if not dst_attr:
+        dst_attr = src_attr
+
+    for edge in overlay_src.edges():
+        try:
             val = edge.get(src_attr)
-            if val is None: 
-                val = default 
-        except KeyError: 
- 
-            # TODO: check if because edge doesn't exist in dest, or because 
-            # attribute doesn't exist in graph_src 
- 
-            log.debug('Unable to copy edge attribute %s for (%s, %s) in %s', 
-                      src_attr, edge.src, edge.dst, overlay_src) 
- 
-        else: 
- 
-            # TODO: use a dtype to take an int, float, etc 
- 
-            if type is float: 
-                val = float(val) 
-            elif type is int: 
-                val = int(val) 
- 
-            try: 
-                overlay_dst.edge(edge).set(dst_attr, val) 
-            except AttributeError: 
-                # fail to debug - as attribute may not have been set 
-                log.debug('Unable to set edge attribute on %s in %s', 
-                          edge, overlay_dst) 
+            if val is None:
+                val = default
+        except KeyError:
+
+            # TODO: check if because edge doesn't exist in dest, or because
+            # attribute doesn't exist in graph_src
+
+            log.debug('Unable to copy edge attribute %s for (%s, %s) in %s',
+                      src_attr, edge.src, edge.dst, overlay_src)
+
+        else:
+
+            # TODO: use a dtype to take an int, float, etc
+
+            if type is float:
+                val = float(val)
+            elif type is int:
+                val = int(val)
+
+            try:
+                overlay_dst.edge(edge).set(dst_attr, val)
+            except AttributeError:
+                # fail to debug - as attribute may not have been set
+                log.debug('Unable to set edge attribute on %s in %s',
+                          edge, overlay_dst)
 
 
 def wrap_edges(nm_graph, edges):
@@ -353,24 +353,24 @@ def wrap_nodes(nm_graph, nodes):
     return [NmNode(nm_graph._anm, nm_graph._overlay_id, node)
             for node in nodes]
 
-def in_edges(nm_graph, nodes=None): 
+def in_edges(nm_graph, nodes=None):
     """
     Returns incoming edges NetworkModel edge objects.
 
     >>> g = nx.MultiDiGraph()
     >>> g.add_edges_from([(1,2),(3,4),(1,6)])
-    >>> g.out_edges(1) 
+    >>> g.out_edges(1)
     [(1, 2), (1, 6)]
     >>> g.in_edges(1)
     []
     >>> g.in_edges(4)
     [(3, 4)]
     """
-  
-    graph = unwrap_graph(nm_graph) 
-    edges = graph.in_edges(nodes) 
-    return wrap_edges(nm_graph, edges) 
- 
+
+    graph = unwrap_graph(nm_graph)
+    edges = graph.in_edges(nodes)
+    return wrap_edges(nm_graph, edges)
+
 
 
 def split(nm_graph, edges, retain=None, id_prepend=''):
@@ -729,7 +729,7 @@ def most_frequent(iterable):
 
 def neigh_most_frequent(nm_graph, node, attribute,
                         attribute_graph=None, allow_none=False):
-    """Used to explicitly force most frequent values of attribute in sorted format. 
+    """Used to explicitly force most frequent values of attribute in sorted format.
 
     >>> anm = autonetkit.topos.house()
     >>> g_phy = anm['phy']
@@ -790,13 +790,13 @@ def neigh_average(nm_graph, node, attribute, attribute_graph=None):
 
 def neigh_attr(nm_graph, node, attribute, attribute_graph=None):
     """
-    For each node in valid nodes, return neighbor attribute 
+    For each node in valid nodes, return neighbor attribute
     from neighbors in specified nm_graph. attribute_graph is the graph to read the attribute from.
 
     # >>> anm = autonetkit.topos.house()
     # >>> g_phy = anm['phy']
     # >>> neigh_attr(g_phy, "r2", "asn")
-   
+
     """
 
     graph = unwrap_graph(nm_graph)

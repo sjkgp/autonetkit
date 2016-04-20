@@ -385,6 +385,11 @@ class CiscoCompiler(PlatformCompiler):
         dhcp_hosts = [
             h for h in hosts_to_allocate if h.device_subtype in dhcp_subtypes]
 
+        full_duplex_subtypes = {"NX-OSv"}
+        full_duplex_hosts = [
+            h for h in hosts_to_allocate if h.device_subtype
+            in full_duplex_subtypes]
+
         for DmNode in hosts_to_allocate:
             for interface in DmNode.physical_interfaces():
                 if interface.management:
@@ -399,3 +404,5 @@ class CiscoCompiler(PlatformCompiler):
                         interface.use_cdp = True  # ensure CDP activated
                     if DmNode in dhcp_hosts:
                         interface.use_dhcp = True
+                    if DmNode in full_duplex_hosts:
+                        interface.full_duplex = True

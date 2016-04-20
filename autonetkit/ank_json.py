@@ -200,9 +200,14 @@ def jsonify_anm(anm):
 
 def shortened_interface(name):
     """Condenses interface name. Not canonical - mainly for brevity"""
-    name = name.replace("GigabitEthernet", "ge")
-    name = name.replace("0/0/0/", "")
-    return name
+    try:
+        name = name.replace("GigabitEthernet", "ge")
+        name = name.replace("0/0/0/", "")
+    except AttributeError:
+        log.debug("No interface name to shorten")
+        return ""
+    else:
+        return name
 
 
 def prepare_json_anm_nidb(anm, nidb=None):
