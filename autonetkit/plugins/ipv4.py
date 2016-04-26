@@ -630,7 +630,7 @@ class NonPtpSubnets(AutoNetkitException):
 def allocate_single_as_ptp_infra(g_ip, address_block=None):
     infra_blocks = {}
 
-    unique_asns = set(n.get('asn') for n in g_ip)
+    unique_asns = set(n.get('asn') for n in g_ip.l3devices())
     if len(unique_asns) > 1:
         raise MultipleASNs
 
