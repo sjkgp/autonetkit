@@ -13,12 +13,7 @@ class NmGraph(OverlayBase):
 
     @property
     def anm(self):
-        """Returns anm for this overlay
-
-        >>> anm = autonetkit.topos.house()
-
-        """
-
+        """Returns anm for this overlay"""
         return self._anm
 
     @property

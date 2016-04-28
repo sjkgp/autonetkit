@@ -55,6 +55,7 @@ class TestNmNode(unittest.TestCase):
         result = [str(i) for i in r1.physical_interfaces()]
         expected_result = ['eth0.r1', 'eth1.r1', 'eth2.r1']
         self.assertListEqual(expected_result, result)
+        #TODO: add test with args and kwargs too
 
     def test_is_multigraph(self):
         r1 = self.anm_mixed['phy'].node("r1")

@@ -190,12 +190,5 @@ class TestOverlayBase(unittest.TestCase):
         self.assertListEqual(result, [(r1, r2)])
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
-
-
-
-
-

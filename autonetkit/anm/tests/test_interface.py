@@ -1,6 +1,7 @@
 import unittest
 import autonetkit
 
+
 class TestNmPort(unittest.TestCase):
 
     def setUp(self):
