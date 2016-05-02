@@ -33,40 +33,44 @@ def update_vis(anm=None, nidb=None, http_url=None, uuid=None, host = None, port 
     #TODO: put this into a background worker thread - but need to clone the ANM?
     #TODO: allow global config to disable all update calls
     #TODO: warn if both http_url and host, port set as conflict
-    if host is not None and port is not None:
-        http_url = format_http_url(host, port)
-    elif port is not None:
-        http_url = format_http_url(port = port)
-
-    if http_url is None:
-        http_url = default_http_url
-
-    if anm and nidb:
-        body = autonetkit.ank_json.dumps(anm, nidb)
-    elif anm:
-        body = autonetkit.ank_json.dumps(anm)
-    else:
-        import json
-        body = json.dumps({})  # blank to test visualisation server running
-
-    if uuid is None:
-        # try from config
-        uuid = get_uuid(anm)
-
-    params = urllib.urlencode({'body': body, 'type': 'anm',
-                               'uuid': uuid})
     try:
-        data = urllib.urlopen(http_url, params).read()
-        log.debug(data)
-    except IOError, e:
-        log.info('Unable to connect to visualisation server %s', http_url)
-        return
+        if host is not None and port is not None:
+            http_url = format_http_url(host, port)
+        elif port is not None:
+            http_url = format_http_url(port = port)
 
-    if not anm:
+        if http_url is None:
+            http_url = default_http_url
 
-        # testing
+        if anm and nidb:
+            body = autonetkit.ank_json.dumps(anm, nidb)
+        elif anm:
+            body = autonetkit.ank_json.dumps(anm)
+        else:
+            import json
+            body = json.dumps({})  # blank to test visualisation server running
 
-        log.info('Visualisation server running')
+        if uuid is None:
+            # try from config
+            uuid = get_uuid(anm)
+
+        params = urllib.urlencode({'body': body, 'type': 'anm',
+                                   'uuid': uuid})
+        try:
+            data = urllib.urlopen(http_url, params).read()
+            log.debug(data)
+        except IOError, e:
+            log.info('Unable to connect to visualisation server %s', http_url)
+            return
+
+        if not anm:
+
+            # testing
+
+            log.info('Visualisation server running')
+
+    except Exception, exc:
+        log.warning("Unable to visualize topology: %s" % exc)
 
 #@call_log
 
