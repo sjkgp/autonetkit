@@ -1,8 +1,18 @@
+import unittest
+from netaddr import IPAddress
 import autonetkit
 import autonetkit.design.igp
 from mock import patch
 from autonetkit.build_network import DesignRulesApplicator
 
+
+class TestIgp(unittest.TestCase):
+    def test_ip_to_net_ent_title_ios(self):
+        fun = autonetkit.design.igp.ip_to_net_ent_title_ios
+        result = fun(IPAddress("192.168.19.1"))
+        expected_result = '49.1921.6801.9001.00'
+        self.assertEqual(expected_result, result)
+    # TODO: move all function to unittest
 
 def build_layer3():
     anm = autonetkit.topos.house()

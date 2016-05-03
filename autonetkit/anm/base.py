@@ -40,45 +40,13 @@ class OverlayBase(AnkElement):
         self.init_logging("graph")
 
     def __repr__(self):
-        """
-
-        Example:
-
-        >>> anm = autonetkit.topos.house()
-        >>> anm['phy']
-        phy
-
-        """
-
         return self._overlay_id
 
     def is_multigraph(self):
-        """Checks if the graph is multigraph
-        Example:
-
-        >>> anm = autonetkit.topos.house()
-        >>> anm['phy'].is_multigraph()
-        False
-        >>> anm = autonetkit.topos.multi_edge()
-        >>> anm['phy'].is_multigraph()
-        True
-
-        """
+        """Checks if the graph is multigraph"""
         return self._graph.is_multigraph()
 
-
     def is_directed(self):
-        """
-        Example:
-
-        >>> anm = autonetkit.topos.house()
-        >>> anm['phy'].is_directed()
-        False
-        >>> anm = autonetkit.topos.multi_edge()
-        >>> anm['phy'].is_directed()
-        False
-
-        """
         return self._graph.is_directed()
 
     @property
@@ -88,15 +56,7 @@ class OverlayBase(AnkElement):
         return NmGraphData(self._anm, self._overlay_id)
 
     def __contains__(self, n):
-        """Checks if item is contained
-        Example:
-
-        >>> anm = autonetkit.topos.house()
-        >>> "r1" in anm['phy']
-        True
-        >>> "test" in anm['phy']
-        False
-        """
+        """Checks if item is contained"""
 
         try:
             return n.node_id in self._graph
@@ -107,16 +67,7 @@ class OverlayBase(AnkElement):
             return n in self._graph
 
     def interface(self, interface):
-        """Returns in interface.nodeid format
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> eth0 = test_node = g_phy.node("r1")
-        >>> test_node = g_phy.node("r1")
-        >>> eth0 = test_node.interface(1)
-        >>> g_phy.interface(eth0)
-        eth0.r1
-        """
+        """Returns in interface.nodeid format"""
 
         return NmPort(self._anm, self._overlay_id, interface.node_id,
                       interface.interface_id)
@@ -125,34 +76,6 @@ class OverlayBase(AnkElement):
         '''returns edge in this graph with same src and dst
         and key for parallel edges (default is to return first edge)
         #TODO: explain parameter overloading: strings, edges, nodes...
-
-        Example:
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> e_r1_r2 = g_phy.edge("r1", "r2")
-
-        Can also find from an edge
-
-        >>> e_r1_r2_input = anm['input'].edge(e_r1_r2)
-
-        And for multi-edge graphs can specify key
-
-        >>> anm = autonetkit.topos.multi_edge()
-        >>> e1 = anm['phy'].edge("r1", "r2", 0)
-        >>> e2 = anm['phy'].edge("r1", "r2", 1)
-        >>> e1 == e2
-        False
-
-        >>> autonetkit.update_http(anm)
-        >>> eth0_r1 = anm["phy"].node("r1").interface("eth0")
-        >>> eth3_r1 = anm["phy"].node("r1").interface("eth3")
-        >>> eth0_r2 = anm["phy"].node("r2").interface("eth0")
-        >>> anm["phy"].has_edge(eth0_r1, eth0_r2)
-        True
-        >>> anm["phy"].has_edge(eth3_r1, eth0_r2)
-        False
-
         '''
 
         # TODO: handle multigraphs
@@ -250,32 +173,12 @@ class OverlayBase(AnkElement):
 
 
     def __getitem__(self, key):
-        """Gets and returns the node with the corresponding key
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.__getitem__('1')
-
-        >>> g_phy.__getitem__('r1')
-        r1
-
-        """
-
+        """Gets and returns the node with the corresponding key"""
         return self.node(key)
 
     def node(self, key):
         """Returns node based on name
         This is currently O(N). Could use a lookup table
-
-        Example:
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> r1 = g_phy.node("r1")
-
-        Can also find across layers
-        >>> r1_input = anm['input'].node(r1)
-
         """
 
         # TODO: refactor
@@ -301,13 +204,7 @@ class OverlayBase(AnkElement):
             return None
 
     def overlay(self, key):
-        """Get to other overlay graphs in functions
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.overlay('input')
-        input
-        """
+        """Get to other overlay graphs in functions"""
 
         # TODO: refactor: shouldn't be returning concrete instantiation from
         # abstract parent!
@@ -317,58 +214,22 @@ class OverlayBase(AnkElement):
 
     @property
     def name(self):
-        """Return the name
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.name
-        'phy'
-        """
+        """Return the name"""
 
         return self.__repr__()
 
     def __nonzero__(self):
-        """Checks if the value is nonzero
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.__nonzero__()
-        True
-
-        """
+        """Checks if the value is nonzero"""
 
         return self.anm.has_overlay(self._overlay_id)
 
     def node_label(self, node):
-        """Return node label
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.node_label('r1')
-        'r1'
-        >>> g_phy.node_label('r2')
-        'r2'
-        """
+        """Return node label"""
 
         return repr(NmNode(self._anm, self._overlay_id, node))
 
     def has_edge(self, edge_to_find, dst_to_find=None,):
-        """Tests if edge in graph
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> r1 = g_phy.node("r1")
-        >>> r2 = g_phy.node("r2")
-        >>> r5 = g_phy.node("r5")
-        >>> g_phy.has_edge(r1, r2)
-        True
-        >>> g_phy.has_edge(r1, r5)
-        False
-
-        >>> e_r1_r2 = anm['input'].edge(r1, r2)
-        >>> g_phy.has_edge(e_r1_r2)
-        True
-        """
+        """Tests if edge in graph"""
 
         if dst_to_find is None:
             if self.is_multigraph():
@@ -381,52 +242,14 @@ class OverlayBase(AnkElement):
             return bool(self.edge(edge_to_find, dst_to_find))
 
     def __iter__(self):
-        """
-
-        >>> anm = autonetkit.topos.multi_as()
-        >>> g_phy = anm["phy"]
-        >>> list(sorted(g_phy))
-        [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10]
-        """
-
         return iter(self.nodes())
 
     def __len__(self):
-        """Returns length of the graph
-
-        >>> anm = autonetkit.topos.multi_as()
-        >>> g_phy = anm["phy"]
-        >>> g_phy.nodes()
-        [r4, r5, r6, r7, r1, r2, r3, r8, r9, r10]
-        >>> g_phy.__len__()
-        10
-
-        """
+        """Returns length of the graph"""
 
         return len(self._graph)
 
     def nodes(self, *args, **kwargs):
-        """
-
-        >>> anm = autonetkit.topos.multi_as()
-        >>> g_phy = anm["phy"]
-        >>> g_phy.nodes()
-        [r4, r5, r6, r7, r1, r2, r3, r8, r9, r10]
-
-        >>> g_phy.nodes(asn=1)
-        [r4, r5, r1, r2, r3]
-
-        >>> g_phy.nodes(asn=3)
-        [r7, r8, r9, r10]
-
-        >>> g_phy.nodes(asn=1, ibgp_role="RR")
-        [r4, r5]
-
-        >>> g_phy.nodes(asn=1, ibgp_role="RRC")
-        [r1, r2, r3]
-
-        """
-
         result = list(NmNode(self._anm, self._overlay_id, node)
                       for node in self._graph)
 
@@ -435,82 +258,36 @@ class OverlayBase(AnkElement):
         return result
 
     def routers(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be router
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> anm['phy'].routers()
-        [r1, r2, r3]
-
-        """
+        """Shortcut for nodes(), sets device_type to be router"""
 
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_router()]
 
     def switches(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be switch
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> anm['phy'].switches()
-        [sw1]
-
-        """
+        """Shortcut for nodes(), sets device_type to be switch"""
 
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_switch()]
 
     def servers(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be server
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> anm['phy'].servers()
-        [s1]
-
-        """
+        """Shortcut for nodes(), sets device_type to be server"""
 
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_server()]
 
     def l3devices(self, *args, **kwargs):
-        """Shortcut for nodes(), tests if device is_l3device
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> anm['phy'].l3devices()
-        [s1, r1, r2, r3]
-
-        """
+        """Shortcut for nodes(), tests if device is_l3device"""
 
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_l3device()]
 
     def device(self, key):
-        """To access programatically
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.device('r1')
-        r1
-        >>> g_phy.device('r2')
-        r2
-
-        """
+        """To access programatically"""
 
         return NmNode(self._anm, self._overlay_id, key)
 
     def groupby(self, attribute, nodes=None):
-        """Returns a dictionary sorted by attribute
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.groupby("asn")
-        {1: [r1, r2, r3], 2: [r4, r5]}
-
-        Can also specify a subset to work from
-
-        >>> nodes = [n for n in g_phy if n.degree() > 2]
-        >>> g_phy.groupby("asn", nodes=nodes)
-        {1: [r2, r3]}
-
-        """
+        """Returns a dictionary sorted by attribute"""
 
         result = {}
 
@@ -526,24 +303,7 @@ class OverlayBase(AnkElement):
         return result
 
     def filter(self, nbunch=None, *args, **kwargs):
-        """Filter the nodes
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.filter()
-        [r4, r5, r1, r2, r3]
-        >>> g_phy.filter("r1")
-        ['r', '1']
-        >>> g_phy.filter("r")
-        ['r']
-        >>> g_phy.filter("r3")
-        ['r', '3']
-        >>> g_phy.filter("1")
-        ['1']
-        >>> g_phy.filter("4")
-        ['4']
-
-        """
+        """Filter the nodes"""
 
         if nbunch is None:
             nbunch = self.nodes()
@@ -559,18 +319,7 @@ class OverlayBase(AnkElement):
 
     def edges(self, src_nbunch=None, dst_nbunch=None, *args,
               **kwargs):
-        """Returns edges. Can also return edges by setting filter.
-
-        >>> anm = autonetkit.topos.house()
-        >>> g_phy = anm['phy']
-        >>> g_phy.edges()
-        [(r4, r5), (r4, r2), (r5, r3), (r1, r2), (r1, r3), (r2, r3)]
-
-        >>> g_phy.edge("r1", "r2").set('color', "red")
-        >>> g_phy.edges(color = "red")
-        [(r1, r2)]
-
-        """
+        """Returns edges. Can also return edges by setting filter."""
 
 # src_nbunch or dst_nbunch may be single node
 # TODO: refactor this

@@ -31,13 +31,6 @@ class DmNode(object):
     # out
 
     def __repr__(self):
-        """
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> repr(r1)
-        'r1'
-        """
         return self._node_data['label']
 
     # TODO: add a dump method - needed with str()?
@@ -62,26 +55,10 @@ class DmNode(object):
 
     def __hash__(self):
         """Returns hashed value of node id
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> hash(r1)
-        14592087666131685
         """
         return hash(self.node_id)
 
     def __eq__(self, other):
-        """
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> rb = nidb.node('rb')
-        Unable to find node rb in nidb
-        >>> rb = nidb.node('r1')
-        >>> r1 == rb
-        True
-        """
         try:
             return self.node_id == other.node_id
         except AttributeError:
@@ -91,12 +68,6 @@ class DmNode(object):
 
     def interface(self, key):
         """Returns interface based on interface id
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> r1.interface(1)
-        r1.r1 to r2
         """
         # TODO: also need to allow access interface for nidb and search on
         # (node, interface id) tuple
@@ -109,14 +80,7 @@ class DmNode(object):
 
     @property
     def _ports(self):
-        """Returns underlying interface dict
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1._ports
-        {0: {'category': 'loopback', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to r2'}, 2: {'category': 'physical', 'description': 'r1 to r3'}}
-        """
+        """Returns underlying interface dict"""
         try:
             return self._graph.node[self.node_id]["_ports"]
         except KeyError:
@@ -127,13 +91,6 @@ class DmNode(object):
     def _next_int_id(self):
         """"
         returns next free interface ID
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> r1._next_int_id
-        3
-
         """
         import itertools
         for int_id in itertools.count(1):  # start at 1 as 0 is loopback
@@ -142,12 +99,6 @@ class DmNode(object):
 
     def add_interface(self, description=None, category="physical", *args,  **kwargs):
         """Public function to add interface
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> r1.add_interface()
-        r1.3
         """
         data = dict(kwargs)
         interface_id = self._next_int_id
@@ -160,15 +111,6 @@ class DmNode(object):
     @property
     def _interface_ids(self):
         """Returns interface ids for this node
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> r1._interface_ids
-        [0, 1, 2]
-        >>> r2 = nidb.node('r2')
-        >>> r2._interface_ids
-        [0, 1, 2, 3]
         """
         return self._ports.keys()
 
@@ -176,13 +118,6 @@ class DmNode(object):
     def interfaces(self):
         # TODO: make not a property
         """Called by templates, sorts by ID
-
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.interfaces
-        [r1.0, r1.r1 to r2, r1.r1 to r3]
         """
         int_list = self.get_interfaces()
 
@@ -196,24 +131,11 @@ class DmNode(object):
 
     def physical_interfaces(self):
         """Get and return self interfaces
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.physical_interfaces()
-        [r1.r1 to r2, r1.r1 to r3]
         """
         return self.get_interfaces(category="physical")
 
     def loopback_interfaces(self):
-        """Get and return loopback interfaces
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.loopback_interfaces()
-        [r1.0]
-        """
+        """Get and return loopback interfaces"""
         return self.get_interfaces(category="loopback")
 
     def get_interfaces(self, *args, **kwargs):
@@ -237,25 +159,11 @@ class DmNode(object):
 
     @property
     def loopback_zero(self):
-        """
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.loopback_zero
-        r1.0
-
-        """
         return (i for i in self.interfaces if i.is_loopback_zero).next()
 
     @property
     def raw_interfaces(self):
         """Direct access to the interfaces dictionary, used by ANK modules
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.raw_interfaces
-        {0: {'category': 'loopback', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to r2'}, 2: {'category': 'physical', 'description': 'r1 to r3'}}
         """
         return self._ports
 
@@ -270,23 +178,11 @@ class DmNode(object):
 
     def degree(self):
         """Returns degree of a node
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.degree()
-        2
         """
         return self._graph.degree(self.node_id)
 
     def neighbors(self):
         """Returns neighbors of the node
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.neighbors()
-        [r2, r3]
         """
         return [DmNode(self.nidb, node)
                     for node in self._graph.neighbors(self.node_id)]
@@ -298,13 +194,6 @@ class DmNode(object):
 
     def __lt__(self, other):
         """Comparison method to compare the nodes
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r2 = nidb.node("r2")
-        >>> r1 < r2
-        True
         """
         # TODO: use human sort from StackOverflow
 
@@ -349,126 +238,47 @@ class DmNode(object):
     @property
     def _node_data(self):
         """Returns node data
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1._node_data
-        {'Network': None, '_ports': {0: {'category': 'loopback', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to sw1'}, 2: {'category': 'physical', 'description': 'r1 to r2'}, 3: {'category': 'physical', 'description': 'r1 to r3'}}, 'update': None, 'syntax': None, 'host': None, 'device_type': 'router', 'graphics': {'y': 300, 'x': 500, 'device_type': 'router', 'device_subtype': None}, 'asn': 1, 'device_subtype': None, 'label': 'r1', 'platform': None}
         """
         return self.nidb.raw_graph().node[self.node_id]
 
     def dump(self):
-        """Dump attributes of this node
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.dump()
-        {'Network': None,
-         '_ports': {0: {'category': 'loopback', 'description': None},
-                    1: {'category': 'physical', 'description': 'r1 to sw1'},
-                    2: {'category': 'physical', 'description': 'r1 to r2'},
-                    3: {'category': 'physical', 'description': 'r1 to r3'}},
-         'asn': 1,
-         'device_subtype': None,
-         'device_type': 'router',
-         'graphics': {'device_subtype': None,
-                      'device_type': 'router',
-                      'x': 500,
-                      'y': 300},
-         'host': None,
-         'label': 'r1',
-         'platform': None,
-         'syntax': None,
-         'update': None}"""
+        """Dump attributes of this node"""
         # return str(self._node_data)
         import pprint
         pprint.pprint(self._node_data)
 
     def __nonzero__(self):
-        """Allows for checking if the node specified exists
-
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> bool(r1)
-        True
-        """
+        """Allows for checking if the node specified exists"""
         return self.node_id in self.nidb.raw_graph()
 
     def is_router(self):
         """ Check if device type is router
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> r1.is_router()
-        True
-        >>> s1 = nidb.node("s1")
-        >>> s1.is_router()
-        False
-        >>> sw1 = nidb.node("sw1")
-        >>> sw1.is_router()
-        False
-
         """
         return self.device_type == "router"
 
     def is_device_type(self, device_type):
         """Generic user-defined cross-overlay search for device_type for consistency with ANM
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node('r1')
-        >>> r1.is_device_type('router')
-        True
-        >>> r1.is_device_type('switch')
-        False
-
         """
         return self.device_type == device_type
 
     def is_switch(self):
         """ Check if device type is switch
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> s1 = nidb.node("sw1")
-        >>> s1.is_switch()
-        True
         """
         return self.device_type == "switch"
 
     def is_server(self):
         """ Check if device type is server
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.is_server()
-        False
         """
         return self.device_type == "server"
 
     def is_firewall(self):
         """Check if device type is firewall
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.is_firewall()
-        False
         """
         return self.device_type == "firewall"
 
     def is_l3device(self):
         """Layer 3 devices: router, server, firewall
         ie not switch
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.is_l3device()
-        True
         """
         #TODO: move this shared logic with anm into base device that both inherit from
         return self.is_router() or self.is_server() or self.is_firewall()
@@ -482,25 +292,12 @@ class DmNode(object):
     @property
     def id(self):
         """Returns id of the node
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.id
-        'r1'
-
         """
         return self.node_id
 
     @property
     def label(self):
         """Returns node label
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> r1.label
-        'r1'
         """
         return self.__repr__()
 
@@ -520,12 +317,6 @@ class DmNode(object):
 
     def __iter__(self):
         """Shortcut to iterate over the node data of this node
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> r1 = nidb.node("r1")
-        >>> list(r1)
-        ['Network', '_ports', 'update', 'syntax', 'host', 'device_type', 'graphics', 'asn', 'device_subtype', 'label', 'platform']
         """
 
         return iter(self._node_data)
