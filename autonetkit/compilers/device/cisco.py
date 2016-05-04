@@ -314,6 +314,7 @@ class IosBaseCompiler(RouterCompiler):
     def mpls_ldp(self, node):
         g_mpls_ldp = self.anm['mpls_ldp']
         mpls_ldp_node = g_mpls_ldp.node(node)
+        ipv4_node = self.anm["ipv4"].node(node)
         node.add_scope("mpls")
         if mpls_ldp_node and mpls_ldp_node.get('role') in ('P', 'PE'):
 
@@ -336,7 +337,7 @@ class IosBaseCompiler(RouterCompiler):
         if mpls_ldp_node:
             # P, PE, CE
             node.mpls['enabled'] = True
-            node.mpls['router_id'] = node.loopback_zero.id
+            node.mpls['router_id'] = ipv4_node.loopback_zero["ipv4"].get("ip_address")
 
     def rip(self, node):
     #Inheriting from base compiler. Adding in interface stanza.
