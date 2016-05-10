@@ -62,7 +62,7 @@ def extract_ipv4_blocks(anm):
             log.warning('Unable to obtain IPv4 vrf_loopback_subnet from input graph: %s, using default %s' % (
                 e, vrf_loopback_block))
 
-    return (infra_block, loopback_block, vrf_loopback_block)
+    return infra_block, loopback_block, vrf_loopback_block
 
 
 def manual_ipv4_infrastructure_allocation(anm):
@@ -102,7 +102,7 @@ def manual_ipv4_infrastructure_allocation(anm):
         infra_subnet = g_in.data.ipv4_infra_subnet
         infra_prefix = g_in.data.ipv4_infra_prefix
         global_infra_block = sn_preflen_to_network(infra_subnet, infra_prefix)
-    except Exception, e:
+    except Exception:
         log.info("Unable to parse specified ipv4 infra subnets %s/%s")
 
     mismatched_interfaces = []
@@ -189,7 +189,7 @@ def manual_ipv4_loopback_allocation(anm):
         loopback_prefix = g_in.data.ipv4_loopback_prefix
         loopback_block = sn_preflen_to_network(loopback_subnet,
                                                loopback_prefix)
-    except Exception, e:
+    except Exception:
         log.info("Unable to parse specified ipv4 loopback subnets %s/%s")
     else:
         mismatched_nodes = [n for n in g_ipv4.l3devices()
@@ -261,10 +261,6 @@ def build_ipv4(anm, infrastructure=True):
     manual_alloc_devices = set()
     for device in l3_devices:
         physical_interfaces = list(device.physical_interfaces())
-        allocated = list(
-            interface.get('ipv4_address') for interface in physical_interfaces
-            if interface.is_bound and interface['ipv4'].get('allocate') is not False
-            and interface['ipv4'].is_bound)
         if all(interface.get('ipv4_address') for interface in
                physical_interfaces if interface.is_bound
                and interface['ip'].get('allocate') is not False
@@ -307,7 +303,6 @@ def build_ipv4(anm, infrastructure=True):
         log.info("Allocating from IPv4 loopback block: %s" % loopback_block)
         # Check if some nodes are allocated
         allocated = sorted([n for n in g_ip.routers() if n['input'].get('loopback_v4')])
-        unallocated = sorted([n for n in g_ip.routers() if not n['input'].get('loopback_v4')])
         if len(allocated):
             log.warning(
                 "Using automatic IPv4 loopback allocation. IPv4 loopback addresses specified on nodes %s will be ignored." % allocated)

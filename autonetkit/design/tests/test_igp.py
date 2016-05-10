@@ -88,7 +88,6 @@ def test_eigrp_no_isis_set():
     autonetkit.design.igp.build_eigrp(anm)
 
 def net_side_effect(anm):
-    import netaddr
     g_isis = anm['isis']
     #Note: this only mocks up to 255
     import itertools

@@ -1,4 +1,3 @@
-import autonetkit.ank as ank_utils
 import autonetkit.config
 import autonetkit.log as log
 from autonetkit.ank import sn_preflen_to_network
@@ -110,7 +109,7 @@ def extract_ipv6_blocks(anm):
             log.warning('Unable to obtain IPv6 vrf_loopback_subnet from input graph: %s, using default %s' % (
                 e, vrf_loopback_block))
 
-    return (infra_block, loopback_block, vrf_loopback_block)
+    return infra_block, loopback_block, vrf_loopback_block
 
 #@call_log
 
@@ -265,13 +264,6 @@ def build_ipv6(anm):
     manual_alloc_devices = set()
     for device in l3_devices:
         physical_interfaces = list(device.physical_interfaces())
-        allocated = list(
-            interface.get('ipv6_address') for interface in physical_interfaces
-            if interface.is_bound and interface['ipv6'].is_bound
-            and interface['ip'].get('allocate') is not False)
-
-        #TODO: check for repeated code
-
 #TODO: copy allocate from g_ip to g_ipv6
         if all(interface.get('ipv6_address') for interface in
                physical_interfaces if interface.is_bound

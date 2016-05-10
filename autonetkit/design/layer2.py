@@ -129,8 +129,6 @@ class Layer2Builder(object):
                      and n['layer2'].get('device_subtype') == "virtual"]
         for node in vswitches:
             # TODO: refactor neigh_most_frequent to allow fallthrough attributes
-            # asn = ank_utils.neigh_most_frequent(g_l2_bc, node, 'asn', g_l2)  #
-            # arbitrary choice
             asns = [n['layer2'].get('asn') for n in node.neighbors()]
             asns = [x for x in asns if x is not None]
             asn = ank_utils.most_frequent(asns)
@@ -147,7 +145,7 @@ class Layer2Builder(object):
         import math
         for _, val in coincident_nodes.items():
             for index, item in enumerate(val):
-                index = index + 1
+                index += 1
                 x_offset = 25 * math.floor(index / 2) * math.pow(-1, index)
                 y_offset = -1 * 25 * math.floor(index / 2) * math.pow(-1, index)
                 item['graphics'].set('x', item['graphics'].get('x') + x_offset)
@@ -168,16 +166,13 @@ class Layer2Builder(object):
 
         # set collision domain IPs
         # TODO; work out why this throws a json exception
-        #autonetkit.ank.set_node_default(g_l2_bc,  broadcast_domain=False)
-
         for node in g_l2_bc.nodes('broadcast_domain'):
             graphics_node = g_graphics.node(node)
-            #graphics_node.device_type = 'broadcast_domain'
             if node.is_switch():
                 # TODO: check not virtual
                 node['phy'].set('broadcast_domain', True)
             if not node.is_switch():
-                # use node sorting, as accomodates for numeric/string names
+                # use node sorting, as accommodates for numeric/string names
                 graphics_node.set('device_type', 'broadcast_domain')
                 neighbors = sorted(neigh for neigh in node.neighbors())
                 label = '_'.join(neigh.label for neigh in neighbors)
@@ -198,8 +193,6 @@ class Layer2Builder(object):
         # TODO: rename to "mark_defaults_vlan" or similar
         # checks all links to managed switches have vlans
         g_vtp = anm['vtp']
-        g_l2 = anm['layer2']
-        g_l1_conn = anm['layer1_conn']
         managed_switches = [n for n in g_vtp.switches()
                             if n.get('device_subtype') == "managed"]
 
@@ -292,10 +285,8 @@ class Layer2Builder(object):
         from collections import defaultdict
         g_l2 = anm['layer2']
         g_l1_conn = anm['layer1_conn']
-        g_phy = anm['phy']
 
         g_vtp = anm.add_overlay('vtp')
-        # g_vlan = anm.add_overlay('vlan')
         managed_switches = [n for n in g_l2.switches()
                             if n.get('device_subtype') == "managed"]
 
@@ -315,8 +306,6 @@ class Layer2Builder(object):
                            if not(e.src in managed_switches or e.dst in managed_switches)]
         g_vtp.remove_edges_from(edges_to_remove)
 
-        # import ipdb
-        # ipdb.set_trace()
         self.set_default_vlans()
 
         # copy across vlans from input graph
@@ -359,12 +348,10 @@ class Layer2Builder(object):
             # create a virtual switch for each
             # TODO: naming: if this is the only pair then name after these, else
             # use the switch names too
-            #vswitch_prefix = "_".join(str(sw) for sw in sub)
             vswitches = []  # store to connect trunks
             for vlan, interfaces in vlans.items():
                 # create a virtual switch
                 vswitch_id = "vswitch%s" % vswitch_id_counter.next()
-                # vswitch = g_vlan.add_node(vswitch_id)
                 vswitch = g_l2.add_node(vswitch_id)
                 # TODO: check of switch or just broadcast_domain for higher layer
                 # purposes
@@ -392,7 +379,6 @@ class Layer2Builder(object):
             g_l2.remove_nodes_from(sub)
             # TODO: also remove any broadcast domains no longer connected
 
-            # g_l2.remove_nodes_from(disconnected_bcs)
 
             # Note: we don't store the interface names as ciuld clobber
             # eg came from two physical switches, each on gige0
@@ -404,7 +390,6 @@ class Layer2Builder(object):
             edges_to_add = list(itertools.combinations(vswitches, 2))
             # TODO: ensure only once
             # TODO: filter so only one direction
-            # g_vlan.add_edges_from(edges_to_add, trunk=True)
             g_vtp.add_edges_from(edges_to_add, trunk=True)
 
         for node in g_vtp:

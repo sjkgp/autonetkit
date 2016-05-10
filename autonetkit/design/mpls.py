@@ -11,7 +11,6 @@ from autonetkit.ank_utils import call_log
 
 def mpls_te(anm):
     g_in = anm['input']
-    g_phy = anm['phy']
     g_l3 = anm['layer3']
 
     # add regardless, so allows quick check of node in anm['mpls_te'] in
@@ -141,7 +140,6 @@ def build_ibgp_vpn_v4(anm):
         # TODO: remove the bgp layer and have just ibgp and ebgp
     # TODO: build from design rules, currently just builds from ibgp links in
     # bgp layer
-    g_bgp = anm['bgp']
     g_ibgp_v4 = anm['ibgp_v4']
     g_vrf = anm['vrf']
     g_ibgp_vpn_v4 = anm.add_overlay("ibgp_vpn_v4", directed=True)
@@ -296,12 +294,12 @@ def build_vrf(anm):
     allocate_vrf_roles(g_vrf)
     vrf_pre_process(anm)
 
-    def is_pe_ce_edge(edge):
-        if not(edge.src in g_vrf and edge.dst in g_vrf):
+    def is_pe_ce_edge(edge_to_check):
+        if not(edge_to_check.src in g_vrf and edge_to_check.dst in g_vrf):
             return False
 
-        src_vrf_role = g_vrf.node(edge.src).get('vrf_role')
-        dst_vrf_role = g_vrf.node(edge.dst).get('vrf_role')
+        src_vrf_role = g_vrf.node(edge_to_check.src).get('vrf_role')
+        dst_vrf_role = g_vrf.node(edge_to_check.dst).get('vrf_role')
         return (src_vrf_role, dst_vrf_role) in (("PE", "CE"), ("CE", "PE"))
 
     vrf_add_edges = (e for e in g_layer3.edges()
@@ -309,11 +307,11 @@ def build_vrf(anm):
     # TODO: should mark as being towards PE or CE
     g_vrf.add_edges_from(vrf_add_edges)
 
-    def is_pe_p_edge(edge):
-        if not(edge.src in g_vrf and edge.dst in g_vrf):
+    def is_pe_p_edge(edge_to_check):
+        if not(edge_to_check.src in g_vrf and edge_to_check.dst in g_vrf):
             return False
-        src_vrf_role = g_vrf.node(edge.src).get('vrf_role')
-        dst_vrf_role = g_vrf.node(edge.dst).get('vrf_role')
+        src_vrf_role = g_vrf.node(edge_to_check.src).get('vrf_role')
+        dst_vrf_role = g_vrf.node(edge_to_check.dst).get('vrf_role')
         return (src_vrf_role, dst_vrf_role) in (("PE", "P"), ("P", "PE"))
     vrf_add_edges = (e for e in g_layer3.edges()
                      if is_pe_p_edge(e))

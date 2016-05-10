@@ -1,4 +1,3 @@
-import autonetkit.log as log
 import autonetkit.ank as ank_utils
 
 def build_layer1(anm):
@@ -23,11 +22,6 @@ def build_layer3(anm):
     ank_utils.aggregate_nodes(g_l3, switches)
     exploded_edges = ank_utils.explode_nodes(g_l3,
                                              switches)
-
-    # also explode virtual switches
-    vswitches = [n for n in g_l3.nodes()
-                 if n['layer2'].get('device_type') == "switch"
-                 and n['layer2'].get('device_subtype') == "virtual"]
 
     # explode each seperately?
     for edge in exploded_edges:
