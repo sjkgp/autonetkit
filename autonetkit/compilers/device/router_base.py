@@ -5,19 +5,17 @@ from autonetkit.compilers.device.device_base import DeviceCompiler
 import autonetkit.plugins.naming as naming
 import autonetkit.log as log
 import netaddr
-from autonetkit.ank import sn_preflen_to_network
-
 
 class RouterCompiler(DeviceCompiler):
-
     """Base router compiler"""
 
     lo_interface = 'lo0'
     lo_interface_prefix = 'lo'
 
-# and set per platform
+    # and set per platform
 
-    def ibgp_session_data(self, session, ip_version):
+    @staticmethod
+    def ibgp_session_data(session, ip_version):
 
         # Don't make staticmethod as may want to extend (DeviceCompiler.g. in
         # IOS compiler for vpnv4)
@@ -25,6 +23,7 @@ class RouterCompiler(DeviceCompiler):
         node = session.src
         neigh = session.dst
 
+        use_ipv4 = use_ipv6 = False
         if ip_version == 4:
             neigh_ip = neigh['ipv4']
             use_ipv4 = True
@@ -44,7 +43,8 @@ class RouterCompiler(DeviceCompiler):
         }
         return data
 
-    def ebgp_session_data(self, session, ip_version):
+    @staticmethod
+    def ebgp_session_data(session, ip_version):
         node = session.src
         neigh = session.dst
         if ip_version == 4:
@@ -83,7 +83,7 @@ class RouterCompiler(DeviceCompiler):
         super(RouterCompiler, self).__init__(nidb, anm)
 
     def compile(self, node):
-        #TODO: call this from parent
+        # TODO: call this from parent
         super(RouterCompiler, self).compile(node)
         node.do_render = True  # turn on rendering
 
@@ -131,9 +131,9 @@ class RouterCompiler(DeviceCompiler):
         use_bgp = False
         for overlay in bgp_overlays:
             if (self.anm.has_overlay(overlay)
-                        and node in self.anm[overlay]
-                        and self.anm[overlay].node(node).degree() > 0
-                    ):
+                and node in self.anm[overlay]
+                and self.anm[overlay].node(node).degree() > 0
+                ):
                 use_bgp = True
                 break
 
@@ -146,10 +146,10 @@ class RouterCompiler(DeviceCompiler):
             ipv4_node = self.anm['ipv4'].node(node)
             if ipv4_node and ipv4_node.get('static_routes'):
                 for route in ipv4_node.get('static_routes'):
-                    stanza = {'prefix' : route.prefix,
-                              'netmask' : route.netmask,
-                              'nexthop' : route.nexthop,
-                              'metric' : route.metric}
+                    stanza = {'prefix': route.prefix,
+                              'netmask': route.netmask,
+                              'nexthop': route.nexthop,
+                              'metric': route.metric}
                     node.ipv4_static_routes.append(stanza)
 
         node.ipv6_static_routes = []
@@ -157,9 +157,9 @@ class RouterCompiler(DeviceCompiler):
             ipv6_node = self.anm['ipv6'].node(node)
             if ipv6_node and ipv6_node.get('static_routes'):
                 for route in ipv6_node.get('static_routes'):
-                    stanza = {'prefix' : route.prefix,
-                              'nexthop' : route.nexthop,
-                              'metric' : route.metric}
+                    stanza = {'prefix': route.prefix,
+                              'nexthop': route.nexthop,
+                              'metric': route.metric}
                     node.ipv6_static_routes.append(stanza)
 
     def interfaces(self, node):
@@ -175,11 +175,11 @@ class RouterCompiler(DeviceCompiler):
             node.loopback_zero.ipv4_address = ipv4_node.get('loopback')
             node.loopback_zero.ipv4_subnet = node.loopback_subnet
 
-        # TODO: bne consistent wit hcidr name so can use in cisco ios xr templates
-        # if node.ip.use_ipv6:
-            #ipv6_node = self.anm['ipv6'].node(node)
-            #node.loopback_zero.ipv6_address = ipv6_node.loopback
-            #node.loopback_zero.ipv6_subnet = node.loopback_subnet
+            # TODO: bne consistent wit hcidr name so can use in cisco ios xr templates
+            # if node.ip.use_ipv6:
+            # ipv6_node = self.anm['ipv6'].node(node)
+            # node.loopback_zero.ipv6_address = ipv6_node.loopback
+            # node.loopback_zero.ipv6_subnet = node.loopback_subnet
 
         for interface in node.physical_interfaces():
             phy_int = self.anm['phy'].interface(interface)
@@ -237,11 +237,11 @@ class RouterCompiler(DeviceCompiler):
                 try:
                     cost = int(ospf_int.get('cost'))
                 except TypeError:
-                    #TODO: log warning here
+                    # TODO: log warning here
                     cost = 1
-                stanza = {'id' : interface.id,
-                          'cost' : cost,
-                          'passive' : False}
+                stanza = {'id': interface.id,
+                          'cost': cost,
+                          'passive': False}
 
                 if node.ip.get('use_ipv4'):
                     stanza['ipv4_address'] = ospf_int['ipv4'].get('ip_address')
@@ -257,9 +257,9 @@ class RouterCompiler(DeviceCompiler):
         router_area = ospf_loopback_zero.get('area')  # area assigned to router
         # can't serialize IPAddress object to JSON
         router_area = str(router_area)
-        stanza = {'id' : node.loopback_zero.id,
-                  'cost' : 0,
-                  'passive' :True}
+        stanza = {'id': node.loopback_zero.id,
+                  'cost': 0,
+                  'passive': True}
         interfaces_by_area[router_area].append(stanza)
 
         node.ospf['interfaces_by_area'] = interfaces_by_area
@@ -287,13 +287,13 @@ class RouterCompiler(DeviceCompiler):
             interface.ospf_cost = ospf_cost
             network = ipv4_int.get('subnet')
 
-            #TODO: refactor to allow injecting loopback IPs, etc into IGP
+            # TODO: refactor to allow injecting loopback IPs, etc into IGP
             if ospf_int and ospf_int.is_bound and network \
                     not in added_networks:  # don't add more than once
                 added_networks.add(network)
-                link_stanza = {'network' : network,
-                               'interface' : interface,
-                               'area' : ospf_int.get('area')}
+                link_stanza = {'network': network,
+                               'interface': interface,
+                               'area': ospf_int.get('area')}
 
                 node.ospf['ospf_links'].append(link_stanza)
 
@@ -301,25 +301,25 @@ class RouterCompiler(DeviceCompiler):
             phy_int = self.anm['phy'].interface(interface)
             ipv4_int = g_ipv4.interface(interface)
             if not phy_int.get('inject_to_igp'):
-                #TODO: need to confirm which area to use
+                # TODO: need to confirm which area to use
                 continue
 
             network = ipv4_int.get('subnet')
             if network in added_networks:
-                #TODO: may want to warn here
-                continue # already advertised ("how? - warn if so!)
+                # TODO: may want to warn here
+                continue  # already advertised ("how? - warn if so!)
 
             # Use the same area as Loopback Zero
             area = node.ospf.get('loopback_area')
 
             if not network:
                 log.info("Not injecting unset network on loopback %s "
-                    "to IGP", interface)
+                         "to IGP", interface)
                 continue
 
-            link_stanza = {'network' : network,
-                           'interface' : interface,
-                           'area' : area}
+            link_stanza = {'network': network,
+                           'interface': interface,
+                           'area': area}
             node.ospf['ospf_links'].append(link_stanza)
 
             # also add networks for subnets to servers in the same AS
@@ -327,8 +327,6 @@ class RouterCompiler(DeviceCompiler):
     def bgp(self, node):
         phy_node = self.anm['phy'].node(node)
         g_ipv4 = self.anm['ipv4']
-        if node.ip.get('use_ipv6'):
-            g_ipv6 = self.anm['ipv6']
         asn = phy_node.get('asn')
         node.asn = asn
         bgp_stanza = node.add_scope("bgp")
@@ -447,7 +445,6 @@ class RouterCompiler(DeviceCompiler):
         ipv4_networks.add(node.loopback_zero.get('ipv4_cidr'))
         node.rip['ipv4_networks'] = sorted(list(ipv4_networks))
 
-
     def isis(self, node):
         g_isis = self.anm['isis']
         isis_node = g_isis.node(node)
@@ -465,7 +462,6 @@ class RouterCompiler(DeviceCompiler):
 
             isis_int = phy_int['isis']
             if isis_int and isis_int.is_bound:
-                isis_node = g_isis.node(node)
                 interface.isis = {
                     'metric': isis_int.get('metric'),
                     'process_id': process_id,
@@ -476,7 +472,6 @@ class RouterCompiler(DeviceCompiler):
 
                 # TODO: add wrapper for this
 
-        g_isis = self.anm['isis']
         isis_node = self.anm['isis'].node(node)
         node.isis['net'] = isis_node.get('net')
 
@@ -485,7 +480,7 @@ class RouterCompiler(DeviceCompiler):
         node.isis['process_id'] = process_id
         node.isis['lo_interface'] = self.lo_interface
 
-# set isis on loopback_zero
+        # set isis on loopback_zero
 
         node.loopback_zero.isis = {'use_ipv4': node.ip.get('use_ipv4'),
                                    'use_ipv6': node.ip.get('use_ipv6')}

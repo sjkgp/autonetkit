@@ -5,7 +5,6 @@ from autonetkit.compilers.device.server_base import ServerCompiler
 
 
 class UbuntuCompiler(ServerCompiler):
-
     def compile(self, node):
         super(UbuntuCompiler, self).compile(node)
 
@@ -37,10 +36,10 @@ class UbuntuCompiler(ServerCompiler):
                         if n.is_router()]
         if not len(gateway_list):
             if node.device_subtype != "server":
-                pass # don't warn for other server subtypes
+                pass  # don't warn for other server subtypes
             else:
                 log.warning('Server %s is not directly connected to any routers'
-                    % node)
+                            % node)
             return
         elif len(gateway_list) > 1:
             log.info('Server %s is multi-homed: using gateways %s'
@@ -54,7 +53,7 @@ class UbuntuCompiler(ServerCompiler):
         cloud_init_static_routes_v6 = []
         g_l3 = self.anm['layer3']
 
-        #TODO: need to handle multipoint to only enter once
+        # TODO: need to handle multipoint to only enter once
         for gateway in sorted(gateway_list):
             seen = set()
             for gateway_edge_l3 in g_l3.edges(node, gateway):
@@ -63,11 +62,10 @@ class UbuntuCompiler(ServerCompiler):
 
                 gateway_interface = gateway_edge_l3.dst_int
                 if gateway_interface in seen:
-                    continue # don't add same interface more than once
+                    continue  # don't add same interface more than once
                     # e.g. if from multipoint
                 seen.add(gateway_interface)
 
-                gateway_ipv4 = gateway_ipv6 = None
                 node.add_scope("ip")
 
                 # TODO: look at aggregation
@@ -82,7 +80,7 @@ class UbuntuCompiler(ServerCompiler):
                         log.warning("No gateway IPv4 for %s to %s", node, gateway)
 
                     else:
-                        #TODO: split this into a function
+                        # TODO: split this into a function
                         static_routes_v4 = []
                         host_routes_v4 = []
                         for (asn, asn_routes) in self.anm['ipv4'].data['infra_blocks'].items():
@@ -95,7 +93,7 @@ class UbuntuCompiler(ServerCompiler):
                                     'gw': gateway_ipv4,
                                     'interface': server_interface_id,
                                     'description': 'Route to infra subnet in AS %s via %s'
-                                    % (asn, gateway),
+                                                   % (asn, gateway),
                                 }
                                 if infra_route.prefixlen == 32:
                                     host_routes_v4.append(route_entry)
@@ -105,7 +103,7 @@ class UbuntuCompiler(ServerCompiler):
                         # eBGP advertised loopbacks in all (same + other) ASes
 
                         for (asn, asn_routes) in self.anm['ipv4'].data['loopback_blocks'
-                                                                       ].items():
+                        ].items():
                             for asn_route in asn_routes:
                                 route_entry = {
                                     'network': asn_route,
@@ -113,7 +111,7 @@ class UbuntuCompiler(ServerCompiler):
                                     'gw': gateway_ipv4,
                                     'interface': server_interface_id,
                                     'description': 'Route to loopback subnet in AS %s via %s'
-                                    % (asn, gateway),
+                                                   % (asn, gateway),
                                 }
                                 if asn_route.prefixlen == 32:
                                     host_routes_v4.append(route_entry)
@@ -125,11 +123,11 @@ class UbuntuCompiler(ServerCompiler):
 
                         for entry in host_routes_v4:
                             formatted = 'route add -host %s gw %s dev %s' \
-                                % (entry['prefix'], entry['gw'], entry['interface'])
+                                        % (entry['prefix'], entry['gw'], entry['interface'])
                             cloud_init_static_routes_v4.append(formatted)
                         for entry in static_routes_v4:
                             formatted = 'route add -net %s gw %s dev %s' \
-                                % (entry['network'], entry['gw'], entry['interface'])
+                                        % (entry['network'], entry['gw'], entry['interface'])
                             cloud_init_static_routes_v4.append(formatted)
 
             # IGP advertised infrastructure pool from same AS
@@ -139,7 +137,7 @@ class UbuntuCompiler(ServerCompiler):
                 if gateway_ipv6 is None:
                     log.warning("No gateway IPv6 for %s to %s", node, gateway)
                 else:
-                    #TODO: split this into a function
+                    # TODO: split this into a function
                     static_routes_v6 = []
                     host_routes_v6 = []
                     for (asn, asn_routes) in self.anm['ipv6'].data['infra_blocks'].items():
@@ -152,7 +150,7 @@ class UbuntuCompiler(ServerCompiler):
                                 'gw': gateway_ipv6,
                                 'interface': server_interface_id,
                                 'description': 'Route to infra subnet in AS %s via %s'
-                                % (asn, gateway),
+                                               % (asn, gateway),
                             }
                             if infra_route.prefixlen == 32:
                                 host_routes_v6.append(route_entry)
@@ -162,7 +160,7 @@ class UbuntuCompiler(ServerCompiler):
                     # eBGP advertised loopbacks in all (same + other) ASes
 
                     for (asn, asn_routes) in self.anm['ipv6'].data['loopback_blocks'
-                                                                   ].items():
+                    ].items():
                         for asn_route in asn_routes:
                             route_entry = {
                                 'network': asn_route,
@@ -170,7 +168,7 @@ class UbuntuCompiler(ServerCompiler):
                                 'gw': gateway_ipv6,
                                 'interface': server_interface_id,
                                 'description': 'Route to loopback subnet in AS %s via %s'
-                                % (asn, gateway),
+                                               % (asn, gateway),
                             }
                             if asn_route.prefixlen == 32:
                                 host_routes_v6.append(route_entry)
@@ -183,12 +181,12 @@ class UbuntuCompiler(ServerCompiler):
 
                     for entry in host_routes_v6:
                         formatted = 'route -A inet6 add %s gw %s dev %s' \
-                            % (entry.prefix, entry.gw, entry.interface)
+                                    % (entry.prefix, entry.gw, entry.interface)
                         cloud_init_static_routes_v6.append(formatted)
 
                     for entry in static_routes_v6:
                         formatted = 'route -A inet6 add %s gw %s dev %s' \
-                            % (entry['network'], entry['gw'], entry['interface'])
+                                    % (entry['network'], entry['gw'], entry['interface'])
                         cloud_init_static_routes_v6.append(formatted)
 
         node.add_scope("cloud_init")

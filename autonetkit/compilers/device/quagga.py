@@ -4,7 +4,6 @@ from autonetkit.compilers.device.router_base import RouterCompiler
 
 
 class QuaggaCompiler(RouterCompiler):
-
     """Base Quagga compiler"""
 
     lo_interface = 'lo:1'
@@ -49,7 +48,7 @@ class QuaggaCompiler(RouterCompiler):
                     subnet = bgp_int['ipv4'].get('subnet')
                     default_ebgp_area = 0
                     node.ospf['ospf_links'].append({'network': subnet,
-                                                 'area': default_ebgp_area})
+                                                    'area': default_ebgp_area})
 
     def isis(self, node):
         """Sets ISIS links

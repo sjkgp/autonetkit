@@ -146,7 +146,7 @@ class IosBaseCompiler(RouterCompiler):
                 stanza = {'prefix': str(infra_route.network),
                           'netmask': str(infra_route.netmask),
                           'nexthop': "Null0",
-                          'metric' : 254}
+                          'metric': 254}
                 node.ipv4_static_routes.append(stanza)
 
         if node.is_ebgp_v6 and node.ip.get('use_ipv6'):
@@ -305,8 +305,6 @@ class IosBaseCompiler(RouterCompiler):
                         interface.description += ' vrf %s' \
                             % vrf_int.get('vrf_name')
 
-        vrf_node = self.anm['vrf'].node(node)
-
         node.vrf['use_ipv4'] = node.ip.get('use_ipv4')
         node.vrf['use_ipv6'] = node.ip.get('use_ipv6')
         node.vrf['vrfs'] = sorted(node.vrf['vrfs'], key=lambda x: x['vrf'])
@@ -327,20 +325,21 @@ class IosBaseCompiler(RouterCompiler):
                     node.mpls['ldp_interfaces'].append(interface.id)
                     interface.use_mpls = True
 
-        #TODO: check if this block is repeated (redundant) logic of above
+        # TODO: check if this block is repeated (redundant) logic of above
         if mpls_ldp_node and mpls_ldp_node.get('role') is 'P':
             node.mpls['ldp_interfaces'] = []
             for interface in node.physical_interfaces():
                 node.mpls['ldp_interfaces'].append(interface.id)
 
-        #TODO: refactor this logic
+        # TODO: refactor this logic
         if mpls_ldp_node:
             # P, PE, CE
             node.mpls['enabled'] = True
-            node.mpls['router_id'] = ipv4_node.loopback_zero["ipv4"].get("ip_address")
+            node.mpls['router_id'] = ipv4_node.loopback_zero[
+                "ipv4"].get("ip_address")
 
     def rip(self, node):
-    #Inheriting from base compiler. Adding in interface stanza.
+        # Inheriting from base compiler. Adding in interface stanza.
         super(IosBaseCompiler, self).rip(node)
         for interface in node.physical_interfaces():
             phy_int = self.anm['phy'].interface(interface)
@@ -535,7 +534,8 @@ class IosClassicCompiler(IosBaseCompiler):
             src_int = g_gre_tunnel.edge(node, neigh).src_int
             tunnel_source = node.interface(src_int).id
             stanza['source'] = tunnel_source
-            stanza['destination'] = "0.0.0.0"  # placeholder for user to replace
+            # placeholder for user to replace
+            stanza['destination'] = "0.0.0.0"
 
             if neigh.get('tunnel_enabled_ipv4'):
                 ip_address = neigh.get('tunnel_ipv4_address')
@@ -564,19 +564,16 @@ class IosClassicCompiler(IosBaseCompiler):
 
         l2tp_v3_node = g_l2tp_v3.node(node)
         if l2tp_v3_node.get('role') != "tunnel":
-            return # nothing to configure
+            return  # nothing to configure
 
         node.l2tp_classes = list(l2tp_v3_node.get('l2tp_classes'))
-        for l2tp_class in l2tp_v3_node.get('l2tp_classes'):
-            node.l2tp_classes
 
         node.pseudowire_classes = []
         for pwc in l2tp_v3_node.get('pseudowire_classes'):
-            stanza = {}
-            stanza['name'] = pwc['name']
-            stanza['encapsulation'] = pwc['encapsulation']
-            stanza['protocol'] = pwc['protocol']
-            stanza['l2tp_class_name'] = pwc['l2tp_class_name']
+            stanza = {'name': pwc['name'],
+                      'encapsulation': pwc['encapsulation'],
+                      'protocol': pwc['protocol'],
+                      'l2tp_class_name': pwc['l2tp_class_name']}
             local_interface = pwc['local_interface']
 
             # Lookup the interface ID allocated for this loopback by compiler
@@ -588,16 +585,15 @@ class IosClassicCompiler(IosBaseCompiler):
         for interface in node.physical_interfaces():
             phy_int = g_phy.interface(interface)
             if phy_int.get('xconnect_encapsulation') != "l2tpv3":
-                continue # no l2tpv3 encap, no need to do anything
+                continue  # no l2tpv3 encap, no need to do anything
 
             tunnel_int = l2tp_v3_node.interface(interface)
-            stanza = {}
-            stanza['remote_ip'] = tunnel_int.get('xconnect_remote_ip')
-            stanza['vc_id'] = tunnel_int.get('xconnect_vc_id')
-            stanza['encapsulation'] = "l2tpv3"
-            #TODO: need to be conscious of support for other xconnect types
+            stanza = {'remote_ip': tunnel_int.get('xconnect_remote_ip'),
+                      'vc_id': tunnel_int.get('xconnect_vc_id'),
+                      'encapsulation': "l2tpv3",
+                      'pw_class': tunnel_int.get('xconnect_pw_class')}
+            # TODO: need to be conscious of support for other xconnect types
             # in templates since pw_class may not apply if not l2tpv3, et
-            stanza['pw_class'] = tunnel_int.get('xconnect_pw_class')
 
             interface.xconnect = stanza
 
@@ -732,8 +728,8 @@ class IosXrCompiler(IosBaseCompiler):
 
         for interface in mpls_te_node.physical_interfaces():
             nidb_interface = self.nidb.interface(interface)
-            stanza = {'id' : nidb_interface.id,
-                      'bandwidth_percent' : 100}
+            stanza = {'id': nidb_interface.id,
+                      'bandwidth_percent': 100}
             rsvp_interfaces.append(stanza)
 
             mpls_te_interfaces.append(nidb_interface.id)
@@ -758,11 +754,9 @@ class IosXrCompiler(IosBaseCompiler):
                 if node.rip.get('use_ipv4'):
                     ipv4_interfaces.append(data)
 
-        loopback_zero = node.loopback_zero
         data = {'id': node.loopback_zero.id, 'passive': True}
         if node.rip.get('use_ipv4'):
             ipv4_interfaces.append(data)
-
 
         node.rip['ipv4_interfaces'] = ipv4_interfaces
 
@@ -789,7 +783,6 @@ class IosXrCompiler(IosBaseCompiler):
                 if node.eigrp.get('use_ipv6'):
                     ipv6_interfaces.append(data)
 
-        loopback_zero = node.loopback_zero
         data = {'id': node.loopback_zero.id, 'passive': True}
         if node.eigrp.get('use_ipv4'):
             ipv4_interfaces.append(data)
@@ -866,13 +859,13 @@ class NxOsCompiler(IosBaseCompiler):
                     node.mpls['ldp_interfaces'].append(interface.id)
                     interface.use_mpls = True
 
-        #TODO: check if this block is repeated (redundant) logic of above
+        # TODO: check if this block is repeated (redundant) logic of above
         if mpls_ldp_node and mpls_ldp_node.get('role') is 'P':
             node.mpls['ldp_interfaces'] = []
             for interface in node.physical_interfaces():
                 node.mpls['ldp_interfaces'].append(interface.id)
 
-        #TODO: refactor this logic
+        # TODO: refactor this logic
         if mpls_ldp_node:
             # P, PE, CE
             node.mpls['enabled'] = True
@@ -898,8 +891,7 @@ class NxOsCompiler(IosBaseCompiler):
         super(NxOsCompiler, self).rip(node)
         loopback_zero = node.loopback_zero
         loopback_zero.rip = {'use_ipv4': node.ip.get('use_ipv4'),
-                            'process_id': node.rip.get('process_id')}
-
+                             'process_id': node.rip.get('process_id')}
 
     def ospf(self, node):
         super(NxOsCompiler, self).ospf(node)
@@ -924,6 +916,3 @@ class NxOsCompiler(IosBaseCompiler):
         loopback_zero = node.loopback_zero
         loopback_zero.eigrp = {'use_ipv4': node.ip.get('use_ipv4'),
                                'use_ipv6': node.ip.get('use_ipv6')}
-
-
-
