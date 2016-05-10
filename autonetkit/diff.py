@@ -3,16 +3,17 @@ import os
 
 import nidb
 
-#TODO: make this generalise to two graphs, rather than DeviceModel specifically
 
-def nidb_diff(directory = None, length = 1):
+# TODO: make this generalise to two graphs, rather than DeviceModel specifically
+
+def nidb_diff(directory=None, length=1):
     if not directory:
         directory = os.path.join("versions", "nidb")
     glob_dir = os.path.join(directory, "*.json.gz")
     pickle_files = glob.glob(glob_dir)
     pickle_files = sorted(pickle_files)
     pairs = [(a, b) for (a, b) in zip(pickle_files, pickle_files[1:])]
-    pairs = pairs[-1*length:]
+    pairs = pairs[-1 * length:]
     diffs = []
     for file_a, file_b in pairs:
         nidb_a = nidb.DeviceModel()
@@ -27,9 +28,10 @@ def nidb_diff(directory = None, length = 1):
 
     return diffs
 
+
 def elem_diff(elem_a, elem_b):
     if type(elem_a) != type(elem_b):
-        #TODO: fix this
+        # TODO: fix this
         string_types = (str, unicode)
         if type(elem_a) in string_types and type(elem_b) in string_types:
             pass
@@ -58,7 +60,7 @@ def elem_diff(elem_a, elem_b):
     if isinstance(elem_a, list):
         len_a = len(elem_a)
         len_b = len(elem_b)
-#TODO: handle if different lengths
+        # TODO: handle if different lengths
         retval = []
         min_len = min(len_a, len_b)
         for index in range(min_len):
@@ -70,7 +72,8 @@ def elem_diff(elem_a, elem_b):
             return retval
 
     if elem_a != elem_b:
-        return {1: elem_a, 2: elem_b }
+        return {1: elem_a, 2: elem_b}
+
 
 def compare_nidb(nidb_a, nidb_b):
     graph_a = nidb_a._graph
@@ -78,19 +81,20 @@ def compare_nidb(nidb_a, nidb_b):
     diff = compare(graph_a, graph_b)
     return diff
 
+
 def compare(graph_a, graph_b):
     diff = {}
 
     diff = {
-            'graph': {},
-            'nodes': {},
-            'edges': {},
-            }
+        'graph': {},
+        'nodes': {},
+        'edges': {},
+    }
 
     diff['graph'] = elem_diff(graph_a.graph, graph_b.graph)
 
     diff['nodes'] = {
-    'm': {},
+        'm': {},
     }
 
     nodes_a = set(graph_a.nodes())
@@ -114,12 +118,12 @@ def compare(graph_a, graph_b):
     if not len(diff['nodes']['m']):
         del diff['nodes']['m']
 
-    #TODO: do this backwards, and append at end
+    # TODO: do this backwards, and append at end
     if not len(diff['nodes']):
         del diff['nodes']
 
     diff['edges'] = {
-    'm': {},
+        'm': {},
     }
     edges_a = set(graph_a.edges())
     edges_b = set(graph_b.edges())
@@ -143,9 +147,8 @@ def compare(graph_a, graph_b):
     if not len(diff['edges']['m']):
         del diff['edges']['m']
 
-    #TODO: do this backwards, and append at end
+    # TODO: do this backwards, and append at end
     if not len(diff['edges']):
         del diff['edges']
-
 
     return diff

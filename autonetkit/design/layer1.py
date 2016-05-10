@@ -1,6 +1,4 @@
 import autonetkit.ank as ank_utils
-import autonetkit.log as log
-
 
 
 class Layer1Builder(object):

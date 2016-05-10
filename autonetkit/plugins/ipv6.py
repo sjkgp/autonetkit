@@ -3,8 +3,6 @@
 import json
 
 import autonetkit.ank as ank_utils
-import autonetkit.ank_json
-import autonetkit.ank_messaging
 import autonetkit.log as log
 import netaddr
 
@@ -69,8 +67,8 @@ def allocate_infra(g_ip, address_block=None):
     if not address_block:
         address_block = netaddr.IPNetwork('2001:DB8:a::')
 
-# TODO: check if need to do network address... possibly only for
-# loopback_pool and infra_pool so maps to asn
+    # TODO: check if need to do network address... possibly only for
+    # loopback_pool and infra_pool so maps to asn
 
     infra_pool = address_block.subnet(80)
 

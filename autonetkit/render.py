@@ -4,7 +4,6 @@ import shutil
 import time
 
 import autonetkit.log as log
-import mako
 import pkg_resources
 from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError
 

@@ -305,7 +305,6 @@ class NmNode(AnkElement):
             self._graph.node[self.node_id]['_ports'] = value
         except KeyError:
             self.log.debug('No interfaces initialised for')
-            return []
 
     @property
     def _graph(self):

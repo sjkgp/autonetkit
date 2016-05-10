@@ -1,6 +1,4 @@
-import logging
 import logging.handlers
-import autonetkit.config as config
 
 ank_logger = logging.getLogger("ANK2")
 if not ank_logger.handlers:

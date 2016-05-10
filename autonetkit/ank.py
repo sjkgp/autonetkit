@@ -17,6 +17,7 @@ static_route_v4 = namedtuple("static_route_v4",
 static_route_v6 = namedtuple("static_route_v6",
                              ["prefix", "nexthop", "metric"])
 
+
 # TODO: add ability to specify labels to unwrap too
 
 # TODO: split into a utils module
@@ -69,6 +70,7 @@ def set_node_default(nm_graph, nbunch=None, **kwargs):
             if key not in graph.node[node]:
                 graph.node[node][key] = val
 
+
 # TODO: also add ability to copy multiple attributes
 
 # TODO: rename to copy_node_attr_from
@@ -113,7 +115,6 @@ def copy_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
 
 def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
                        nbunch=None, type=None, default=None):
-
     """
     Copies interger attributes from the source to destination.
     Supported types are float and int.
@@ -217,6 +218,7 @@ def wrap_nodes(nm_graph, nodes):
     return [NmNode(nm_graph._anm, nm_graph._overlay_id, node)
             for node in nodes]
 
+
 def in_edges(nm_graph, nodes=None):
     """
     Returns incoming edges NetworkModel edge objects.
@@ -225,7 +227,6 @@ def in_edges(nm_graph, nodes=None):
     graph = unwrap_graph(nm_graph)
     edges = graph.in_edges(nodes)
     return wrap_edges(nm_graph, edges)
-
 
 
 def split(nm_graph, edges, retain=None, id_prepend=''):
@@ -249,7 +250,7 @@ def split(nm_graph, edges, retain=None, id_prepend=''):
 
     # handle single edge
     if edges in nm_graph.edges():
-        edges = [edges] # place into list for iteration
+        edges = [edges]  # place into list for iteration
 
     edges = list(edges)
 
@@ -270,7 +271,7 @@ def split(nm_graph, edges, retain=None, id_prepend=''):
             new_id = '%s%s_%s' % (id_prepend, node_a, node_b)
 
         if nm_graph.is_multigraph():
-            new_id = new_id + '_%s' % edge.ekey
+            new_id += '_%s' % edge.ekey
 
         ports = edge.raw_interfaces
         data = edge._data
@@ -318,7 +319,7 @@ def explode_nodes(nm_graph, nodes, retain=None):
     total_added_edges = []  # keep track to return
 
     if nodes in nm_graph:
-        nodes = [nodes] # place into list for iteration
+        nodes = [nodes]  # place into list for iteration
 
     for node in nodes:
 
@@ -378,7 +379,7 @@ def label(nm_graph, nodes):
     return list(nm_graph._anm.node_label(node) for node in nodes)
 
 
-def connected_subgraphs(nm_graph, nodes = None):
+def connected_subgraphs(nm_graph, nodes=None):
     """
     Returns the connected subgraphs in list. If edges are removed from connected graph,
     subgraph would output subgraphs with reflected changes.
@@ -390,7 +391,6 @@ def connected_subgraphs(nm_graph, nodes = None):
     graph = unwrap_graph(nm_graph)
     subgraph = graph.subgraph(nodes)
     if not len(subgraph.edges()):
-
         # print "Nothing to aggregate for %s: no edges in subgraph"
 
         pass
@@ -425,7 +425,6 @@ def aggregate_nodes(nm_graph, nodes, retain=None):
     graph = unwrap_graph(nm_graph)
     subgraph = graph.subgraph(nodes)
     if not len(subgraph.edges()):
-
         # print "Nothing to aggregate for %s: no edges in subgraph"
 
         pass
@@ -482,12 +481,12 @@ def most_frequent(iterable):
     it will return that it's unable to calculate most frequent value.
     """
 
-# from http://stackoverflow.com/q/1518522
+    # from http://stackoverflow.com/q/1518522
 
     gby = itertools.groupby
     try:
         return max(gby(sorted(iterable)), key=lambda (x, v):
-                   (len(list(v)), -iterable.index(x)))[0]
+        (len(list(v)), -iterable.index(x)))[0]
     except ValueError, error:
         log.warning('Unable to calculate most_frequent, %s', error)
         return None
@@ -601,7 +600,7 @@ def shortest_path(nm_graph, src, dst):
     src_id = unwrap_nodes(src)
     dst_id = unwrap_nodes(dst)
 
-    #TODO: check path works for muli-edge graphs too
+    # TODO: check path works for muli-edge graphs too
     path = nx.shortest_path(graph, src_id, dst_id)
 
     return wrap_nodes(nm_graph, path)
@@ -613,7 +612,7 @@ def boundary_nodes(nm_graph, nodes):
     """
 
     # TODO: move to utils
-# TODO: use networkx boundary nodes directly: does the same thing
+    # TODO: use networkx boundary nodes directly: does the same thing
 
     graph = unwrap_graph(nm_graph)
     nodes = list(nodes)
@@ -626,6 +625,7 @@ def boundary_nodes(nm_graph, nodes):
     assert all(n in nbunch for n in internal_nodes)  # check internal
 
     return wrap_nodes(nm_graph, internal_nodes)
+
 
 def shallow_copy_nx_graph(nx_graph):
     """Convenience wrapper for nx shallow copy"""
@@ -642,7 +642,3 @@ def shallow_copy_nx_graph(nx_graph):
             return nx.MultiGraph(nx_graph)
         else:
             return nx.Graph(nx_graph)
-
-
-
-
