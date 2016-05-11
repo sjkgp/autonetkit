@@ -262,6 +262,7 @@ class NmGraph(OverlayBase):
             nx_ebunch = unwrap_edges(ebunch)
         except AttributeError:
             pass  # don't need to unwrap
+            nx_ebunch = ebunch
 
         self._graph.remove_edges_from(nx_ebunch)
 

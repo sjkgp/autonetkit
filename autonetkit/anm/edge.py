@@ -86,7 +86,6 @@ class NmEdge(AnkElement):
 
     def __getitem__(self, key):
         """"""
-
         from autonetkit.anm.graph import NmGraph
         overlay = NmGraph(self.anm, key)
         return overlay.edge(self)
