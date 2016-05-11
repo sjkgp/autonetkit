@@ -228,9 +228,11 @@ def in_edges(nm_graph, nodes=None):
     edges = graph.in_edges(nodes)
     return wrap_edges(nm_graph, edges)
 
+
 def split_edge(nm_graph, edge, id_prepend=''):
     edges = [edge]
     return split_edges(nm_graph, edges, id_prepend)
+
 
 def split_edges(nm_graph, edges, id_prepend=''):
     """
@@ -256,22 +258,24 @@ def split_edges(nm_graph, edges, id_prepend=''):
             new_id = '%s%s_%s' % (id_prepend, node_a, node_b)
 
         if nm_graph.is_multigraph():
-            new_id = new_id + '_%s' % edge.ekey
+            new_id += '_%s' % edge.ekey
 
         split_node = nm_graph.add_node(new_id)
         added_nodes.append(split_node)
-        split_ifaceA = split_node.add_interface()
-        split_ifaceB = split_node.add_interface()
+        split_iface_a = split_node.add_interface()
+        split_iface_b = split_node.add_interface()
 
-        nm_graph.add_edge(src_int, split_ifaceA)
-        nm_graph.add_edge(dst_int, split_ifaceB)
+        nm_graph.add_edge(src_int, split_iface_a)
+        nm_graph.add_edge(dst_int, split_iface_b)
         nm_graph.remove_edge(edge)
 
     return added_nodes
 
+
 def explode_node(nm_graph, node):
     nodes = [node]
     return explode_nodes(nm_graph, nodes)
+
 
 def explode_nodes(nm_graph, nodes):
     """Explodes all nodes in nodes.
@@ -282,7 +286,7 @@ def explode_nodes(nm_graph, nodes):
     for node in nodes:
         edges = node.edges()
         edge_pairs = [(e1, e2) for e1 in edges for e2 in edges
-        if e1 != e2]
+                      if e1 != e2]
         added_pairs = set()
         for edge_pair in edge_pairs:
             (src_edge, dst_edge) = sorted(edge_pair)
@@ -349,14 +353,14 @@ def aggregate_nodes(nm_graph, nodes):
     total amount of edges that are added.
     """
 
-    #TODO: remove subgraph step into separate function
+    # TODO: remove subgraph step into separate function
 
     nodes = list(unwrap_nodes(nodes))
     graph = unwrap_graph(nm_graph)
     subgraph = graph.subgraph(nodes)
     if not len(subgraph.edges()):
         # print "Nothing to aggregate for %s: no edges in subgraph"
-        #TODO: handle this case
+        # TODO: handle this case
         pass
 
     total_added_edges = []
@@ -381,14 +385,13 @@ def aggregate_nodes(nm_graph, nodes):
             external_interfaces = []
             for node in nodes_to_remove:
                 external_interfaces += [e.dst_int for e in node.edges()
-                if e.dst not in component_nodes]
+                                        if e.dst not in component_nodes]
                 # all edges out of component
 
             log.debug('External interfaces %s', external_interfaces)
-            edges_to_add = []
             for dst_int in external_interfaces:
-                split_ifaceA = base.add_interface()
-                new_edge = nm_graph.add_edge(split_ifaceA, dst_int)
+                split_iface_a = base.add_interface()
+                new_edge = nm_graph.add_edge(split_iface_a, dst_int)
                 total_added_edges.append(new_edge)
 
             nm_graph.remove_nodes_from(nodes_to_remove)
