@@ -267,33 +267,24 @@ def split(nm_graph, edges, retain=None, id_prepend=''):
 
     return added_nodes
 
-def explode_nodes(nm_graph, nodes, retain=None):
+def explode_nodes(nm_graph, nodes):
     """Explodes all nodes in nodes.
-    TODO: Add support for digraph - check if nm_graph.is_directed()
     """
-    if retain is None:
-        retain = []
-
     log.debug('Exploding nodes')
-    try:
-        retain.lower()
-        retain = [retain]  # was a string, put into list
-    except AttributeError:
-        pass  # already a list
-
     total_added_edges = []  # keep track to return
 
     if nodes in nm_graph:
         nodes = [nodes]  # place into list for iteration
 
     for node in nodes:
-
         edges = node.edges()
-        edge_pairs = [(e1, e2) for e1 in edges for e2 in edges if e1
-                      != e2]
+        edge_pairs = [(e1, e2) for e1 in edges for e2 in edges
+        if e1 != e2]
         added_pairs = set()
         for edge_pair in edge_pairs:
             (src_edge, dst_edge) = sorted(edge_pair)
+
+            # only add in single direction
             if (src_edge, dst_edge) in added_pairs:
                 continue  # already added this link pair in other direction
             else:
@@ -302,39 +293,17 @@ def explode_nodes(nm_graph, nodes, retain=None):
             src = src_edge.dst  # src is the exploded node
             dst = dst_edge.dst  # src is the exploded node
 
+            src_int = src_edge.dst_int
+            dst_int = dst_edge.dst_int
+
             if src == dst:
                 continue  # don't add self-loop
 
-            data = dict((key, src_edge._data.get(key)) for key in
-                        retain)
-            node_to_dst_data = dict((key, dst_edge._data.get(key))
-                                    for key in retain)
-            data.update(node_to_dst_data)
-
-            data['_ports'] = {}
-            try:
-                src_int_id = src_edge.raw_interfaces[src.node_id]
-            except KeyError:
-                pass  # not set
-            else:
-                data['_ports'][src.node_id] = src_int_id
-
-            try:
-                dst_int_id = dst_edge.raw_interfaces[dst.node_id]
-            except KeyError:
-                pass  # not set
-            else:
-                data['_ports'][dst.node_id] = dst_int_id
-
-            new_edge = (src.node_id, dst.node_id, data)
-
-            # TODO: use add_edge
-
-            nm_graph.add_edges_from([new_edge])
+            new_edge = nm_graph.add_edge(src_int, dst_int)
             total_added_edges.append(new_edge)
 
         nm_graph.remove_node(node)
-    return wrap_edges(nm_graph, total_added_edges)
+    return total_added_edges
 
 
 def label(nm_graph, nodes):
