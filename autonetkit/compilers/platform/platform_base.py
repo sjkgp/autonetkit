@@ -31,7 +31,7 @@ class PlatformCompiler(object):
             node.ip['use_ipv4'] = phy_node.get('use_ipv4') or False
             node.ip['use_ipv6'] = phy_node.get('use_ipv6') or False
 
-            for interface in node.interfaces:
+            for interface in node.data_interfaces():
                 phy_int = phy_node.interface(interface)
                 if phy_int.get('exclude_igp') is not None:
                     interface.exclude_igp = phy_int.get('exclude_igp')

@@ -116,7 +116,6 @@ class RouterCompiler(DeviceCompiler):
             # applies even if ipv4 disabled, used for eg eigrp, bgp, ...
             node.router_id = ipv4_node.get('loopback')
 
-        self.interfaces(node)
         if self.anm.has_overlay('ospf') and node in self.anm['ospf']:
             self.ospf(node)
         if self.anm.has_overlay('isis') and node in self.anm['isis']:

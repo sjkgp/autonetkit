@@ -349,11 +349,14 @@ class Layer2Builder(object):
             # use the switch names too
             vswitches = []  # store to connect trunks
 
+            vswitch_tp_lookup = {}
+
             for vlan, interfaces in vlans.items():
                 # create a virtual switch
                 vswitch_id = "vswitch%s" % vswitch_id_counter.next()
                 vswitch = g_l2.add_node(vswitch_id)
                 vlan_tp = vswitch.add_interface(category="vlan_termination_point")
+                vswitch_tp_lookup[vswitch] = vlan_tp
                 # TODO: check of switch or just broadcast_domain for higher layer
                 # purposes
                 vswitch.set('device_type', 'switch')
@@ -388,7 +391,14 @@ class Layer2Builder(object):
             # and add the trunks
             # TODO: these need annotations! ???
             # create trunks
-            edges_to_add = list(itertools.combinations(vswitches, 2))
+            for sw1 in vswitches:
+                for sw2 in vswitches:
+                    if sw1 == sw2:
+                        continue
+
+                    edge = (vswitch_tp_lookup[sw1], vswitch_tp_lookup[sw2])
+                    edges_to_add.append(edge)
+
             # TODO: ensure only once
             # TODO: filter so only one direction
             g_vtp.add_edges_from(edges_to_add, trunk=True)

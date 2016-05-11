@@ -64,7 +64,7 @@ class NmGraph(OverlayBase):
         if not update:
             # TODO: what is update used for?
             # filter out existing nodes
-            nbunch = (n for n in nbunch if n not in self._graph)
+            nbunch = [n for n in nbunch if n not in self._graph]
 
         nbunch = list(nbunch)
         node_ids = list(nbunch)  # before appending retain data
@@ -149,6 +149,7 @@ class NmGraph(OverlayBase):
             try:
                 phy_interfaces = phy_graph.node[node_id]['_ports']
             except KeyError:
+                #TODO: document this logic
                 # Node not in phy (eg broadcast domain)
                 # Just do base initialisation of loopback zero
                 self._graph.node[node_id]['_ports'] = {
@@ -344,6 +345,11 @@ class NmGraph(OverlayBase):
             elif len(in_edge) == 2:
                 in_a, in_b = in_edge[0], in_edge[1]
                 if isinstance(in_a, NmNode) and isinstance(in_b, NmNode):
+                    import inspect
+                    curframe = inspect.currentframe()
+                    calframe = inspect.getouterframes(curframe, 2)
+                    caller_name = calframe[1]
+                    log.warning("node to node %s, %s, on %s, from %s", in_a, in_b, self._overlay_id, caller_name)
                     src = in_a.node_id
                     dst = in_b.node_id
 
@@ -358,6 +364,11 @@ class NmGraph(OverlayBase):
                     data['_ports'] = ports
 
                 elif isinstance(in_a, NmNode) and isinstance(in_b, NmPort):
+                    import inspect
+                    curframe = inspect.currentframe()
+                    calframe = inspect.getouterframes(curframe, 2)
+                    caller_name = calframe[1]
+                    log.warning("node to iface %s, %s, on %s, from %s", NmNode, NmPort, self._overlay_id, caller_name)
                     src = in_a.node_id
                     dst = in_b.node.node_id
                     ports = {}
