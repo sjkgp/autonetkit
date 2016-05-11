@@ -96,8 +96,7 @@ class Layer2Builder(object):
         for edge in edges_to_split:
             edge.set('split', True)  # mark as split for use in building nidb
 
-        split_created_nodes = list(ank_utils.split(g_l2_bc, edges_to_split,
-                                                   retain=['split'],
+        split_created_nodes = list(ank_utils.split_edges(g_l2_bc, edges_to_split,
                                                    id_prepend='cd_'))
 
         # TODO: if parallel nodes, offset

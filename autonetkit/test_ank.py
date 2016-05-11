@@ -179,7 +179,7 @@ class TestAnk(unittest.TestCase):
         anm = autonetkit.topos.house()
         g_phy = anm['phy']
         edge = g_phy.edge("r1", "r2")
-        new_nodes = ank_utils.split(g_phy, edge)
+        new_nodes = ank_utils.split_edge(g_phy, edge)
         r1 = g_phy.node('r1')
         r2 = g_phy.node('r2')
         r1_r2 = g_phy.node('r1_r2')
@@ -190,7 +190,7 @@ class TestAnk(unittest.TestCase):
         anm = autonetkit.topos.house()
         g_phy = anm['phy']
         edges = g_phy.node("r2").edges()
-        new_nodes = ank_utils.split(g_phy, edges, id_prepend="split_")
+        new_nodes = ank_utils.split_edges(g_phy, edges, id_prepend="split_")
         split_r2_r4 = g_phy.node('split_r2_r4')
         split_r1_r2 = g_phy.node('split_r1_r2')
         split_r2_r3 = g_phy.node('split_r2_r3')
@@ -223,7 +223,7 @@ class TestAnk(unittest.TestCase):
         expected_result = [(r1, r2), (r1, r3), (r2, r3), (r4, r2),
                            (r4, r5), (r5, r3)]
         self.assertListEqual(expected_result, result)
-        exploded_edges = ank_utils.explode_nodes(g_phy, r2)
+        exploded_edges = ank_utils.explode_node(g_phy, r2)
         expected_result = [(r1, r4), (r3, r4), (r1, r3)]
         self.assertListEqual(exploded_edges, expected_result)
         self.assertListEqual(g_phy.nodes(), [r4, r5, r1, r3])

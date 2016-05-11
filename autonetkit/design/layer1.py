@@ -61,8 +61,7 @@ class Layer1Builder(object):
         for edge in edges_to_split:
             edge.set('split', True)  # mark as split for use in building nidb
 
-        split_created_nodes = list(ank_utils.split(g_l1, edges_to_split,
-                                                   retain=['split'],
+        split_created_nodes = list(ank_utils.split_edges(g_l1, edges_to_split,
                                                    id_prepend='cd_'))
 
         for node in split_created_nodes:

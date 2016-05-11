@@ -228,12 +228,14 @@ def in_edges(nm_graph, nodes=None):
     edges = graph.in_edges(nodes)
     return wrap_edges(nm_graph, edges)
 
+def split_edge(nm_graph, edge, id_prepend=''):
+    edges = [edge]
+    return split_edges(nm_graph, edges, id_prepend)
 
-def split(nm_graph, edges, retain=None, id_prepend=''):
+def split_edges(nm_graph, edges, id_prepend=''):
     """
     Splits edges in two, retaining any attributes specified.
     """
-
     added_nodes = []
 
     for edge in edges:
@@ -267,14 +269,15 @@ def split(nm_graph, edges, retain=None, id_prepend=''):
 
     return added_nodes
 
+def explode_node(nm_graph, node):
+    nodes = [node]
+    return explode_nodes(nm_graph, nodes)
+
 def explode_nodes(nm_graph, nodes):
     """Explodes all nodes in nodes.
     """
     log.debug('Exploding nodes')
     total_added_edges = []  # keep track to return
-
-    if nodes in nm_graph:
-        nodes = [nodes]  # place into list for iteration
 
     for node in nodes:
         edges = node.edges()
@@ -353,8 +356,9 @@ def aggregate_nodes(nm_graph, nodes):
     subgraph = graph.subgraph(nodes)
     if not len(subgraph.edges()):
         # print "Nothing to aggregate for %s: no edges in subgraph"
-
+        #TODO: handle this case
         pass
+
     total_added_edges = []
     if graph.is_directed():
         component_nodes_list = \
