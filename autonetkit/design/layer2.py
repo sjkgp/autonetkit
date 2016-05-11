@@ -348,10 +348,12 @@ class Layer2Builder(object):
             # TODO: naming: if this is the only pair then name after these, else
             # use the switch names too
             vswitches = []  # store to connect trunks
+
             for vlan, interfaces in vlans.items():
                 # create a virtual switch
                 vswitch_id = "vswitch%s" % vswitch_id_counter.next()
                 vswitch = g_l2.add_node(vswitch_id)
+                vlan_tp = vswitch.add_interface(category="vlan_termination_point")
                 # TODO: check of switch or just broadcast_domain for higher layer
                 # purposes
                 vswitch.set('device_type', 'switch')
@@ -370,7 +372,7 @@ class Layer2Builder(object):
                 vswitch['layer2'].set('vlan', vlan)
 
                 # and connect from vswitch to the interfaces
-                edges_to_add = [(vswitch, iface) for iface in interfaces]
+                edges_to_add = [(vlan_tp, iface) for iface in interfaces]
                 g_l2.add_edges_from(edges_to_add)
 
             # remove the physical switches
