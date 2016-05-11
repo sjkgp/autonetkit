@@ -119,7 +119,7 @@ class DmNode(object):
         # TODO: make not a property
         """Called by templates, sorts by ID
         """
-        int_list = self.physical_interfaces()
+        int_list = self.data_interfaces()
 
         # Put loopbacks before physical interfaces
         type_index = {"loopback": 0, "physical": 1}
