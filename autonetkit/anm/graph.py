@@ -1,5 +1,5 @@
 import autonetkit.log as log
-from autonetkit.ank_utils import unwrap_edges, unwrap_nodes
+from autonetkit.ank_utils import unwrap_edges, unwrap_nodes, unwrap_edge
 from autonetkit.anm.base import OverlayBase
 from autonetkit.anm.edge import NmEdge
 from autonetkit.anm.interface import NmPort
@@ -31,6 +31,7 @@ class NmGraph(OverlayBase):
     # node_id
 
     def _record_overlay_dependencies(self, nbunch):
+        return
         # TODO: add this logic to anm so can call when instantiating overlays too
         # TODO: make this able to be disabled for performance
         g_deps = self.anm['_dependencies']
@@ -250,15 +251,19 @@ class NmGraph(OverlayBase):
         retval = self.add_edges_from([(src, dst)], retain, **kwargs)
         return retval[0]
 
+    def remove_edge(self, edge):
+        nx_edge = unwrap_edge(edge)
+        self._graph.remove_edge(*nx_edge)
+
     def remove_edges_from(self, ebunch):
         """Removes set of edges from ebunch"""
 
         try:
-            ebunch = unwrap_edges(ebunch)
+            nx_ebunch = unwrap_edges(ebunch)
         except AttributeError:
             pass  # don't need to unwrap
 
-        self._graph.remove_edges_from(ebunch)
+        self._graph.remove_edges_from(nx_ebunch)
 
     def add_edges(self, *args, **kwargs):
         """Adds a set of edges. Alias for add_edges_from"""
