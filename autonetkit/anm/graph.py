@@ -343,7 +343,6 @@ class NmGraph(OverlayBase):
 
             elif len(in_edge) == 2:
                 in_a, in_b = in_edge[0], in_edge[1]
-
                 if isinstance(in_a, NmNode) and isinstance(in_b, NmNode):
                     src = in_a.node_id
                     dst = in_b.node_id
