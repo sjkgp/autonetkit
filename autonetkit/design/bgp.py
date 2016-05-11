@@ -183,9 +183,9 @@ def build_ibgp(anm):
                      and s.get('rr_cluster') is None]
 
         # Remove self-links
-        over_links = [(s, t) for s, t in over_links if s != t]
-        up_links = [(s, t) for s, t in up_links if s != t]
-        down_links = [(s, t) for s, t in down_links if s != t]
+        over_links = [(s.loopback_zero, t.loopback_zero) for s, t in over_links if s != t]
+        up_links = [(s.loopback_zero, t.loopback_zero) for s, t in up_links if s != t]
+        down_links = [(s.loopback_zero, t.loopback_zero) for s, t in down_links if s != t]
 
         g_bgp.add_edges_from(over_links, type='ibgp', direction='over')
         g_bgp.add_edges_from(up_links, type='ibgp', direction='up')
