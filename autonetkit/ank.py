@@ -234,73 +234,38 @@ def split(nm_graph, edges, retain=None, id_prepend=''):
     Splits edges in two, retaining any attributes specified.
     """
 
-    if retain is None:
-        retain = []
-
-    try:
-        # TODO: find more efficient operation to test if string-like
-        retain.lower()
-        retain = [retain]  # was a string, put into list
-    except AttributeError:
-        pass  # already a list
-
-    graph = unwrap_graph(nm_graph)
-    edges_to_add = []
     added_nodes = []
 
-    # handle single edge
-    if edges in nm_graph.edges():
-        edges = [edges]  # place into list for iteration
-
-    edges = list(edges)
-
     for edge in edges:
-        src = edge.src
-        dst = edge.dst
+        src_node = edge.src
+        dst_node = edge.dst
+        src_int = edge.src_int
+        dst_int = edge.dst_int
 
-        # Form ID for the new node
-
-        if graph.is_directed():
-            new_id = '%s%s_%s' % (id_prepend, src, dst)
+        # form name
+        if nm_graph.is_directed():
+            new_id = '%s%s_%s' % (id_prepend, src_node, dst_node)
         else:
 
             # undirected, make id deterministic across ank runs
 
             # use sorted for consistency
-            (node_a, node_b) = sorted([src, dst])
+            (node_a, node_b) = sorted([src_node, dst_node])
             new_id = '%s%s_%s' % (id_prepend, node_a, node_b)
 
         if nm_graph.is_multigraph():
-            new_id += '_%s' % edge.ekey
+            new_id = new_id + '_%s' % edge.ekey
 
-        ports = edge.raw_interfaces
-        data = edge._data
-        src_data = data.copy()
-        if src in ports:
-            src_int_id = ports[src.node_id]
-            src_data['_ports'] = {src.node_id: src_int_id}
-        dst_data = data.copy()
-        if dst in ports:
-            dst_int_id = ports[dst.node_id]
-            dst_data['_ports'] = {dst.node_id: dst_int_id}
+        split_node = nm_graph.add_node(new_id)
+        added_nodes.append(split_node)
+        split_ifaceA = split_node.add_interface()
+        split_ifaceB = split_node.add_interface()
 
-        # Note: don't retain ekey since adding to a new node
-        append = (src.node_id, new_id, src_data)
-        edges_to_add.append(append)
-        append = (dst.node_id, new_id, dst_data)
-        edges_to_add.append(append)
+        nm_graph.add_edge(src_int, split_ifaceA)
+        nm_graph.add_edge(dst_int, split_ifaceB)
+        nm_graph.remove_edge(edge)
 
-        added_nodes.append(new_id)
-
-    nm_graph.add_nodes_from(added_nodes)
-    nm_graph.add_edges_from(edges_to_add)
-
-    # remove the pre-split edges
-
-    nm_graph.remove_edges_from(edges)
-
-    return wrap_nodes(nm_graph, added_nodes)
-
+    return added_nodes
 
 def explode_nodes(nm_graph, nodes, retain=None):
     """Explodes all nodes in nodes.
