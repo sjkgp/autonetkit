@@ -372,19 +372,12 @@ def connected_subgraphs(nm_graph, nodes=None):
     return wrapped
 
 
-def aggregate_nodes(nm_graph, nodes, retain=None):
+def aggregate_nodes(nm_graph, nodes):
     """Used to aggregate nodes in the nm_graph. Returns values with
     total amount of edges that are added.
     """
 
-    if retain is None:
-        retain = []
-
-    try:
-        retain.lower()
-        retain = [retain]  # was a string, put into list
-    except AttributeError:
-        pass  # already a list
+    #TODO: remove subgraph step into separate function
 
     nodes = list(unwrap_nodes(nodes))
     graph = unwrap_graph(nm_graph)
@@ -412,33 +405,23 @@ def aggregate_nodes(nm_graph, nodes, retain=None):
             log.debug('Retaining %s, removing %s', base,
                       nodes_to_remove)
 
-            external_edges = []
+            external_interfaces = []
             for node in nodes_to_remove:
-                external_edges += [e for e in node.edges() if e.dst
-                                   not in component_nodes]
+                external_interfaces += [e.dst_int for e in node.edges()
+                if e.dst not in component_nodes]
                 # all edges out of component
 
-            log.debug('External edges %s', external_edges)
+            log.debug('External interfaces %s', external_interfaces)
             edges_to_add = []
-            for edge in external_edges:
-                dst = edge.dst
-                data = dict((key, edge._data.get(key)) for key in
-                            retain)
-                ports = edge.raw_interfaces
-                dst_int_id = ports[dst.node_id]
+            for dst_int in external_interfaces:
+                split_ifaceA = base.add_interface()
+                new_edge = nm_graph.add_edge(split_ifaceA, dst_int)
+                total_added_edges.append(new_edge)
 
-                # TODO: bind to (and maybe add) port on the new switch?
-
-                data['_ports'] = {dst.node_id: dst_int_id}
-
-                append = (base.node_id, dst.node_id, data)
-                edges_to_add.append(append)
-
-            nm_graph.add_edges_from(edges_to_add)
-            total_added_edges += edges_to_add
             nm_graph.remove_nodes_from(nodes_to_remove)
 
-    return wrap_edges(nm_graph, total_added_edges)
+    # return wrap_edges(nm_graph, total_added_edges)
+    return total_added_edges
 
 
 def most_frequent(iterable):
