@@ -234,101 +234,57 @@ def split(nm_graph, edges, retain=None, id_prepend=''):
     Splits edges in two, retaining any attributes specified.
     """
 
-    if retain is None:
-        retain = []
-
-    try:
-        # TODO: find more efficient operation to test if string-like
-        retain.lower()
-        retain = [retain]  # was a string, put into list
-    except AttributeError:
-        pass  # already a list
-
-    graph = unwrap_graph(nm_graph)
-    edges_to_add = []
     added_nodes = []
 
-    # handle single edge
-    if edges in nm_graph.edges():
-        edges = [edges]  # place into list for iteration
-
-    edges = list(edges)
-
     for edge in edges:
-        src = edge.src
-        dst = edge.dst
+        src_node = edge.src
+        dst_node = edge.dst
+        src_int = edge.src_int
+        dst_int = edge.dst_int
 
-        # Form ID for the new node
-
-        if graph.is_directed():
-            new_id = '%s%s_%s' % (id_prepend, src, dst)
+        # form name
+        if nm_graph.is_directed():
+            new_id = '%s%s_%s' % (id_prepend, src_node, dst_node)
         else:
 
             # undirected, make id deterministic across ank runs
 
             # use sorted for consistency
-            (node_a, node_b) = sorted([src, dst])
+            (node_a, node_b) = sorted([src_node, dst_node])
             new_id = '%s%s_%s' % (id_prepend, node_a, node_b)
 
         if nm_graph.is_multigraph():
-            new_id += '_%s' % edge.ekey
+            new_id = new_id + '_%s' % edge.ekey
 
-        ports = edge.raw_interfaces
-        data = edge._data
-        src_data = data.copy()
-        if src in ports:
-            src_int_id = ports[src.node_id]
-            src_data['_ports'] = {src.node_id: src_int_id}
-        dst_data = data.copy()
-        if dst in ports:
-            dst_int_id = ports[dst.node_id]
-            dst_data['_ports'] = {dst.node_id: dst_int_id}
+        split_node = nm_graph.add_node(new_id)
+        added_nodes.append(split_node)
+        split_ifaceA = split_node.add_interface()
+        split_ifaceB = split_node.add_interface()
 
-        # Note: don't retain ekey since adding to a new node
-        append = (src.node_id, new_id, src_data)
-        edges_to_add.append(append)
-        append = (dst.node_id, new_id, dst_data)
-        edges_to_add.append(append)
+        nm_graph.add_edge(src_int, split_ifaceA)
+        nm_graph.add_edge(dst_int, split_ifaceB)
+        nm_graph.remove_edge(edge)
 
-        added_nodes.append(new_id)
+    return added_nodes
 
-    nm_graph.add_nodes_from(added_nodes)
-    nm_graph.add_edges_from(edges_to_add)
-
-    # remove the pre-split edges
-
-    nm_graph.remove_edges_from(edges)
-
-    return wrap_nodes(nm_graph, added_nodes)
-
-
-def explode_nodes(nm_graph, nodes, retain=None):
+def explode_nodes(nm_graph, nodes):
     """Explodes all nodes in nodes.
-    TODO: Add support for digraph - check if nm_graph.is_directed()
     """
-    if retain is None:
-        retain = []
-
     log.debug('Exploding nodes')
-    try:
-        retain.lower()
-        retain = [retain]  # was a string, put into list
-    except AttributeError:
-        pass  # already a list
-
     total_added_edges = []  # keep track to return
 
     if nodes in nm_graph:
         nodes = [nodes]  # place into list for iteration
 
     for node in nodes:
-
         edges = node.edges()
-        edge_pairs = [(e1, e2) for e1 in edges for e2 in edges if e1
-                      != e2]
+        edge_pairs = [(e1, e2) for e1 in edges for e2 in edges
+        if e1 != e2]
         added_pairs = set()
         for edge_pair in edge_pairs:
             (src_edge, dst_edge) = sorted(edge_pair)
+
+            # only add in single direction
             if (src_edge, dst_edge) in added_pairs:
                 continue  # already added this link pair in other direction
             else:
@@ -337,39 +293,17 @@ def explode_nodes(nm_graph, nodes, retain=None):
             src = src_edge.dst  # src is the exploded node
             dst = dst_edge.dst  # src is the exploded node
 
+            src_int = src_edge.dst_int
+            dst_int = dst_edge.dst_int
+
             if src == dst:
                 continue  # don't add self-loop
 
-            data = dict((key, src_edge._data.get(key)) for key in
-                        retain)
-            node_to_dst_data = dict((key, dst_edge._data.get(key))
-                                    for key in retain)
-            data.update(node_to_dst_data)
-
-            data['_ports'] = {}
-            try:
-                src_int_id = src_edge.raw_interfaces[src.node_id]
-            except KeyError:
-                pass  # not set
-            else:
-                data['_ports'][src.node_id] = src_int_id
-
-            try:
-                dst_int_id = dst_edge.raw_interfaces[dst.node_id]
-            except KeyError:
-                pass  # not set
-            else:
-                data['_ports'][dst.node_id] = dst_int_id
-
-            new_edge = (src.node_id, dst.node_id, data)
-
-            # TODO: use add_edge
-
-            nm_graph.add_edges_from([new_edge])
+            new_edge = nm_graph.add_edge(src_int, dst_int)
             total_added_edges.append(new_edge)
 
         nm_graph.remove_node(node)
-    return wrap_edges(nm_graph, total_added_edges)
+    return total_added_edges
 
 
 def label(nm_graph, nodes):
@@ -407,19 +341,12 @@ def connected_subgraphs(nm_graph, nodes=None):
     return wrapped
 
 
-def aggregate_nodes(nm_graph, nodes, retain=None):
+def aggregate_nodes(nm_graph, nodes):
     """Used to aggregate nodes in the nm_graph. Returns values with
     total amount of edges that are added.
     """
 
-    if retain is None:
-        retain = []
-
-    try:
-        retain.lower()
-        retain = [retain]  # was a string, put into list
-    except AttributeError:
-        pass  # already a list
+    #TODO: remove subgraph step into separate function
 
     nodes = list(unwrap_nodes(nodes))
     graph = unwrap_graph(nm_graph)
@@ -447,33 +374,23 @@ def aggregate_nodes(nm_graph, nodes, retain=None):
             log.debug('Retaining %s, removing %s', base,
                       nodes_to_remove)
 
-            external_edges = []
+            external_interfaces = []
             for node in nodes_to_remove:
-                external_edges += [e for e in node.edges() if e.dst
-                                   not in component_nodes]
+                external_interfaces += [e.dst_int for e in node.edges()
+                if e.dst not in component_nodes]
                 # all edges out of component
 
-            log.debug('External edges %s', external_edges)
+            log.debug('External interfaces %s', external_interfaces)
             edges_to_add = []
-            for edge in external_edges:
-                dst = edge.dst
-                data = dict((key, edge._data.get(key)) for key in
-                            retain)
-                ports = edge.raw_interfaces
-                dst_int_id = ports[dst.node_id]
+            for dst_int in external_interfaces:
+                split_ifaceA = base.add_interface()
+                new_edge = nm_graph.add_edge(split_ifaceA, dst_int)
+                total_added_edges.append(new_edge)
 
-                # TODO: bind to (and maybe add) port on the new switch?
-
-                data['_ports'] = {dst.node_id: dst_int_id}
-
-                append = (base.node_id, dst.node_id, data)
-                edges_to_add.append(append)
-
-            nm_graph.add_edges_from(edges_to_add)
-            total_added_edges += edges_to_add
             nm_graph.remove_nodes_from(nodes_to_remove)
 
-    return wrap_edges(nm_graph, total_added_edges)
+    # return wrap_edges(nm_graph, total_added_edges)
+    return total_added_edges
 
 
 def most_frequent(iterable):
