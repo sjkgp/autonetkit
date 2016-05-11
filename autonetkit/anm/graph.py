@@ -270,6 +270,7 @@ class NmGraph(OverlayBase):
         """Add edges. Unlike NetworkX, can only add an edge if both
         src and dst in graph already.
         If they are not, then they will not be added (silently ignored)
+        #TODO: raise exception if try to add and nodes not in graph
 
 
         Retains interface mappings if they are present (this is why ANK
