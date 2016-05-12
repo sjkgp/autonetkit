@@ -46,8 +46,8 @@ class NmGraph(OverlayBase):
                 edge = (overlay_id, self._overlay_id)
                 g_deps.add_edges_from([edge])
 
-    def add_nodes_from( self, nbunch, retain=None, update=False,
-        **kwargs):
+    def add_nodes_from(self, nbunch, retain=None, update=False,
+                       **kwargs):
         """Update won't append data (which could clobber) if node exists"""
         nbunch = list(nbunch)  # listify in case consumed in try/except
 
@@ -149,7 +149,7 @@ class NmGraph(OverlayBase):
             try:
                 phy_interfaces = phy_graph.node[node_id]['_ports']
             except KeyError:
-                #TODO: document this logic
+                # TODO: document this logic
                 # Node not in phy (eg broadcast domain)
                 # Just do base initialisation of loopback zero
                 self._graph.node[node_id]['_ports'] = {
@@ -170,7 +170,7 @@ class NmGraph(OverlayBase):
         nbunch = [node]
         self.add_nodes_from(nbunch,
                             retain, **kwargs)
-        #TODO: test what this code is meant to do
+        # TODO: test what this code is meant to do
         try:
             node_id = node.id
         except AttributeError:
@@ -198,7 +198,7 @@ class NmGraph(OverlayBase):
         # Initialise loopback zero on node
         for node in self:
             node.set('raw_interfaces', {0:
-                                   {'description': 'loopback', 'category': 'loopback'}})
+                                        {'description': 'loopback', 'category': 'loopback'}})
 
         ebunch = sorted(self.edges())
         for edge in ebunch:
@@ -373,12 +373,12 @@ class NmGraph(OverlayBase):
 
             # TODO: warn if not multigraph and edge already exists - don't
             # add/clobber
-            #TODO: double check this logic + add test case
+            # TODO: double check this logic + add test case
             data.update(**kwargs)
             if self.is_multigraph() and ekey is None:
                 # specifically allocate a key
                 if src in used_keys and dst in used_keys[src]:
-                    pass # already established
+                    pass  # already established
                 else:
                     try:
                         used_keys[src][dst] = self._graph.adj[src][dst].keys()
@@ -387,9 +387,9 @@ class NmGraph(OverlayBase):
                         used_keys[src][dst] = []
 
                 # now have the keys mapping
-                ekey=len(used_keys[src][dst])
+                ekey = len(used_keys[src][dst])
                 while ekey in used_keys[src][dst]:
-                    ekey+=1
+                    ekey += 1
 
                 used_keys[src][dst].append(ekey)
 
@@ -403,20 +403,20 @@ class NmGraph(OverlayBase):
                 if bidirectional:
                     edges_to_add.append((dst, src, dict(data)))
 
-
-            #TODO: warn if not multigraph
+            # TODO: warn if not multigraph
 
             self._graph.add_edges_from(edges_to_add)
             all_edges += edges_to_add
 
         if self.is_multigraph():
             return [
-            NmEdge(self.anm, self._overlay_id, src, dst, ekey) if ekey
-            else NmEdge(self.anm, self._overlay_id, src, dst) # default no ekey set
-            for src, dst, ekey, _ in all_edges]
+                NmEdge(self.anm, self._overlay_id, src, dst, ekey) if ekey
+                # default no ekey set
+                else NmEdge(self.anm, self._overlay_id, src, dst)
+                for src, dst, ekey, _ in all_edges]
         else:
             return [NmEdge(self.anm, self._overlay_id, src, dst)
-            for src, dst, _ in all_edges]
+                    for src, dst, _ in all_edges]
 
     def update(self, nbunch=None, **kwargs):
         """Sets property defined in kwargs to all nodes in nbunch"""
