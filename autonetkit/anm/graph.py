@@ -345,11 +345,6 @@ class NmGraph(OverlayBase):
             elif len(in_edge) == 2:
                 in_a, in_b = in_edge[0], in_edge[1]
                 if isinstance(in_a, NmNode) and isinstance(in_b, NmNode):
-                    import inspect
-                    curframe = inspect.currentframe()
-                    calframe = inspect.getouterframes(curframe, 2)
-                    caller_name = calframe[1]
-                    log.warning("node to node %s, %s, on %s, from %s", in_a, in_b, self._overlay_id, caller_name)
                     src = in_a.node_id
                     dst = in_b.node_id
 
@@ -364,11 +359,6 @@ class NmGraph(OverlayBase):
                     data['_ports'] = ports
 
                 elif isinstance(in_a, NmNode) and isinstance(in_b, NmPort):
-                    import inspect
-                    curframe = inspect.currentframe()
-                    calframe = inspect.getouterframes(curframe, 2)
-                    caller_name = calframe[1]
-                    log.warning("node to iface %s, %s, on %s, from %s", NmNode, NmPort, self._overlay_id, caller_name)
                     src = in_a.node_id
                     dst = in_b.node.node_id
                     ports = {}
