@@ -279,7 +279,6 @@ class NmGraph(OverlayBase):
         If they are not, then they will not be added (silently ignored)
         #TODO: raise exception if try to add and nodes not in graph
 
-
         Retains interface mappings if they are present (this is why ANK
             stores the interface reference on the edges, as it simplifies
             cross-layer access, as well as split, aggregate, etc retaining the
@@ -295,7 +294,6 @@ class NmGraph(OverlayBase):
 
         allow (src, dst, ekey), (src, dst, ekey, data) for the ank utils
         """
-
         if not retain:
             retain = []
         try:
@@ -345,6 +343,11 @@ class NmGraph(OverlayBase):
             elif len(in_edge) == 2:
                 in_a, in_b = in_edge[0], in_edge[1]
                 if isinstance(in_a, NmNode) and isinstance(in_b, NmNode):
+                    import inspect
+                    curframe = inspect.currentframe()
+                    calframe = inspect.getouterframes(curframe, 2)
+                    caller_name = calframe[1]
+                    log.warning("node to node %s, %s, on %s, from %s", in_a, in_b, self._overlay_id, caller_name)
                     src = in_a.node_id
                     dst = in_b.node_id
 
@@ -358,47 +361,9 @@ class NmGraph(OverlayBase):
                         ports[dst] = in_b.interface_id
                     data['_ports'] = ports
 
-                elif isinstance(in_a, NmNode) and isinstance(in_b, NmPort):
-                    src = in_a.node_id
-                    dst = in_b.node.node_id
-                    ports = {}
-                    if dst in self:
-                        ports[dst] = in_b.interface_id
-                    data['_ports'] = ports
-
-                elif isinstance(in_a, NmPort) and isinstance(in_b, NmNode):
-                    src = in_a.node.node_id
-                    dst = in_b.node_id
-                    ports = {}
-                    if src in self:
-                        ports[src] = in_a.interface_id
-                    data['_ports'] = ports
-
                 elif in_a in self and in_b in self:
                     src = in_a
                     dst = in_b
-
-            elif len(in_edge) == 3:
-                # (src, dst, ekey) format
-                # or (src, dst, data) format
-                in_a, in_b, in_c = in_edge[0], in_edge[1], in_edge[2]
-                if in_a in self and in_b in self:
-                    src = in_a
-                    dst = in_b
-                    # TODO: document the following logic
-                    if self.is_multigraph() and not isinstance(in_c, dict):
-                        ekey = in_c
-                    else:
-                        data = in_c
-
-            elif len(in_edge) == 4:
-                # (src, dst, ekey, data) format
-                in_a, in_b = in_edge[0], in_edge[1]
-                if in_a in self and in_b in self:
-                    src = in_a
-                    dst = in_b
-                    ekey = in_edge[2]
-                    data = in_edge[3]
 
             # TODO: if edge not set at this point, give error/warn
 
