@@ -2,7 +2,6 @@ import autonetkit.log as log
 
 
 class PlatformCompiler(object):
-
     """Base Platform Compiler"""
 
     def __init__(self, nidb, anm, host):
@@ -56,7 +55,7 @@ class PlatformCompiler(object):
                         continue
 
                     if ipv4_int.get('ip_address') is None:
-                        #TODO: put into dev log
+                        # TODO: put into dev log
                         log.debug("No IP address allocated on %s", interface)
                         interface.use_ipv4 = False
                         continue
@@ -85,7 +84,7 @@ class PlatformCompiler(object):
                         interface.use_ipv6 = False
                         continue
                     if ipv6_int.get('ip_address') is None:
-                        #TODO: put into dev log
+                        # TODO: put into dev log
                         log.debug("No IP address allocated on %s", interface)
                         interface.use_ipv6 = False
                         continue

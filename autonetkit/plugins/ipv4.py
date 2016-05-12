@@ -16,12 +16,6 @@ from autonetkit.exception import AutoNetkitException
 # TODO: allow slack in allocations: both for ASN (group level), and for
 # collision domains to allow new nodes to be easily added
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-
 def subnet_size(host_count):
     """Returns subnet size"""
 
@@ -34,7 +28,7 @@ class TreeNode(object):
         object.__setattr__(self, 'graph', graph)
         object.__setattr__(self, 'node', node)
 
-    # TODO: make thise fixed attributes, as only certain number needed here
+    # TODO: make these fixed attributes, as only certain number needed here
 
     def __getattr__(self, attr):
         return self.graph.node[self.node].get(attr)
@@ -113,7 +107,7 @@ class IpTree(object):
             level_counts[parent_level] += parent_count
             subgraph.add_nodes_from((self.next_node_id,
                                      {'prefixlen': parent_level})
-                                    for n in range(parent_count))
+                                    for _ in range(parent_count))
 
             if level_counts[parent_level] == 1:
                 if parent_level == min(level_counts.keys()):
@@ -199,7 +193,6 @@ class IpTree(object):
 
         unallocated_nodes = sorted(unallocated_nodes, key=key_func)
         groupings = itertools.groupby(unallocated_nodes, key=key_func)
-        group_count = len(set(map(key_func, unallocated_nodes)))
         prefixes_by_attr = {}
 
         for (attr_value, items) in groupings:
@@ -333,7 +326,6 @@ class IpTree(object):
         subgraphs = sorted(subgraphs, key=lambda x:
         subgraph.node[subgraph.graph['root'
         ]]['group_attr'])
-        root_nodes = [subgraph.graph['root'] for subgraph in subgraphs]
         root_nodes = []
         for subgraph in subgraphs:
             root_node = subgraph.graph['root']
@@ -401,7 +393,7 @@ class IpTree(object):
                 # cd -> neigh (cd is parent)
                 global_graph.add_edge(cd_id, child_id)
 
-            # TODO: make allocate seperate step
+                # TODO: make allocate seperate step
 
         def allocate(node):
 
