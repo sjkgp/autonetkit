@@ -195,15 +195,8 @@ class Network(object):
             # render.remove_dirs(["rendered"])
 
             if self.should_render:
-                #import time
-                #start = time.clock()
                 from autonetkit import render
                 render.render(self.nidb)
-                # print time.clock() - start
-                #import autonetkit.render2
-                #start = time.clock()
-                # autonetkit.render2.render(self.nidb)
-                # print time.clock() - start
 
         if not (self.should_build or compile):
 

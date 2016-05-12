@@ -75,17 +75,20 @@ def validate_igp(anm):
         connected_sub_graphs = nx.connected_components(graph)
         n = len(sub_graphs)
         max_sublist_length = len(max(connected_sub_graphs, key=len))
-        sum_sublist_length = sum(map(len, connected_sub_graphs)) 
+        sum_sublist_length = sum(map(len, connected_sub_graphs))
         total = float(max_sublist_length) / float(sum_sublist_length)
         # Warn the user if node of size 1 is not connected
         # Warn the user if 5% of nodes are not connected
         if not nx.is_connected(graph):
-            for i in range(n):  
-                 # to test -> print "Subraph:", i, "consists of ", sub_graphs[i].nodes()
-                if len(sub_graphs[i].nodes()) == 1: 
-                    g_igp.log.warning("IGP topology for ASN%s is disconnected" % asn)
-            if total >= .95:     
-                g_igp.log.warning("IGP topology for ASN%s is disconnected" % asn)
+            for i in range(n):
+                # to test -> print "Subraph:", i, "consists of ",
+                # sub_graphs[i].nodes()
+                if len(sub_graphs[i].nodes()) == 1:
+                    g_igp.log.warning(
+                        "IGP topology for ASN%s is disconnected" % asn)
+            if total >= .95:
+                g_igp.log.warning(
+                    "IGP topology for ASN%s is disconnected" % asn)
         else:
             g_igp.log.debug("IGP topology for ASN%s is connected" % asn)
 
@@ -110,6 +113,7 @@ def duplicate_items(items):
     counts = {i: items.count(i) for i in unique}
     return [i for i in counts if counts[i] > 1]
 
+
 # TODO: add high-level symmetry, anti-summetry, uniqueness, etc functions
 # as per NCGuard
 
@@ -131,13 +135,13 @@ def validate_ipv4(anm):
     all_ints = [i for n in g_ipv4.l3devices()
                 for i in n.physical_interfaces()
                 if i.is_bound]  # don't include unbound interfaces
-    all_int_ips = [i.get('ip_address') for i in all_ints if i.get('ip_address')]
+    all_int_ips = [i.get('ip_address')
+                   for i in all_ints if i.get('ip_address')]
 
     if all_unique(all_int_ips):
         g_ipv4.log.debug("All interface IPs globally unique")
     else:
         tests_passed = False
-        duplicates = duplicate_items(all_int_ips)
         duplicate_ips = set(duplicate_items(all_int_ips))
         duplicate_ints = [n for n in all_ints
                           if n.ip_address in duplicate_ips]
@@ -149,7 +153,7 @@ def validate_ipv4(anm):
         bc.log.debug("Verifying subnet and interface IPs")
         if not bc.get('allocate'):
             log.debug("Skipping validation of manually allocated broadcast "
-                "domain %s" % bc)
+                      "domain %s" % bc)
             continue
 
         neigh_ints = list(bc.neighbor_interfaces())
@@ -181,7 +185,6 @@ def validate_ipv4(anm):
         neigh_int_ips = [i.get('ip_address') for i in neigh_ints]
         if all_unique(neigh_int_ips):
             bc.log.debug("All interface IP addresses are unique")
-            duplicates = duplicate_items(neigh_int_ips)
         else:
             tests_passed = False
             duplicate_ips = set(duplicate_items(neigh_int_ips))

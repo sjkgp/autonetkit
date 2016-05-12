@@ -1,7 +1,9 @@
 import logging.handlers
 import autonetkit.config as config
 
+
 class CustomAdapter(logging.LoggerAdapter):
+
     def process(self, msg, kwargs):
         return '[%s]: %s' % (self.extra['item'], msg), kwargs
 
@@ -10,21 +12,21 @@ ank_logger = logging.getLogger("ANK")
 if not ank_logger.handlers:
     console_formatter = logging.Formatter("%(levelname)-1s %(message)s")
     ch = logging.StreamHandler()
-    #ch.setLevel(logging.INFO)
+    # ch.setLevel(logging.INFO)
     ch.setFormatter(console_formatter)
     ch.setLevel(logging.DEBUG)
     ank_logger.addHandler(ch)
 
     file_logging = config.settings['Logging']['file']
     if file_logging:
-        LOG_FILENAME =  "autonetkit.log"
+        LOG_FILENAME = "autonetkit.log"
         #fh = logging.FileHandler(LOG_FILENAME)
-        LOG_SIZE = 2097152 # 2 MB
+        LOG_SIZE = 2097152  # 2 MB
         fh = logging.handlers.RotatingFileHandler(
             LOG_FILENAME, maxBytes=LOG_SIZE, backupCount=5)
         fh.setLevel(logging.DEBUG)
         formatter = logging.Formatter("%(asctime)s %(levelname)s "
-            "%(funcName)s %(message)s")
+                                      "%(funcName)s %(message)s")
         fh.setFormatter(formatter)
         ank_logger.addHandler(fh)
 

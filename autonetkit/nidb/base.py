@@ -1,5 +1,6 @@
-import autonetkit.log as log
+import logging
 import autonetkit
+import autonetkit.log as log
 
 from autonetkit.nidb.interface import DmInterface
 from autonetkit.nidb.edge import DmEdge

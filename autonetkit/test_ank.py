@@ -28,7 +28,7 @@ class TestAnk(unittest.TestCase):
         result = ank_utils.name_folder_safe('ank')
         self.assertEqual(result, 'ank')
         result = ank_utils.name_folder_safe('ank/repo')
-        self.assertEqual(result ,'ank_repo')
+        self.assertEqual(result, 'ank_repo')
         result = ank_utils.name_folder_safe('auto.net.kit.repo')
         self.assertEqual(result, 'auto_net_kit_repo')
         result = ank_utils.name_folder_safe('ank.folder')
@@ -46,7 +46,7 @@ class TestAnk(unittest.TestCase):
         r5 = g_phy.node("r5")
         r1.set("color", "blue")
         result = [(n, n.get("color")) for n in g_phy]
-        expected_result  = [(r4, None), (r5, None), (r1, 'blue'), (r2, None), (r3, None)]
+        expected_result = [(r4, None), (r5, None), (r1, 'blue'), (r2, None), (r3, None)]
         self.assertListEqual(expected_result, result)
         ank_utils.set_node_default(g_phy, color="red")
         result = [(n, n.get("color")) for n in g_phy]
@@ -87,13 +87,13 @@ class TestAnk(unittest.TestCase):
         self.assertListEqual(expected_result, result)
         # Can specify the remote attribute to set
         ank_utils.copy_attr_from(g_in, g_phy, "role",
-                                "device_role", default="edge")
+                                 "device_role", default="edge")
         result = [(n, n.get('device_role')) for n in g_phy]
         expected_result = [(n, n.get('role') if n.get('role') else 'edge')
                            for n in g_in]
         self.assertListEqual(expected_result, result)
         # Can specify the type to cast to
-        g_in.update(memory = "32")
+        g_in.update(memory="32")
         ank_utils.copy_attr_from(g_in, g_phy, "memory", type=int)
         result = [n.get("memory") for n in g_phy]
         expected_result = [32, 32, 32, 32, 32]
@@ -129,11 +129,11 @@ class TestAnk(unittest.TestCase):
         self.assertListEqual(expected_result, g_in.edges())
         self.assertListEqual(expected_result, g_phy.edges())
         g_in.edge("r1", "r2").set('color', "red")
-        result = g_in.edges(color = "red")
+        result = g_in.edges(color="red")
         expected_result = [(r1, r2)]
         self.assertListEqual(expected_result, result)
         ank_utils.copy_edge_attr_from(g_in, g_phy, 'color')
-        result = g_phy.edges(color = "red")
+        result = g_phy.edges(color="red")
         expected_result = [(r1, r2)]
         self.assertListEqual(expected_result, result)
 
@@ -143,8 +143,6 @@ class TestAnk(unittest.TestCase):
         r1 = g_phy.node('r1')
         r2 = g_phy.node('r2')
         r3 = g_phy.node('r3')
-        r4 = g_phy.node('r4')
-        r5 = g_phy.node('r5')
         elist = [("r1", "r2"), ("r2", "r3")]
         edges = ank_utils.wrap_edges(g_phy, elist)
         # The edges are now NetworkModel edge objects
@@ -157,8 +155,6 @@ class TestAnk(unittest.TestCase):
         r1 = g_phy.node('r1')
         r2 = g_phy.node('r2')
         r3 = g_phy.node('r3')
-        r4 = g_phy.node('r4')
-        r5 = g_phy.node('r5')
         nlist = ["r1", "r2", "r3"]
         nodes = ank_utils.wrap_nodes(g_phy, nlist)
         # The nodes are now NetworkModel node objects
@@ -170,7 +166,7 @@ class TestAnk(unittest.TestCase):
 
     def test_in_edges(self):
         g = nx.MultiDiGraph()
-        g.add_edges_from([(1,2),(3,4),(1,6)])
+        g.add_edges_from([(1, 2), (3, 4), (1, 6)])
         self.assertListEqual(g.out_edges(1), [(1, 2), (1, 6)])
         self.assertListEqual(g.in_edges(1), [])
         self.assertListEqual(g.in_edges(4), [(3, 4)])
@@ -271,9 +267,9 @@ class TestAnk(unittest.TestCase):
         self.assertListEqual(result, [(r3, r5)])
 
     def test_most_frequent(self):
-        rlist= ['r1', 'r2', 'r3', 'r1']
+        rlist = ['r1', 'r2', 'r3', 'r1']
         self.assertEqual(ank_utils.most_frequent(rlist), 'r1')
-        rlist= ['r1', 'r2', 'r3', 'r1', 'r3', 'r3']
+        rlist = ['r1', 'r2', 'r3', 'r1', 'r3', 'r3']
         self.assertEqual(ank_utils.most_frequent(rlist), 'r3')
 
     def test_neigh_most_frequent(self):
@@ -319,9 +315,9 @@ class TestAnk(unittest.TestCase):
         r3 = g_phy.node('r3')
         r4 = g_phy.node('r4')
         r5 = g_phy.node('r5')
-        self.assertListEqual(ank_utils.shortest_path(g_phy,'r1','r2'), [r1, r2])
-        self.assertListEqual(ank_utils.shortest_path(g_phy,'r1','r4'), [r1, r2, r4])
-        self.assertListEqual(ank_utils.shortest_path(g_phy,'r1','r5'), [r1, r3, r5])
+        self.assertListEqual(ank_utils.shortest_path(g_phy, 'r1', 'r2'), [r1, r2])
+        self.assertListEqual(ank_utils.shortest_path(g_phy, 'r1', 'r4'), [r1, r2, r4])
+        self.assertListEqual(ank_utils.shortest_path(g_phy, 'r1', 'r5'), [r1, r3, r5])
 
     def test_boundary_nodes(self):
         anm = autonetkit.topos.house()
@@ -353,7 +349,8 @@ class TestAnk(unittest.TestCase):
         g_phy = anm['phy']
         genexp = ank_utils.neigh_attr(g_phy, "r2", "asn")
         result = [item for item in genexp]
-        self.assertListEqual([2,1,1], result)
+        self.assertListEqual([2, 1, 1], result)
+
 
 if __name__ == '__main__':
     unittest.main()

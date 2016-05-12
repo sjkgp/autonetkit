@@ -9,7 +9,6 @@ import string
 import itertools
 from autonetkit.ank_utils import alphabetical_sort as alpha_sort
 from autonetkit.compilers.device.quagga import QuaggaCompiler
-from autonetkit.render2 import NodeRender, PlatformRender
 
 
 class NetkitCompiler(PlatformCompiler):
@@ -29,7 +28,6 @@ class NetkitCompiler(PlatformCompiler):
 
         # todo: set platform render
         lab_topology = self.nidb.topology(self.host)
-        lab_topology.render2 = PlatformRender()
 
         # TODO: this should be all l3 devices not just routers
         for phy_node in g_phy.l3devices(host=self.host, syntax='quagga'):
@@ -48,17 +46,6 @@ class NetkitCompiler(PlatformCompiler):
             dm_node.render['custom'] = {
                 'abc': 'def.txt'
             }
-
-            render2 = NodeRender()
-            # TODO: dest folder also needs to be able to accept a list
-            # TODO: document that use a list so can do native os.path.join on
-            # target platform
-            render2.add_folder(["templates", "quagga"], folder_name)
-            render2.add_file(
-                ("templates", "netkit_startup.mako"), "%s.startup" % folder_name)
-            dm_node.render2 = render2
-            lab_topology.render2.add_node(dm_node)
-            # lab_topology.render2_hosts.append(phy_node)
 
             # allocate zebra information
             dm_node.add_scope("zebra")
@@ -116,19 +103,6 @@ class NetkitCompiler(PlatformCompiler):
         lab_topology.description = "AutoNetkit Lab"
         lab_topology.author = "AutoNetkit"
         lab_topology.web = "www.autonetkit.org"
-
-        render2 = lab_topology.render2
-        # TODO: test with adding a folder
-        # render2.add_folder(["templates", "quagga"], folder_name)
-        render2.add_file(("templates", "netkit_lab_conf.mako"), "lab.conf")
-        render2.base_folder = [self.host, "netkit"]
-        render2.archive = "%s_%s" % (self.host, "netkit")
-        render2.template_data = {
-            "render_dst_file": "lab.conf",
-            "description": "AutoNetkit Lab",
-            "author": "AutoNetkit",
-            "web": "www.autonetkit.org",
-        }
 
         host_nodes = list(
             self.nidb.nodes(host=self.host, platform="netkit"))

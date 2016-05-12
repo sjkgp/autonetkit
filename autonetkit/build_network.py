@@ -16,7 +16,6 @@ __all__ = ['build']
 
 
 def load(input_graph_string, defaults=True):
-
     # TODO: look at XML header for file type
     import autonetkit.load.graphml as graphml
     import autonetkit.load.load_json as load_json
@@ -69,12 +68,12 @@ def initialise(input_graph):
     g_in = anm.initialise_input(input_graph)
     # autonetkit.update_vis(anm)
 
-# set defaults
+    # set defaults
     if not g_in.data.specified_int_names:
         # if not specified then automatically assign interface names
         g_in.data.specified_int_names = False
 
-    #import autonetkit.plugins.graph_product as graph_product
+    # import autonetkit.plugins.graph_product as graph_product
     # graph_product.expand(g_in)  # apply graph products if relevant
 
     expand_fqdn = False
@@ -90,7 +89,7 @@ def initialise(input_graph):
     g_in.update(g_in.servers(platform="netkit"), syntax="quagga")
 
     # TODO: check this is needed
-    #autonetkit.ank.set_node_default(g_in, specified_int_names=None)
+    # autonetkit.ank.set_node_default(g_in, specified_int_names=None)
 
     g_graphics = anm.add_overlay("graphics")  # plotting data
     g_graphics.add_nodes_from(g_in, retain=['x', 'y', 'device_type',
@@ -118,7 +117,7 @@ def check_server_asns(anm):
                                for n in l3_neighbors]
             # tuples for warning message
             server.log.warning("Server does not belong to same ASN "
-                               "as neighbors %s" % (neighs_with_asn))
+                               "as neighbors %s" % neighs_with_asn)
 
             if len(l3_neighbors) == 1:
                 # single ASN of neighbor -> auto correct
@@ -133,7 +132,6 @@ def check_server_asns(anm):
 
 
 class DesignRulesApplicator(object):
-
     def __init__(self, anm):
         self.anm = anm
 
@@ -159,7 +157,7 @@ class DesignRulesApplicator(object):
         # log.info("Building overlay topologies")
         anm = self.anm
         g_in = anm['input']
-    # autonetkit.update_http(anm)
+        # autonetkit.update_http(anm)
 
         build_phy(anm)
 
@@ -243,7 +241,6 @@ class DesignRulesApplicator(object):
 
 def build(input_graph):
     """Main function to build network overlay topologies"""
-    anm = None
     anm = initialise(input_graph)
     applicator = DesignRulesApplicator(anm)
     anm = applicator.design()
@@ -286,7 +283,7 @@ def build_phy(anm):
                 interface.set('custom_config', custom_config_phy_ints)
             specified_id = interface['input'].get("specified_id")
             if specified_id:
-                interface.set('specified_id', specified_id) # map across
+                interface.set('specified_id', specified_id)  # map across
 
     # TODO: tidy this code up
     for node in g_phy:
@@ -294,7 +291,7 @@ def build_phy(anm):
             remote_edges = interface.edges()
             if len(remote_edges):
                 interface.set('description', 'to %s' \
-                    % remote_edges[0].dst.label)
+                              % remote_edges[0].dst.label)
 
 
 def build_conn(anm):

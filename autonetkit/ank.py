@@ -7,7 +7,7 @@ import autonetkit
 
 import autonetkit.log as log
 import networkx as nx
-from ank_utils import unwrap_graph, unwrap_nodes
+from autonetkit.ank_utils import unwrap_graph, unwrap_nodes
 from autonetkit.anm import NmEdge, NmNode
 
 # helper namedtuples - until have a more complete schema (such as from Yang)

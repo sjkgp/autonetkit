@@ -7,6 +7,7 @@ import autonetkit.log as log
 import pkg_resources
 from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError
 
+
 # TODO: have same error handling block for each template render call
 
 # TODO: clean up cache enable/disable
@@ -16,9 +17,11 @@ def resource_path(relative):
     """Makes relative to package"""
     return pkg_resources.resource_filename(__name__, relative)
 
+
 # TODO: fix support here for template lookups, internal, user provided
-#template_cache_dir = config.template_cache_dir
+# template_cache_dir = config.template_cache_dir
 template_cache_dir = "cache"
+
 
 # disable cache for cleaner folder structure
 
@@ -36,9 +39,11 @@ def initialise_jinja():
                              lstrip_blocks=True)
     return jinja2_env
 
+
 # TODO: make lookup initialised once rather than global for module import
 # and allow users to append to the lookup
 JINJA = initialise_jinja()
+
 
 def format_version_banner():
     try:
@@ -49,6 +54,7 @@ def format_version_banner():
         version_banner = "autonetkit_dev"
 
     return version_banner
+
 
 # TODO: make a render class, that caches traversed folders for speed
 
@@ -61,7 +67,7 @@ def render_inline(node, render_template_file, to_memory=True,
     Note: supports rendering to memory (ie back to nidb rather than file)
     """
 
-    node.log.debug("Rendering template %s" % (render_template_file))
+    node.log.debug("Rendering template %s" % render_template_file)
     version_banner = format_version_banner()
 
     date = time.strftime("%Y-%m-%d %H:%M", time.localtime())
@@ -69,7 +75,7 @@ def render_inline(node, render_template_file, to_memory=True,
     if render_template_file:
         try:
             render_template = JINJA.get_template(
-                    render_template_file)
+                render_template_file)
         except TemplateSyntaxError, error:
             log.warning("Unable to render %s: "
                         "Syntax error in template: %s" % (node, error))
@@ -84,6 +90,7 @@ def render_inline(node, render_template_file, to_memory=True,
             )
 
             return render_output
+
 
 # TODO: Add support for both src template and src folder (eg for quagga,
 # servers)
@@ -112,7 +119,7 @@ def render_node(node):
         # print render_custom
         pass
 
-# TODO: make sure is an abspath here so don't wipe user directory!!!
+    # TODO: make sure is an abspath here so don't wipe user directory!!!
     if render_output_dir and not os.path.isdir(render_output_dir):
         try:
             os.makedirs(render_output_dir)
@@ -159,7 +166,7 @@ def render_node(node):
             )
 
 
-        # TODO: revert to shutil copy
+            # TODO: revert to shutil copy
     if render_base:
         render_base = resource_path(render_base)
         fs_jinja_templates = []
@@ -245,8 +252,8 @@ def render_topology(topology):
                 raise e
     dst_file = os.path.join(render_output_dir, topology.render_dst_file)
 
-# TODO: may need to iterate if multiple parts of the directory need to be
-# created
+    # TODO: may need to iterate if multiple parts of the directory need to be
+    # created
 
     # TODO: capture mako errors better
 
@@ -265,6 +272,6 @@ def render_topology(topology):
             log.warning("Unable to render %s: %s. Check all variables used are defined" % (
                 topology, error))
         except TypeError, error:
-            log.warning("Unable to render topology: %s." % (error))
+            log.warning("Unable to render topology: %s." % error)
             from mako import exceptions
             log.warning(exceptions.text_error_template().render())

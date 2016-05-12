@@ -14,7 +14,6 @@ import autonetkit.plugins.ipv4
 import netaddr
 import networkx as nx
 from networkx.readwrite import json_graph
-from autonetkit.render2 import NodeRender, PlatformRender
 from autonetkit.ank import shallow_copy_nx_graph
 
 
@@ -46,12 +45,6 @@ class AnkEncoder(json.JSONEncoder):
             return str(obj)
         if isinstance(obj, dict):
             return obj
-        if isinstance(obj, autonetkit.render2.NodeRender):
-            retval = obj.to_json()
-            return retval
-        if isinstance(obj, autonetkit.render2.PlatformRender):
-            retval = obj.to_json()
-            return retval
         if isinstance(obj, autonetkit.nidb.DmInterface):
             # TODO: check this is consistent with deserialization
             return str(obj)
