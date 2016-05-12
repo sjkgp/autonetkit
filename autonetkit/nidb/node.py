@@ -19,11 +19,6 @@ class DmNode(object):
         # Set using this method to bypass __setattr__
         object.__setattr__(self, 'nidb', nidb)
         object.__setattr__(self, 'node_id', node_id)
-        #logger = logging.getLogger("ANK")
-        # TODO: also pass the node object to the logger for building custom output lists
-        # ie create a special handler that just outputs the specific node/link/interface errors
-        #logstring = "Node: %s" % str(self)
-        #logger = CustomAdapter(logger, {'item': logstring})
         logger = log
         object.__setattr__(self, 'log', logger)
 

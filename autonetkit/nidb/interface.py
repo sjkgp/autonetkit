@@ -11,9 +11,6 @@ class DmInterface(object):
         object.__setattr__(self, 'nidb', nidb)
         object.__setattr__(self, 'node_id', node_id)
         object.__setattr__(self, 'interface_id', interface_id)
-        #logger = logging.getLogger("ANK")
-        #logstring = "Interface: %s" % str(self)
-        #self.log = CustomAdapter(logger, {'item': logstring})
         logger = log
         object.__setattr__(self, 'log', logger)
 

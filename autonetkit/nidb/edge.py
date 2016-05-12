@@ -16,9 +16,6 @@ class DmEdge(object):
         object.__setattr__(self, 'src_id', src_id)
         object.__setattr__(self, 'dst_id', dst_id)
         object.__setattr__(self, 'ekey', ekey)  # for multigraphs
-        #logger = logging.getLogger("ANK")
-        #logstring = "Edge: %s" % str(self)
-        #self.log = CustomAdapter(logger, {'item': logstring})
         logger = log
         object.__setattr__(self, 'log', logger)
 
