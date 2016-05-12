@@ -119,7 +119,7 @@ class DmNode(object):
         # TODO: make not a property
         """Called by templates, sorts by ID
         """
-        int_list = self.get_interfaces()
+        int_list = self.data_interfaces()
 
         # Put loopbacks before physical interfaces
         type_index = {"loopback": 0, "physical": 1}
@@ -137,6 +137,11 @@ class DmNode(object):
     def loopback_interfaces(self):
         """Get and return loopback interfaces"""
         return self.get_interfaces(category="loopback")
+
+    def data_interfaces(self):
+        lo_ifaces = self.loopback_interfaces()
+        phy_ifaces = self.physical_interfaces()
+        return lo_ifaces + phy_ifaces
 
     def get_interfaces(self, *args, **kwargs):
         """Public function to view interfaces
@@ -159,7 +164,7 @@ class DmNode(object):
 
     @property
     def loopback_zero(self):
-        return (i for i in self.interfaces if i.is_loopback_zero).next()
+        return (i for i in self.loopback_interfaces() if i.is_loopback_zero).next()
 
     @property
     def raw_interfaces(self):

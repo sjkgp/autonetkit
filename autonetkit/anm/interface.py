@@ -184,7 +184,11 @@ class NmPort(AnkElement):
             return return_val
 
         if self.overlay_id != 'phy':  # prevent recursion
-            self.phy._interface.get('description')
+            try:
+                self.phy._interface.get('description')
+            except IndexError:
+                # interface (such as a termination point) not in phy
+                return ""
 
     @property
     def is_loopback_zero(self):
@@ -225,7 +229,7 @@ class NmPort(AnkElement):
 
     def dump(self):
         """Returns string of items
-        """ 
+        """
         return str(self._interface.items())
 
     def get(self, key):

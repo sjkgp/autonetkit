@@ -82,6 +82,11 @@ class NmNode(AnkElement):
         kwargs['category'] = "loopback"
         return self.interfaces(*args, **kwargs)
 
+    def data_interfaces(self, *args, **kwargs):
+        lo_ifaces = self.loopback_interfaces(args, kwargs)
+        phy_ifaces = self.physical_interfaces(args, kwargs)
+        return lo_ifaces + phy_ifaces
+
     def is_multigraph(self):
         """Checks if node is multigraph
         """

@@ -64,7 +64,7 @@ class NmGraph(OverlayBase):
         if not update:
             # TODO: what is update used for?
             # filter out existing nodes
-            nbunch = (n for n in nbunch if n not in self._graph)
+            nbunch = [n for n in nbunch if n not in self._graph]
 
         nbunch = list(nbunch)
         node_ids = list(nbunch)  # before appending retain data
@@ -149,6 +149,7 @@ class NmGraph(OverlayBase):
             try:
                 phy_interfaces = phy_graph.node[node_id]['_ports']
             except KeyError:
+                #TODO: document this logic
                 # Node not in phy (eg broadcast domain)
                 # Just do base initialisation of loopback zero
                 self._graph.node[node_id]['_ports'] = {
