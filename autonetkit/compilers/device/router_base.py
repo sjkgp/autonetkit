@@ -20,26 +20,27 @@ class RouterCompiler(DeviceCompiler):
         # Don't make staticmethod as may want to extend (DeviceCompiler.g. in
         # IOS compiler for vpnv4)
 
-        node = session.src
         neigh = session.dst
 
         use_ipv4 = use_ipv6 = False
         if ip_version == 4:
-            neigh_ip = neigh['ipv4']
+            ip_overlay = "ipv4"
             use_ipv4 = True
             use_ipv6 = False
         elif ip_version == 6:
-            neigh_ip = neigh['ipv6']
+            ip_overlay = "ipv6"
             use_ipv4 = False
             use_ipv6 = True
+
+        neigh_loopback = session.dst_int[ip_overlay].get("ip_address")
 
         data = {  # TODO: this is platform dependent???
             'neighbor': neigh.label,
             'use_ipv4': use_ipv4,
             'use_ipv6': use_ipv6,
             'asn': neigh.asn,
-            'loopback': neigh_ip.get('loopback'),
-            'update_source': node.loopback_zero.id,
+            'loopback': neigh_loopback,
+            'update_source': session.src_int
         }
         return data
 
