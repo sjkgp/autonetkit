@@ -286,10 +286,7 @@ class NmGraph(OverlayBase):
         for in_edge in ebunch:
             """Edge could be one of:
             - NmEdge
-            - (NmNode, NmNode)
             - (NmPort, NmPort)
-            - (NmNode, NmPort)
-            - (NmPort, NmNode)
             - (string, string)
             """
             # This is less efficient than nx add_edges_from, but cleaner logic
