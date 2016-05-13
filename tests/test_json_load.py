@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import autonetkit
+import autonetkit.example
 from autonetkit.load.load_json import simple_to_nx, nx_to_simple
 
 house = autonetkit.example.house()
