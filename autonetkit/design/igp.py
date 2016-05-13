@@ -59,8 +59,8 @@ def build_ospf(anm):
         for interface in node.physical_interfaces():
             interface.set('cost', 1)
 
-    ank_utils.copy_attr_from(g_in, g_ospf, "ospf_area", dst_attr="area")
-    ank_utils.copy_attr_from(
+    ank_utils.copy_node_attr_from(g_in, g_ospf, "ospf_area", dst_attr="area")
+    ank_utils.copy_node_attr_from(
         g_in, g_ospf, "custom_config_ospf", dst_attr="custom_config")
 
     g_ospf.remove_edges_from([link for link in g_ospf.edges(
@@ -198,7 +198,7 @@ def build_eigrp(anm):
     g_eigrp.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_eigrp, "multipoint")
 
-    ank_utils.copy_attr_from(
+    ank_utils.copy_node_attr_from(
         g_in, g_eigrp, "custom_config_eigrp", dst_attr="custom_config")
 
 # Merge and explode switches
@@ -250,7 +250,7 @@ def build_rip(anm):
     g_rip.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_rip, "multipoint")
 
-    ank_utils.copy_attr_from(
+    ank_utils.copy_node_attr_from(
         g_in, g_rip, "custom_config_rip", dst_attr="custom_config")
 
     g_rip.remove_edges_from(
@@ -289,7 +289,7 @@ def build_isis(anm):
     g_isis.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_isis, "multipoint")
 
-    ank_utils.copy_attr_from(
+    ank_utils.copy_node_attr_from(
         g_in, g_isis, "custom_config_isis", dst_attr="custom_config")
 
     g_isis.remove_edges_from(

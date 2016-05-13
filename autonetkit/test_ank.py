@@ -67,7 +67,7 @@ class TestAnk(unittest.TestCase):
         expected_result = [None, None, None, None, None]
         self.assertEqual(expected_result, result)
         ank_utils.set_node_default(g_in, color="red")
-        ank_utils.copy_attr_from(g_in, g_phy, "color")
+        ank_utils.copy_node_attr_from(g_in, g_phy, "color")
         result = [n.get("color") for n in g_phy]
         expected_result = ['red', 'red', 'red', 'red', 'red']
         self.assertListEqual(expected_result, result)
@@ -79,14 +79,14 @@ class TestAnk(unittest.TestCase):
         r4 = g_in.node('r4')
         r5 = g_in.node('r5')
         ank_utils.set_node_default(g_in, nodes, role="core")
-        ank_utils.copy_attr_from(g_in, g_phy, "role", default="edge")
+        ank_utils.copy_node_attr_from(g_in, g_phy, "role", default="edge")
         result = [(n, n.get("role")) for n in g_phy]
         expected_result = [(r4, 'edge'), (r5, 'edge'), (r1, 'core'),
                            (r2, 'core'), (r3, 'core')]
 
         self.assertListEqual(expected_result, result)
         # Can specify the remote attribute to set
-        ank_utils.copy_attr_from(g_in, g_phy, "role",
+        ank_utils.copy_node_attr_from(g_in, g_phy, "role",
                                  "device_role", default="edge")
         result = [(n, n.get('device_role')) for n in g_phy]
         expected_result = [(n, n.get('role') if n.get('role') else 'edge')
@@ -94,7 +94,7 @@ class TestAnk(unittest.TestCase):
         self.assertListEqual(expected_result, result)
         # Can specify the type to cast to
         g_in.update(memory="32")
-        ank_utils.copy_attr_from(g_in, g_phy, "memory", type=int)
+        ank_utils.copy_node_attr_from(g_in, g_phy, "memory", type=int)
         result = [n.get("memory") for n in g_phy]
         expected_result = [32, 32, 32, 32, 32]
         self.assertEqual(expected_result, result)

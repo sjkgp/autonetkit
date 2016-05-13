@@ -76,8 +76,8 @@ def set_node_default(nm_graph, nbunch=None, **kwargs):
 # TODO: rename to copy_node_attr_from
 
 
-def copy_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
-                   nbunch=None, type=None, default=None):
+def copy_node_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
+                        nbunch=None, type=None, default=None):
     """ Copies attribute from specific values that user sets from the source
         to the destination. Also can specify the remote attribute or default value.
     """

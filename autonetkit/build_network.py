@@ -210,9 +210,9 @@ class DesignRulesApplicator(object):
 
         default_igp = g_in.data.igp or "ospf"
         ank_utils.set_node_default(g_in, igp=default_igp)
-        ank_utils.copy_attr_from(g_in, g_phy, "igp")
+        ank_utils.copy_node_attr_from(g_in, g_phy, "igp")
 
-        ank_utils.copy_attr_from(g_in, g_phy, "include_csr")
+        ank_utils.copy_node_attr_from(g_in, g_phy, "include_csr")
 
         # log.info("Building IGP")
         from autonetkit.design.igp import build_igp
@@ -261,15 +261,15 @@ def build_phy(anm):
                                        'device_subtype', 'platform', 'host', 'syntax'])
 
     if g_in.data.Creator == "Topology Zoo Toolset":
-        ank_utils.copy_attr_from(g_in, g_phy, "Network")
+        ank_utils.copy_node_attr_from(g_in, g_phy, "Network")
 
     ank_utils.set_node_default(g_phy, Network=None)
     g_phy.add_edges_from(g_in.edges(type="physical"))
     # TODO: make this automatic if adding to the physical graph?
 
     ank_utils.set_node_default(g_phy, use_ipv4=False, use_ipv6=False)
-    ank_utils.copy_attr_from(g_in, g_phy, "custom_config_global",
-                             dst_attr="custom_config")
+    ank_utils.copy_node_attr_from(g_in, g_phy, "custom_config_global",
+                                  dst_attr="custom_config")
 
     g_phy.data.infrastructure_only = g_in.data.infrastructure_only
 

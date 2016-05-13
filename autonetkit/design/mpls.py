@@ -227,8 +227,8 @@ def build_mpls_ldp(anm):
     nodes_to_add = [n for n in g_in.routers()
                     if n['vrf'].get('vrf_role') in ("PE", "P")]
     g_mpls_ldp.add_nodes_from(nodes_to_add)
-    ank_utils.copy_attr_from(g_vrf, g_mpls_ldp, "vrf_role", dst_attr="role")
-    ank_utils.copy_attr_from(g_vrf, g_mpls_ldp, "vrf")
+    ank_utils.copy_node_attr_from(g_vrf, g_mpls_ldp, "vrf_role", dst_attr="role")
+    ank_utils.copy_node_attr_from(g_vrf, g_mpls_ldp, "vrf")
 
     nodes_to_add = [n for n in g_in.routers() if n.get('LDP')]
     g_mpls_ldp.add_nodes_from(nodes_to_add)

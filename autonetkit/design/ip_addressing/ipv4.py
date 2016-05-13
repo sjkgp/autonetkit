@@ -230,13 +230,13 @@ def build_ipv4(anm, infrastructure=True):
 
     # Copy ASN attribute chosen for collision domains (used in alloc algorithm)
 
-    ank_utils.copy_attr_from(
+    ank_utils.copy_node_attr_from(
         g_ip, g_ipv4, 'asn', nbunch=g_ipv4.nodes('broadcast_domain'))
     # work around until fall-through implemented
     vswitches = [n for n in g_ip.nodes()
                  if n['layer2'].get('device_type') == "switch"
                  and n['layer2'].get('device_subtype') == "virtual"]
-    ank_utils.copy_attr_from(g_ip, g_ipv4, 'asn', nbunch=vswitches)
+    ank_utils.copy_node_attr_from(g_ip, g_ipv4, 'asn', nbunch=vswitches)
     g_ipv4.add_edges_from(g_ip.edges())
 
     # check if ip ranges have been specified on g_in

@@ -79,10 +79,10 @@ def build_ibgp(anm):
     # TODO: build direct to ibgp graph - can construct combined bgp for vis
     #TODO: normalise input property
 
-    ank_utils.copy_attr_from(g_in, g_bgp, "ibgp_role")
-    ank_utils.copy_attr_from(
+    ank_utils.copy_node_attr_from(g_in, g_bgp, "ibgp_role")
+    ank_utils.copy_node_attr_from(
         g_in, g_bgp, "ibgp_l2_cluster", "hrr_cluster", default=None)
-    ank_utils.copy_attr_from(
+    ank_utils.copy_node_attr_from(
         g_in, g_bgp, "ibgp_l3_cluster", "rr_cluster", default=None)
 
     # TODO: add more detailed logging
@@ -216,7 +216,7 @@ def build_bgp(anm):
     # remove ibgp links
 
     """TODO: remove up to here once compiler updated"""
-    ank_utils.copy_attr_from(
+    ank_utils.copy_node_attr_from(
         g_in, g_bgp, "custom_config_bgp", dst_attr="custom_config")
 
     # log.info("Building eBGP")
