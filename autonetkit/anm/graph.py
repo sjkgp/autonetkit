@@ -328,11 +328,6 @@ class NmGraph(OverlayBase):
                         ports[dst] = in_b.interface_id
                     data['_ports'] = ports
 
-                elif in_a in self and in_b in self:
-                    src = in_a
-                    dst = in_b
-
-
             # TODO: if edge not set at this point, give error/warn
 
             # TODO: add check that edge.src and edge.dst exist
