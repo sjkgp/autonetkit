@@ -149,8 +149,8 @@ def copy_int_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
                 dst_int.set(dst_attr, val)
 
 
-def copy_edge_attr_from(overlay_src, overlay_dst, src_attr,
-                        dst_attr=None, type=None, default=None):
+def copy_edge_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
+                        ebunch=None, type=None, default=None):
     # note this won't work if merge/aggregate edges
     """
     Main purpose is to copy edge attributes from source to the destination.
@@ -159,7 +159,9 @@ def copy_edge_attr_from(overlay_src, overlay_dst, src_attr,
     if not dst_attr:
         dst_attr = src_attr
 
-    for edge in overlay_src.edges():
+    if ebunch is None:
+        ebunch = overlay_src.edges()
+    for edge in ebunch:
         try:
             val = edge.get(src_attr)
             if val is None:

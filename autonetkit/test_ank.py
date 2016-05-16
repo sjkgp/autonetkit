@@ -59,7 +59,7 @@ class TestAnk(unittest.TestCase):
         expected_result = [(r4, None), (r5, None), (r1, 'core'), (r2, 'core'), (r3, 'core')]
         self.assertListEqual(expected_result, result)
 
-    def test_copy_attr_from(self):
+    def test_copy_node_attr_from(self):
         anm = autonetkit.topos.house()
         g_in = anm['input']
         g_phy = anm['phy']
@@ -135,6 +135,18 @@ class TestAnk(unittest.TestCase):
         ank_utils.copy_edge_attr_from(g_in, g_phy, 'color')
         result = g_phy.edges(color="red")
         expected_result = [(r1, r2)]
+        self.assertListEqual(expected_result, result)
+        # test for nbuch
+        g_in.edge("r1", "r2").set('color', "blue")
+        g_in.edge("r2", "r3").set('color', "blue")
+        edge = g_in.edge("r2", "r3")
+        ank_utils.copy_edge_attr_from(g_in, g_phy, 'color', ebunch=[edge])
+        expected_result = [(r2, r3)]
+        result = g_phy.edges(color="blue")
+        self.assertListEqual(expected_result, result)
+        ank_utils.copy_edge_attr_from(g_in, g_phy, 'color')
+        expected_result = [(r1, r2), (r2, r3)]
+        result = g_phy.edges(color="blue")
         self.assertListEqual(expected_result, result)
 
     def test_wrap_edges(self):
