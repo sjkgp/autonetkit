@@ -25,8 +25,8 @@ render_hostname = "localhost"
 g_phy = anm["input"]
 g_test_a = anm.add_overlay("test_a")
 g_test_b = anm.add_overlay("test_b")
-g_test_a.add_nodes_from(g_phy)
-g_test_b.add_nodes_from(g_phy)
+g_test_a.copy_nodes_from(g_phy)
+g_test_b.copy_nodes_from(g_phy)
 
 g_test_a.add_edges_from(g_phy.edges())
 g_test_b.add_edges_from(g_phy.edges())

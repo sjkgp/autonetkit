@@ -1,5 +1,6 @@
 import autonetkit
 import autonetkit.log as log
+import autonetkit.ank as ank_utils
 
 # TODO: break into separate test functions, with setup and teardown
 
@@ -12,7 +13,7 @@ def test():
     g_in = anm.add_overlay("input")
 
     router_ids = ["r1", "r2", "r3", "r4", "r5"]
-    g_in.add_nodes_from(router_ids)
+    g_in.create_nodes_from(router_ids)
 
     g_in.update(device_type="router")
     g_in.update(asn=1)
@@ -33,11 +34,14 @@ def test():
     g_in.add_edges_from(input_interface_edges)
 
     g_phy = anm['phy']
-    g_phy.add_nodes_from(g_in, retain=["device_type", "x", "y", "asn"])
+    g_phy.copy_nodes_from(g_in)
+    retain=["device_type", "x", "y", "asn"]
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_in, g_phy, attr)
     g_phy.add_edges_from(g_in.edges())
 
     g_test = anm.add_overlay("test")
-    g_test.add_node("test_node")
+    g_test.create_node("test_node")
 
     # test interfaces
     for node in g_phy:
@@ -191,7 +195,7 @@ def test():
 
     # add node
     # TODO: better handling of nodes with no x,y, asn, etc in jsonify
-    r6 = g_phy.add_node("r6")
+    r6 = g_phy.create_node("r6")
     assert(r6 in g_phy)
     del g_phy[r6]
     assert(r6 not in g_phy)

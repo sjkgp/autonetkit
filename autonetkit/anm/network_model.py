@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import time
-
-import autonetkit # used in doctests
-import autonetkit.log as log
 import networkx as nx
+
+import autonetkit.log as log
 from autonetkit.anm.graph import NmGraph
 from autonetkit.anm.ank_element import AnkElement
-
+import autonetkit.ank as ank_utils
 
 class NetworkModel(AnkElement):
 
@@ -140,8 +139,11 @@ class NetworkModel(AnkElement):
         graph = nx.Graph(graph)
         g_graphics = self['graphics']
         g_in = self.add_overlay('input', graph=graph, directed=False)
-        g_graphics.add_nodes_from(g_in, retain=['x', 'y', 'device_type',
-                                                'device_subtype', 'pop', 'label', 'asn'])
+        g_graphics.copy_nodes_from(g_in)
+        retain = ['x', 'y', 'device_type', 'device_subtype', 'pop', 'label',
+                  'asn']
+        for attr in retain:
+            ank_utils.copy_node_attr_from(g_in, g_graphics, attr)
         return g_in
 
     def initialise_input(self, graph):
@@ -154,8 +156,8 @@ class NetworkModel(AnkElement):
         overlay.allocate_input_interfaces()
         return overlay
 
-    def add_overlay(self, name, nodes=None, graph=None,
-                    directed=False, multi_edge=False, retain=None):
+    def add_overlay(self, name, graph=None,
+                    directed=False, multi_edge=False):
         """Adds overlay graph of name name
 
         anm = autonetkit.NetworkModel()
@@ -193,10 +195,6 @@ class NetworkModel(AnkElement):
 
         self._overlays[name] = new_graph
         overlay = NmGraph(self, name)
-
-        if nodes:
-            retain = retain or []  # default is an empty list
-            overlay.add_nodes_from(nodes, retain)
 
         return overlay
 

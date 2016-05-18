@@ -36,27 +36,26 @@ class NmGraph(OverlayBase):
         # TODO: make this able to be disabled for performance
         g_deps = self.anm['_dependencies']
         if self._overlay_id not in g_deps:
-            g_deps.add_node(self._overlay_id)
+            g_deps.create_node(self._overlay_id)
         overlay_id = node.overlay_id
         if overlay_id not in g_deps:
-            g_deps.add_node(overlay_id)
+            g_deps.create_node(overlay_id)
 
         if g_deps.number_of_edges(self._overlay_id, overlay_id) == 0:
             edge = (overlay_id, self._overlay_id)
             g_deps.add_edges_from([edge])
 
-    def add_nodes_from( self, nbunch, retain=None, update=False,
-        **kwargs):
-        """Update won't append data (which could clobber) if node exists"""
-        if not update:
-            # TODO: what is update used for?
-            # filter out existing nodes
-            nbunch = (n for n in nbunch if n not in self._graph)
-
-        nbunch = list(nbunch)
+    def create_nodes_from(self, nbunch, **kwargs):
+        nbunch = [n for n in nbunch if n not in self._graph]
 
         for n in nbunch:
-            self.add_node(n, retain, **kwargs)
+            self.create_node(n, **kwargs)
+
+    def copy_nodes_from(self, nbunch, **kwargs):
+        nbunch = [n for n in nbunch if n not in self._graph]
+
+        for n in nbunch:
+            self.copy_node(n, **kwargs)
 
     def _copy_interfaces(self, node):
         """Copies ports from one overlay to another"""
@@ -125,30 +124,18 @@ class NmGraph(OverlayBase):
                         phy_interfaces)
             self._graph.node[node]['_ports'] = data
 
-    def add_node(self, node, retain=None, **kwargs):
-        """Adds node to overlay"""
-        if not retain:
-            retain = []
-        try:
-            retain.lower()
-            retain = [retain]  # was a string, put into list
-        except AttributeError:
-            pass  # already a list
+    def create_node(self, node, **kwargs):
+        return self._add_node(node, **kwargs)
 
-        node_id = node
-        data = dict((key, node.get(key)) for key in retain)
-        try:
-            # only store the id in overlay
-            node_id = node.node_id
-            self._record_overlay_dependencies(node)
-        except AttributeError:
-            pass
-        if 'label' not in data:
-            data['label'] = node_id
-        self._graph.add_nodes_from([(node_id, data)], **kwargs)
-        self._copy_interfaces(node_id)
+    def copy_node(self, node, **kwargs):
+        return self._add_node(node.node_id, **kwargs)
 
-        return NmNode(self.anm, self._overlay_id, node_id)
+    def _add_node(self, node, **kwargs):
+        # TODO: label workaround
+        data = {'label': node}
+        self._graph.add_nodes_from([(node, data)], **kwargs)
+        self._copy_interfaces(node)
+        return NmNode(self.anm, self._overlay_id, node)
 
     def allocate_input_interfaces(self):
         """allocates edges to interfaces"""

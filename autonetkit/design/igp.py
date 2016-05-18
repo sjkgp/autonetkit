@@ -15,7 +15,7 @@ def build_igp(anm):
     igp_protocols = ["ospf", "eigrp", "isis", "rip"]
     for protocol in igp_protocols:
         g_protocol = anm[protocol]
-        g_igp.add_nodes_from(g_protocol, igp=protocol)
+        g_igp.copy_nodes_from(g_protocol, igp=protocol)
         g_igp.add_edges_from(g_protocol.edges(), igp=protocol)
 
 #@call_log
@@ -51,7 +51,7 @@ def build_ospf(anm):
         return
 
     ospf_nodes = [n for n in g_l3 if n['phy'].get('igp') == "ospf"]
-    g_ospf.add_nodes_from(ospf_nodes)
+    g_ospf.copy_nodes_from(ospf_nodes)
     g_ospf.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_ospf, "multipoint")
 
@@ -194,7 +194,7 @@ def build_eigrp(anm):
         return
 
     eigrp_nodes = [n for n in g_l3 if n['phy'].get('igp') == "eigrp"]
-    g_eigrp.add_nodes_from(eigrp_nodes)
+    g_eigrp.copy_nodes_from(eigrp_nodes)
     g_eigrp.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_eigrp, "multipoint")
 
@@ -246,7 +246,7 @@ def build_rip(anm):
         return
 
     rip_nodes = [n for n in g_l3 if n['phy'].get('igp') == "rip-v2"]
-    g_rip.add_nodes_from(rip_nodes)
+    g_rip.copy_nodes_from(rip_nodes)
     g_rip.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_rip, "multipoint")
 
@@ -285,7 +285,7 @@ def build_isis(anm):
         return
 
     isis_nodes = [n for n in g_l3 if n['phy'].get('igp') == "isis"]
-    g_isis.add_nodes_from(isis_nodes)
+    g_isis.copy_nodes_from(isis_nodes)
     g_isis.add_edges_from(g_l3.edges(), warn=False)
     ank_utils.copy_int_attr_from(g_l3, g_isis, "multipoint")
 

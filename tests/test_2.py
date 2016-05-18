@@ -6,7 +6,7 @@ anm = autonetkit.NetworkModel()
 g_phy = anm.add_overlay("phy")
 for index in range(5):
     node_id = "r_%s" % index
-    g_phy.add_node(node_id)
+    g_phy.create_node(node_id)
 
 print g_phy.nodes()
 for node in g_phy:
@@ -15,7 +15,7 @@ for node in g_phy:
     for interface in range(3):
         node.add_interface()
 
-sw = g_phy.add_node("sw1")
+sw = g_phy.create_node("sw1")
 sw.device_type = "switch"
 
 for node in g_phy:

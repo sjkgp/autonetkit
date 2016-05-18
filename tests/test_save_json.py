@@ -3,13 +3,14 @@ from autonetkit import ank as ank_utils
 import autonetkit.ank_json
 import json
 
+
 def setup_input():
     anm = autonetkit.NetworkModel()
 
     g_in = anm.add_overlay("input")
 
-    r1 = g_in.add_node("r1", x=100, y=100)
-    r2 = g_in.add_node("r2", x=250, y=250)
+    r1 = g_in.create_node("r1", x=100, y=100)
+    r2 = g_in.create_node("r2", x=250, y=250)
 
     g_in.update(device_type="router")
     g_in.update(asn=1)
@@ -43,7 +44,7 @@ def test():
         print iface.dump()
 
     g_phy_live = anm.add_overlay("phy_live", multi_edge=True)
-    g_phy_live.add_nodes_from(anm['phy'])
+    g_phy_live.copy_nodes_from(anm['phy'])
     g_phy_live.add_edges_from(anm['phy'].edges())
     g_phy_live.data.paths = []  # to store paths onto
     ank_utils.copy_int_attr_from(anm['phy'], anm['phy_live'], "id")
@@ -51,11 +52,11 @@ def test():
     for overlay_id in ("ospf_live", "eigrp_live", "rip_live", "isis_live"):
         g_overlay = anm.add_overlay(
             overlay_id, directed=True, multi_edge=True)
-        g_overlay.add_nodes_from(anm['phy'])
+        g_overlay.copy_nodes_from(anm['phy'])
 
     for overlay_id in ("ibgp_v4_live", "ebgp_v4_live"):
         g_overlay = anm.add_overlay(overlay_id, directed=True,)
-        g_overlay.add_nodes_from(anm['phy'])
+        g_overlay.copy_nodes_from(anm['phy'])
 
     print anm.overlays()
 

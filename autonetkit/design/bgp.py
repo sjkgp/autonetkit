@@ -14,8 +14,11 @@ def build_ibgp_v4(anm):
     ipv4_nodes = set(g_phy.routers("use_ipv4"))
     if len(ipv4_nodes) == 0:
         return
-    g_ibgpv4.add_nodes_from((n for n in g_bgp if n in ipv4_nodes),
-                            retain=["ibgp_role", "hrr_cluster", "rr_cluster"])
+    nbunch = (n for n in g_bgp if n in ipv4_nodes)
+    g_ibgpv4.copy_nodes_from(nbunch)
+    retain=["ibgp_role", "hrr_cluster", "rr_cluster"]
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_bgp, g_ibgpv4, attr, nbunch=nbunch)
     g_ibgpv4.add_edges_from(g_bgp.edges(type="ibgp"), retain="direction")
 
 
@@ -29,8 +32,11 @@ def build_ibgp_v6(anm):
     ipv6_nodes = set(g_phy.routers("use_ipv6"))
     if len(ipv6_nodes) == 0:
         return
-    g_ibgpv6.add_nodes_from((n for n in g_bgp if n in ipv6_nodes),
-                            retain=["ibgp_role", "hrr_cluster", "rr_cluster"])
+    nbunch = (n for n in g_bgp if n in ipv6_nodes)
+    g_ibgpv6.copy_nodes_from(nbunch)
+    retain=["ibgp_role", "hrr_cluster", "rr_cluster"]
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_bgp, g_ibgpv6, attr, nbunch=nbunch)
     g_ibgpv6.add_edges_from(g_bgp.edges(type="ibgp"), retain="direction")
 
 
@@ -44,7 +50,7 @@ def build_ebgp_v4(anm):
     ipv4_nodes = set(g_phy.routers("use_ipv4"))
     if len(ipv4_nodes) == 0:
         return
-    g_ebgpv4.add_nodes_from(n for n in g_ebgp if n in ipv4_nodes)
+    g_ebgpv4.copy_nodes_from(n for n in g_ebgp if n in ipv4_nodes)
     g_ebgpv4.add_edges_from(g_ebgp.edges(), retain="direction")
 
 
@@ -58,7 +64,7 @@ def build_ebgp_v6(anm):
     ipv6_nodes = set(g_phy.routers("use_ipv6"))
     if len(ipv6_nodes) == 0:
         return
-    g_ebgpv6.add_nodes_from(n for n in g_ebgp if n in ipv6_nodes)
+    g_ebgpv6.copy_nodes_from(n for n in g_ebgp if n in ipv6_nodes)
     g_ebgpv6.add_edges_from(g_ebgp.edges(), retain="direction")
 
 def build_ebgp(anm):
@@ -66,7 +72,7 @@ def build_ebgp(anm):
 
     g_ebgp = anm.add_overlay("ebgp", directed=True)
 
-    g_ebgp.add_nodes_from(g_l3.routers())
+    g_ebgp.copy_nodes_from(g_l3.routers())
     ank_utils.copy_int_attr_from(g_l3, g_ebgp, "multipoint")
 
     ebgp_edges = [e for e in g_l3.edges() if e.src.get('asn') != e.dst.get('asn')]
@@ -207,7 +213,7 @@ def build_bgp(anm):
 
     """TODO: remove from here once compiler updated"""
     g_bgp = anm.add_overlay("bgp", directed=True)
-    g_bgp.add_nodes_from(g_l3.routers())
+    g_bgp.copy_nodes_from(g_l3.routers())
     edges_to_add = [e for e in g_l3.edges()
                     if e.src in g_bgp and e.dst in g_bgp]
     g_bgp.add_edges_from(edges_to_add, bidirectional=True)

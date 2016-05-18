@@ -23,7 +23,7 @@ def mpls_te(anm):
 
     # te head end set if here
 
-    g_mpls_te.add_nodes_from(g_in.routers())
+    g_mpls_te.copy_nodes_from(g_in.routers())
 
     # build up edge list sequentially, to provide meaningful messages for
     # multipoint links
@@ -50,7 +50,7 @@ def mpls_oam(anm):
 
     use_mpls_oam = g_in.data.use_mpls_oam
     if use_mpls_oam:
-        g_mpls_oam.add_nodes_from(g_in.routers())
+        g_mpls_oam.copy_nodes_from(g_in.routers())
 
 #@call_log
 
@@ -168,7 +168,9 @@ def build_ibgp_vpn_v4(anm):
 
     ibgp_vpn_v4_nodes = (n for n in ibgp_v4_nodes
                          if n not in ce_nodes)
-    g_ibgp_vpn_v4.add_nodes_from(ibgp_vpn_v4_nodes, retain=["ibgp_role"])
+    g_ibgp_vpn_v4.copy_nodes_from(ibgp_vpn_v4_nodes)
+    retain=["ibgp_role"]
+    ank_utils.copy_node_attr_from(g_ibgp_v4, g_ibgp_vpn_v4, "ibgp_role", nbunch=ibgp_vpn_v4_nodes)
     g_ibgp_vpn_v4.add_edges_from(g_ibgp_v4.edges(), retain="direction")
 
     for node in g_ibgp_vpn_v4:
@@ -226,12 +228,12 @@ def build_mpls_ldp(anm):
     g_mpls_ldp = anm.add_overlay("mpls_ldp")
     nodes_to_add = [n for n in g_in.routers()
                     if n['vrf'].get('vrf_role') in ("PE", "P")]
-    g_mpls_ldp.add_nodes_from(nodes_to_add)
+    g_mpls_ldp.copy_nodes_from(nodes_to_add)
     ank_utils.copy_node_attr_from(g_vrf, g_mpls_ldp, "vrf_role", dst_attr="role")
     ank_utils.copy_node_attr_from(g_vrf, g_mpls_ldp, "vrf")
 
     nodes_to_add = [n for n in g_in.routers() if n.get('LDP')]
-    g_mpls_ldp.add_nodes_from(nodes_to_add)
+    g_mpls_ldp.copy_nodes_from(nodes_to_add)
     for node in nodes_to_add:
         node["mpls_ldp"].set('role', 'P') # set as P nodes
 
@@ -289,7 +291,11 @@ def build_vrf(anm):
         log.debug("No VRFs set")
         return
 
-    g_vrf.add_nodes_from(g_in.routers(), retain=["vrf_role", "vrf"])
+    nbunch = g_in.routers()
+    g_vrf.copy_nodes_from(nbunch)
+    retain = ["vrf_role", "vrf"]
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_in, g_vrf, attr,nbunch=nbunch)
 
     allocate_vrf_roles(g_vrf)
     vrf_pre_process(anm)

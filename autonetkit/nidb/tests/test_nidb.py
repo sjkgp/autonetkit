@@ -1,4 +1,5 @@
 import autonetkit
+import autonetkit.ank as ank_utils
 import autonetkit.log as log
 import unittest
 
@@ -11,7 +12,7 @@ def test():
     nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
     input_edges = [
         ("r1", "r2"), ("r2", "r4"), ("r3", "r4"), ("r3", "r5"), ("r1", "r3")]
-    g_in.add_nodes_from(nodes)
+    g_in.create_nodes_from(nodes)
 
     positions = {'r3': (107, 250), 'r5': (380, 290), 'r1': (
         22, 50), 'r2': (377, 9), 'r4': (571, 229)}
@@ -30,7 +31,11 @@ def test():
     g_in.add_edges_from(input_interface_edges)
 
     g_phy = anm['phy']
-    g_phy.add_nodes_from(g_in, retain=["asn", "device_type", "x", "y"])
+    g_phy.copy_nodes_from(g_in)
+    retain = ["asn", "device_type", "x", "y"]
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_in, g_phy, attr)
+
     g_phy.add_edges_from(g_in.edges())
 
     autonetkit.update_http(anm)
@@ -153,8 +158,11 @@ def test():
     # Adding node, then seeing if nodes are updated
     # Checks add_nodes_from
     nodes = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6']
-    g_in.add_nodes_from(nodes)
-    g_phy.add_nodes_from(g_in, retain=["asn", "device_type", "x", "y"])
+    g_in.create_nodes_from(nodes)
+    g_phy.copy_nodes_from(g_in)
+    retain = ["asn", "device_type", "x", "y"]
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_in, g_phy, attr)
     nidb = autonetkit.DeviceModel(anm)
     nidb.add_nodes_from(g_phy, retain=["asn", "device_type", "x", "y"])
     r6 = nidb.node('r6')

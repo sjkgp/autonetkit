@@ -225,9 +225,10 @@ def build_ipv4(anm, infrastructure=True):
     g_ip = anm['ip']
     g_in = anm['input']
     # retain if collision domain or not
-    g_ipv4.add_nodes_from(g_ip, retain=['label', 'allocate',
-                                        'broadcast_domain'])
-
+    g_ipv4.copy_nodes_from(g_ip)
+    retain = ['label', 'allocate', 'broadcast_domain']
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_ip, g_ipv4, attr)
     # Copy ASN attribute chosen for collision domains (used in alloc algorithm)
 
     ank_utils.copy_node_attr_from(

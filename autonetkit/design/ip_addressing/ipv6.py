@@ -1,6 +1,6 @@
 import autonetkit.config
 import autonetkit.log as log
-from autonetkit.ank import sn_preflen_to_network
+from autonetkit.ank import sn_preflen_to_network, copy_node_attr_from
 from netaddr import IPAddress
 
 SETTINGS = autonetkit.config.settings
@@ -226,8 +226,10 @@ def build_ipv6(anm):
     g_ip = anm['ip']
     g_in = anm['input']
     # retain if collision domain or not
-    g_ipv6.add_nodes_from(g_ip, retain=['label', 'asn', 'allocate',
-                                        'broadcast_domain'])
+    g_ipv6.copy_nodes_from(g_ip)
+    retain=['label', 'asn', 'allocate', 'broadcast_domain']
+    for attr in retain:
+        copy_node_attr_from(g_ip, g_ipv6, attr)
     g_ipv6.add_edges_from(g_ip.edges())
 
     # TODO: tidy up naming consitency of secondary_loopback_block and

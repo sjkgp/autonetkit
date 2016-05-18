@@ -18,7 +18,9 @@ def build_ip(anm):
     g_l2 = anm['layer2']
     g_phy = anm['phy']
     # Retain arbitrary ASN allocation for IP addressing
-    g_ip.add_nodes_from(g_l2, retain=["asn", "broadcast_domain"])
+    g_ip.copy_nodes_from(g_l2)
+    ank_utils.copy_node_attr_from(g_l2, g_ip, "broadcast_domain")
+    ank_utils.copy_node_attr_from(g_l2, g_ip, "asn")
     g_ip.add_edges_from(g_l2.edges())
 
     #TODO:

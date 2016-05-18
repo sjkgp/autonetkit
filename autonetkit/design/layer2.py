@@ -19,7 +19,7 @@ class Layer2Builder(object):
         g_l2 = anm.add_overlay('layer2')
         g_l1 = anm['layer1']
 
-        g_l2.add_nodes_from(g_l1)
+        g_l2.copy_nodes_from(g_l1)
         g_l2.add_edges_from(g_l1.edges())
         # Don't aggregate managed switches
         for node in g_l2:
@@ -32,7 +32,8 @@ class Layer2Builder(object):
         anm = self.anm
         g_l2 = anm['layer2']
         g_l2_conn = anm.add_overlay('layer2_conn')
-        g_l2_conn.add_nodes_from(g_l2, retain="broadcast_domain")
+        g_l2_conn.copy_nodes_from(g_l2)
+        ank_utils.copy_node_attr_from(g_l2, g_l2_conn, "broadcast_domain")
         g_l2_conn.add_edges_from(g_l2.edges())
 
         broadcast_domains = g_l2_conn.nodes(broadcast_domain=True)
@@ -84,8 +85,8 @@ class Layer2Builder(object):
         g_phy = anm['phy']
         g_graphics = anm['graphics']
         g_l2_bc = anm.add_overlay('layer2_bc')
-        g_l2_bc.add_nodes_from(g_l2.l3devices())
-        g_l2_bc.add_nodes_from(g_l2.switches())
+        g_l2_bc.copy_nodes_from(g_l2.l3devices())
+        g_l2_bc.copy_nodes_from(g_l2.switches())
         g_l2_bc.add_edges_from(g_l2.edges())
 
         # remove external connectors
@@ -289,7 +290,7 @@ class Layer2Builder(object):
         managed_switches = [n for n in g_l2.switches()
                             if n.get('device_subtype') == "managed"]
 
-        g_vtp.add_nodes_from(g_l1_conn)
+        g_vtp.copy_nodes_from(g_l1_conn)
         g_vtp.add_edges_from(g_l1_conn.edges())
 
         # remove anything not a managed_switch or connected to a managed_switch
@@ -354,7 +355,7 @@ class Layer2Builder(object):
             for vlan, interfaces in vlans.items():
                 # create a virtual switch
                 vswitch_id = "vswitch%s" % vswitch_id_counter.next()
-                vswitch = g_l2.add_node(vswitch_id)
+                vswitch = g_l2.create_node(vswitch_id)
                 vlan_tp = vswitch.add_interface(category="vlan_termination_point")
                 vswitch_tp_lookup[vswitch] = vlan_tp
                 # TODO: check of switch or just broadcast_domain for higher layer

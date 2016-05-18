@@ -13,8 +13,11 @@ def build_layer3(anm):
     g_in = anm['input']
     gl2_conn = anm['layer2_conn']
     g_l3 = anm.add_overlay("layer3")
-    g_l3.add_nodes_from(gl2_conn, retain=['label'])
-    g_l3.add_nodes_from(g_in.switches(), retain=['asn'])
+    g_l3.copy_nodes_from(gl2_conn)
+    ank_utils.copy_node_attr_from(gl2_conn, g_l3, 'label')
+    nbunch = g_in.switches()
+    g_l3.copy_nodes_from(nbunch)
+    ank_utils.copy_node_attr_from(g_in, g_l3, 'asn', nbunch=nbunch)
     g_l3.add_edges_from(gl2_conn.edges())
 
     switches = g_l3.switches()

@@ -92,8 +92,10 @@ def initialise(input_graph):
     # autonetkit.ank.set_node_default(g_in, specified_int_names=None)
 
     g_graphics = anm.add_overlay("graphics")  # plotting data
-    g_graphics.add_nodes_from(g_in, retain=['x', 'y', 'device_type',
-                                            'label', 'device_subtype', 'asn'])
+    g_graphics.copy_nodes_from(g_in)
+    retain=['x', 'y', 'device_type', 'label', 'device_subtype', 'asn']
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_in, g_graphics, attr)
 
     return anm
 
@@ -256,9 +258,11 @@ def build_phy(anm):
     if g_phy.data.enable_routing is None:
         g_in.data.enable_routing = True  # default if not set
 
-    g_phy.add_nodes_from(g_in, retain=['label', 'update', 'device_type',
-                                       'asn', 'specified_int_names', 'x', 'y',
-                                       'device_subtype', 'platform', 'host', 'syntax'])
+    g_phy.copy_nodes_from(g_in)
+    retain=['label', 'update', 'device_type', 'asn', 'specified_int_names',
+            'x', 'y', 'device_subtype', 'platform', 'host', 'syntax']
+    for attr in retain:
+        ank_utils.copy_node_attr_from(g_in, g_phy, attr)
 
     if g_in.data.Creator == "Topology Zoo Toolset":
         ank_utils.copy_node_attr_from(g_in, g_phy, "Network")
@@ -298,7 +302,8 @@ def build_conn(anm):
     """Build connectivity overlay"""
     g_in = anm['input']
     g_conn = anm.add_overlay("conn", directed=True)
-    g_conn.add_nodes_from(g_in, retain=['label'])
+    g_conn.copy_nodes_from(g_in)
+    ank_utils.copy_node_attr_from(g_in, g_conn, 'label')
     g_conn.add_edges_from(g_in.edges(type="physical"))
 
     return

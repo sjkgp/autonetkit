@@ -14,7 +14,7 @@ class Layer1Builder(object):
         anm = self.anm
         g_l1 = anm.add_overlay('layer1')
         g_phy = anm['phy']
-        g_l1.add_nodes_from(g_phy)
+        g_l1.copy_nodes_from(g_phy)
         g_l1.add_edges_from(g_phy.edges())
 
         # aggregate collision domains
@@ -31,7 +31,9 @@ class Layer1Builder(object):
         anm = self.anm
         g_l1 = anm['layer1']
         g_l1_conn = anm.add_overlay('layer1_conn')
-        g_l1_conn.add_nodes_from(g_l1, retain="collision_domain")
+        g_l1_conn.copy_nodes_from(g_l1)
+        ank_utils.copy_node_attr_from(g_l1, g_l1_conn, "collision_domain")
+
         g_l1_conn.add_edges_from(g_l1.edges())
 
         collision_domains = g_l1_conn.nodes(collision_domain=True)

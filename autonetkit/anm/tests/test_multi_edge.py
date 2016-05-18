@@ -7,20 +7,20 @@ def test():
 
     anm = autonetkit.NetworkModel()
     g_phy = anm['phy']
-    g_phy.add_nodes_from(["r1", "r2", "r3", "r4", "r5"])
+    g_phy.create_nodes_from(["r1", "r2", "r3", "r4", "r5"])
     for node in g_phy:
-        node.device_type = "router"
+        node.set('device_type', "router")
 
-    g_phy.node("r1").x = 100
-    g_phy.node("r1").y = 100
-    g_phy.node("r2").x = 250
-    g_phy.node("r2").y = 250
-    g_phy.node("r3").x = 100
-    g_phy.node("r3").y = 300
-    g_phy.node("r4").x = 600
-    g_phy.node("r4").y = 600
-    g_phy.node("r5").x = 600
-    g_phy.node("r5").y = 300
+    g_phy.node("r1").set('x', 100)
+    g_phy.node("r1").set('y', 100)
+    g_phy.node("r2").set('x', 250)
+    g_phy.node("r2").set('y', 250)
+    g_phy.node("r3").set('x', 100)
+    g_phy.node("r3").set('y', 300)
+    g_phy.node("r4").set('x', 600)
+    g_phy.node("r4").set('y', 600)
+    g_phy.node("r5").set('x', 600)
+    g_phy.node("r5").set('y', 300)
 
     g_phy.add_edges_from(([("r1", "r2")]))
     g_phy.add_edges_from(([("r1", "r3")]))
@@ -30,7 +30,7 @@ def test():
     #g_phy.add_edges_from(([("r4", "r5")]))
 
     g_simple = anm.add_overlay("simple")
-    g_simple.add_nodes_from(g_phy)
+    g_simple.copy_nodes_from(g_phy)
     g_simple.add_edges_from(([("r1", "r2")]))
     g_simple.add_edges_from(([("r4", "r3")]))
 
@@ -38,7 +38,7 @@ def test():
     g_me = anm.add_overlay("multi", multi_edge = True)
     graph = g_me._graph
 
-    g_me.add_nodes_from(g_phy)
+    g_me.copy_nodes_from(g_phy)
 
     # add two edges
     g_me.add_edges_from(([("r1", "r2")]))
@@ -86,7 +86,7 @@ def test():
     # test adding to another mutli edge graph
     print "adding"
     g_me2 = anm.add_overlay("multi2", multi_edge = True)
-    g_me2.add_nodes_from(g_me)
+    g_me2.copy_nodes_from(g_me)
     print "add", len(g_me.edges())
     g_me2.add_edges_from(g_me.edges(), retain = "index")
     for edge in g_me2.edges():
@@ -105,13 +105,13 @@ def test():
         #graph[u][v][k]['test'] = 123
 
     g_dir = anm.add_overlay("dir", directed=True)
-    g_dir.add_nodes_from(g_phy)
+    g_dir.copy_nodes_from(g_phy)
     g_dir.add_edges_from(([("r1", "r2")]))
     g_dir.add_edges_from(([("r2", "r1")]))
     g_dir.add_edges_from(([("r1", "r3")]))
 
     g_dir_multi = anm.add_overlay("dir_multi", directed = True, multi_edge = True)
-    g_dir_multi.add_nodes_from(g_phy)
+    g_dir_multi.copy_nodes_from(g_phy)
     g_dir_multi.add_edges_from(([("r1", "r2")]))
     g_dir_multi.add_edges_from(([("r1", "r2")]))
     g_dir_multi.add_edges_from(([("r1", "r2")]))
@@ -129,7 +129,7 @@ def test():
 
     from networkx.readwrite import json_graph
     import json
-    data =  json_graph.node_link_data(graph)
+    data = json_graph.node_link_data(graph)
     with open("multi.json", "w") as fh:
         fh.write(json.dumps(data, indent=2))
 

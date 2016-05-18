@@ -84,7 +84,7 @@ class TestDmBase(unittest.TestCase):
                        ("r1", "r3")]
         nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
         g_in = anm.add_overlay("input")
-        g_in.add_nodes_from(nodes)
+        g_in.create_nodes_from(nodes)
         r1 = g_in.node('r1')
         r2 = g_in.node('r2')
         r3 = g_in.node('r3')
@@ -93,7 +93,7 @@ class TestDmBase(unittest.TestCase):
         result = g_in.add_edges_from(input_edges)
         expected_result = [(r1, r2), (r2, r4), (r3, r4), (r3, r5), (r1, r3)]
         self.assertListEqual(expected_result, result)
-        g_phy.add_nodes_from(g_in)
+        g_phy.copy_nodes_from(g_in)
         result = g_phy.add_edges_from(g_in.edges())
         expected_result = [(r4, r2), (r4, r3), (r5, r3), (r1, r2), (r1, r3)]
         self.assertListEqual(expected_result, result)
@@ -114,7 +114,7 @@ class TestDmBase(unittest.TestCase):
                        ("r3", "r5"), ("r1", "r3")]
         nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
         g_in = anm.add_overlay("input")
-        g_in.add_nodes_from(nodes)
+        g_in.create_nodes_from(nodes)
         r1 = g_in.node('r1')
         r2 = g_in.node('r2')
         r3 = g_in.node('r3')
@@ -123,7 +123,7 @@ class TestDmBase(unittest.TestCase):
         result = g_in.add_edges_from(input_edges)
         expected_result = [(r1, r2), (r2, r4), (r3, r4), (r3, r5), (r1, r3)]
         self.assertListEqual(expected_result, result)
-        g_phy.add_nodes_from(g_in)
+        g_phy.copy_nodes_from(g_in)
         result = g_phy.add_edges_from(g_in.edges())
         expected_result = [(r4, r2), (r4, r3), (r5, r3), (r1, r2), (r1, r3)]
         self.assertListEqual(expected_result, result)

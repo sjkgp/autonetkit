@@ -93,6 +93,10 @@ def copy_node_attr_from(overlay_src, overlay_dst, src_attr, dst_attr=None,
     for node in nbunch:
         try:
             val = graph_src.node[node].get(src_attr, default)
+            # TODO: remove this workaround
+            if src_attr == 'asn' and val is default:
+                val = overlay_src.anm.overlay_nx_graphs['phy'].\
+                    node[node].get(src_attr, default)
         except KeyError:
 
             # TODO: check if because node doesn't exist in dest, or because
@@ -262,7 +266,7 @@ def split_edges(nm_graph, edges, id_prepend=''):
         if nm_graph.is_multigraph():
             new_id += '_%s' % edge.ekey
 
-        split_node = nm_graph.add_node(new_id)
+        split_node = nm_graph.create_node(new_id)
         added_nodes.append(split_node)
         split_iface_a = split_node.add_interface()
         split_iface_b = split_node.add_interface()
@@ -414,7 +418,7 @@ def most_frequent(iterable):
         return max(gby(sorted(iterable)), key=lambda (x, v):
         (len(list(v)), -iterable.index(x)))[0]
     except ValueError, error:
-        log.warning('Unable to calculate most_frequent, %s', error)
+        # log.warning('Unable to calculate most_frequent, %s', error)
         return None
 
 
