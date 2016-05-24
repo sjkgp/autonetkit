@@ -238,7 +238,7 @@ def build_ipv4(anm, infrastructure=True):
                  if n['layer2'].get('device_type') == "switch"
                  and n['layer2'].get('device_subtype') == "virtual"]
     ank_utils.copy_node_attr_from(g_ip, g_ipv4, 'asn', nbunch=vswitches)
-    g_ipv4.add_edges_from(g_ip.edges())
+    g_ipv4.copy_edges_from(g_ip.edges())
 
     # check if ip ranges have been specified on g_in
 

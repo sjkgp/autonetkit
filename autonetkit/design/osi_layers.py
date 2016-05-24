@@ -18,7 +18,7 @@ def build_layer3(anm):
     nbunch = g_in.switches()
     g_l3.copy_nodes_from(nbunch)
     ank_utils.copy_node_attr_from(g_in, g_l3, 'asn', nbunch=nbunch)
-    g_l3.add_edges_from(gl2_conn.edges())
+    g_l3.copy_edges_from(gl2_conn.edges())
 
     switches = g_l3.switches()
 

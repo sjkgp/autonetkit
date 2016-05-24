@@ -79,9 +79,6 @@ class TestDmBase(unittest.TestCase):
         anm = autonetkit.NetworkModel()
         g_phy = anm['phy']
         nidb = autonetkit.DeviceModel(anm)
-        input_edges = [("r1", "r2"), ("r2", "r4"),
-                       ("r3", "r4"), ("r3", "r5"),
-                       ("r1", "r3")]
         nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
         g_in = anm.add_overlay("input")
         g_in.create_nodes_from(nodes)
@@ -90,11 +87,16 @@ class TestDmBase(unittest.TestCase):
         r3 = g_in.node('r3')
         r4 = g_in.node('r4')
         r5 = g_in.node('r5')
-        result = g_in.add_edges_from(input_edges)
+        input_edges = [(r1.add_interface(), r2.add_interface()),
+                       (r2.add_interface(), r4.add_interface()),
+                       (r3.add_interface(), r4.add_interface()),
+                       (r3.add_interface(), r5.add_interface()),
+                       (r1.add_interface(), r3.add_interface())]
+        result = g_in.create_edges_from(input_edges)
         expected_result = [(r1, r2), (r2, r4), (r3, r4), (r3, r5), (r1, r3)]
         self.assertListEqual(expected_result, result)
         g_phy.copy_nodes_from(g_in)
-        result = g_phy.add_edges_from(g_in.edges())
+        result = g_phy.copy_edges_from(g_in.edges())
         expected_result = [(r4, r2), (r4, r3), (r5, r3), (r1, r2), (r1, r3)]
         self.assertListEqual(expected_result, result)
         retain = ['label', 'host', 'platform', 'x', 'y', 'asn', 'device_type']
@@ -110,8 +112,6 @@ class TestDmBase(unittest.TestCase):
         anm = autonetkit.NetworkModel()
         g_phy = anm['phy']
         nidb = autonetkit.DeviceModel(anm)
-        input_edges = [("r1", "r2"), ("r2", "r4"), ("r3", "r4"),
-                       ("r3", "r5"), ("r1", "r3")]
         nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
         g_in = anm.add_overlay("input")
         g_in.create_nodes_from(nodes)
@@ -120,11 +120,16 @@ class TestDmBase(unittest.TestCase):
         r3 = g_in.node('r3')
         r4 = g_in.node('r4')
         r5 = g_in.node('r5')
-        result = g_in.add_edges_from(input_edges)
+        input_edges = [(r1.add_interface(), r2.add_interface()),
+                       (r2.add_interface(), r4.add_interface()),
+                       (r3.add_interface(), r4.add_interface()),
+                       (r3.add_interface(), r5.add_interface()),
+                       (r1.add_interface(), r3.add_interface())]
+        result = g_in.create_edges_from(input_edges)
         expected_result = [(r1, r2), (r2, r4), (r3, r4), (r3, r5), (r1, r3)]
         self.assertListEqual(expected_result, result)
         g_phy.copy_nodes_from(g_in)
-        result = g_phy.add_edges_from(g_in.edges())
+        result = g_phy.copy_edges_from(g_in.edges())
         expected_result = [(r4, r2), (r4, r3), (r5, r3), (r1, r2), (r1, r3)]
         self.assertListEqual(expected_result, result)
         retain = ['label', 'host', 'platform', 'x', 'y', 'asn', 'device_type']

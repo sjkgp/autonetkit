@@ -19,7 +19,9 @@ def build_ibgp_v4(anm):
     retain=["ibgp_role", "hrr_cluster", "rr_cluster"]
     for attr in retain:
         ank_utils.copy_node_attr_from(g_bgp, g_ibgpv4, attr, nbunch=nbunch)
-    g_ibgpv4.add_edges_from(g_bgp.edges(type="ibgp"), retain="direction")
+    ebunch = g_bgp.edges(type="ibgp")
+    g_ibgpv4.copy_edges_from(ebunch)
+    ank_utils.copy_edge_attr_from(g_bgp, g_ibgpv4, 'direction', ebunch=ebunch)
 
 
 def build_ibgp_v6(anm):
@@ -37,7 +39,9 @@ def build_ibgp_v6(anm):
     retain=["ibgp_role", "hrr_cluster", "rr_cluster"]
     for attr in retain:
         ank_utils.copy_node_attr_from(g_bgp, g_ibgpv6, attr, nbunch=nbunch)
-    g_ibgpv6.add_edges_from(g_bgp.edges(type="ibgp"), retain="direction")
+    ebunch = g_bgp.edges(type="ibgp")
+    g_ibgpv6.copy_edges_from(ebunch)
+    ank_utils.copy_edge_attr_from(g_bgp, g_ibgpv6, 'direction', ebunch=ebunch)
 
 
 def build_ebgp_v4(anm):
@@ -51,7 +55,8 @@ def build_ebgp_v4(anm):
     if len(ipv4_nodes) == 0:
         return
     g_ebgpv4.copy_nodes_from(n for n in g_ebgp if n in ipv4_nodes)
-    g_ebgpv4.add_edges_from(g_ebgp.edges(), retain="direction")
+    g_ebgpv4.copy_edges_from(g_ebgp.edges())
+    ank_utils.copy_edge_attr_from(g_ebgp, g_ebgpv4, 'direction')
 
 
 def build_ebgp_v6(anm):
@@ -65,7 +70,8 @@ def build_ebgp_v6(anm):
     if len(ipv6_nodes) == 0:
         return
     g_ebgpv6.copy_nodes_from(n for n in g_ebgp if n in ipv6_nodes)
-    g_ebgpv6.add_edges_from(g_ebgp.edges(), retain="direction")
+    g_ebgpv6.copy_edges_from(g_ebgp.edges())
+    ank_utils.copy_edge_attr_from(g_ebgp, g_ebgpv6, 'direction')
 
 def build_ebgp(anm):
     g_l3 = anm['layer3']
@@ -76,7 +82,7 @@ def build_ebgp(anm):
     ank_utils.copy_int_attr_from(g_l3, g_ebgp, "multipoint")
 
     ebgp_edges = [e for e in g_l3.edges() if e.src.get('asn') != e.dst.get('asn')]
-    g_ebgp.add_edges_from(ebgp_edges, bidirectional=True, type='ebgp')
+    g_ebgp.copy_edges_from(ebgp_edges, bidirectional=True, type='ebgp')
 
 def build_ibgp(anm):
     g_in = anm['input']
@@ -193,9 +199,9 @@ def build_ibgp(anm):
         up_links = [(s.loopback_zero, t.loopback_zero) for s, t in up_links if s != t]
         down_links = [(s.loopback_zero, t.loopback_zero) for s, t in down_links if s != t]
 
-        g_bgp.add_edges_from(over_links, type='ibgp', direction='over')
-        g_bgp.add_edges_from(up_links, type='ibgp', direction='up')
-        g_bgp.add_edges_from(down_links, type='ibgp', direction='down')
+        g_bgp.create_edges_from(over_links, type='ibgp', direction='over')
+        g_bgp.create_edges_from(up_links, type='ibgp', direction='up')
+        g_bgp.create_edges_from(down_links, type='ibgp', direction='down')
 
 def build_bgp(anm):
     """Build iBGP end eBGP overlays"""
@@ -216,7 +222,7 @@ def build_bgp(anm):
     g_bgp.copy_nodes_from(g_l3.routers())
     edges_to_add = [e for e in g_l3.edges()
                     if e.src in g_bgp and e.dst in g_bgp]
-    g_bgp.add_edges_from(edges_to_add, bidirectional=True)
+    g_bgp.copy_edges_from(edges_to_add, bidirectional=True)
     ank_utils.copy_int_attr_from(g_l3, g_bgp, "multipoint")
 
     # remove ibgp links

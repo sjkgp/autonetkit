@@ -268,7 +268,7 @@ def build_phy(anm):
         ank_utils.copy_node_attr_from(g_in, g_phy, "Network")
 
     ank_utils.set_node_default(g_phy, Network=None)
-    g_phy.add_edges_from(g_in.edges(type="physical"))
+    g_phy.copy_edges_from(g_in.edges(type="physical"))
     # TODO: make this automatic if adding to the physical graph?
 
     ank_utils.set_node_default(g_phy, use_ipv4=False, use_ipv6=False)
@@ -304,6 +304,6 @@ def build_conn(anm):
     g_conn = anm.add_overlay("conn", directed=True)
     g_conn.copy_nodes_from(g_in)
     ank_utils.copy_node_attr_from(g_in, g_conn, 'label')
-    g_conn.add_edges_from(g_in.edges(type="physical"))
+    g_conn.copy_edges_from(g_in.edges(type="physical"))
 
     return

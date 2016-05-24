@@ -271,8 +271,8 @@ def split_edges(nm_graph, edges, id_prepend=''):
         split_iface_a = split_node.add_interface()
         split_iface_b = split_node.add_interface()
 
-        nm_graph.add_edge(src_int, split_iface_a)
-        nm_graph.add_edge(dst_int, split_iface_b)
+        nm_graph.create_edge(src_int, split_iface_a)
+        nm_graph.create_edge(dst_int, split_iface_b)
         nm_graph.remove_edge(edge)
 
     return added_nodes
@@ -312,7 +312,7 @@ def explode_nodes(nm_graph, nodes):
             if src == dst:
                 continue  # don't add self-loop
 
-            new_edge = nm_graph.add_edge(src_int, dst_int)
+            new_edge = nm_graph.create_edge(src_int, dst_int)
             total_added_edges.append(new_edge)
 
         nm_graph.remove_node(node)
@@ -397,7 +397,7 @@ def aggregate_nodes(nm_graph, nodes):
             log.debug('External interfaces %s', external_interfaces)
             for dst_int in external_interfaces:
                 split_iface_a = base.add_interface()
-                new_edge = nm_graph.add_edge(split_iface_a, dst_int)
+                new_edge = nm_graph.create_edge(split_iface_a, dst_int)
                 total_added_edges.append(new_edge)
 
             nm_graph.remove_nodes_from(nodes_to_remove)

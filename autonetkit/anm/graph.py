@@ -199,18 +199,55 @@ class NmGraph(OverlayBase):
 
         self._graph.remove_node(node_id)
 
-    def add_edge(self, src, dst, retain=None, **kwargs):
-        """Adds an edge to the overlay"""
+    def create_edge(self, src, dst, **kwargs):
+        data = {'_ports': {}}
+        src_id = src.node.node_id
+        dst_id = dst.node.node_id
+        ports = {}
+        if src_id in self:
+            ports[src_id] = src.interface_id
+        if dst in self:
+            ports[dst_id] = dst.interface_id
+        data['_ports'] = ports
+        data.update(**kwargs)
 
-        if not retain:
-            retain = []
-        try:
-            retain.lower()
-            retain = [retain]  # was a string, put into list
-        except AttributeError:
-            pass  # already a list
-        retval = self.add_edges_from([(src, dst)], retain, **kwargs)
-        return retval[0]
+        return self._add_edge(src_id, dst_id, data=data)
+
+    def copy_edge(self, edge, reverse=False, **kwargs):
+        ekey = edge.ekey  # explictly set ekey
+        src = edge.src.node_id
+        dst = edge.dst.node_id
+
+        ports = {k: v for k, v in edge.raw_interfaces.items()
+                 if k in self._graph}  # only if exists in this overlay
+        # TODO: debug log if skipping a binding?
+        data = {'_ports': ports}
+        data.update(**kwargs)
+        if reverse:
+            return self._add_edge(dst, src, data, ekey)
+        return self._add_edge(src, dst, data, ekey)
+
+    def _add_edge(self, src, dst, data, ekey=None):
+        if not(src in self and dst in self):
+            self.log.debug("Not adding edge %s/%s, src/dst not in overlay",
+                           str(src), str(dst))
+            return
+        if self.is_multigraph() and ekey is None:
+            # now have the keys mapping
+            try:
+                keys = self._graph.adj[src][dst].keys()
+            except KeyError, e:
+                keys = []
+            ekey=len(keys)
+            while ekey in keys:
+                ekey+=1
+
+        if self.is_multigraph():
+            self._graph.add_edges_from([(src, dst, ekey, dict(data))])
+            return NmEdge(self.anm, self._overlay_id, src, dst, ekey)
+
+        self._graph.add_edges_from([(src, dst, dict(data))])
+        return NmEdge(self.anm, self._overlay_id, src, dst)
 
     def remove_edge(self, edge):
         nx_edge = unwrap_edge(edge)
@@ -227,156 +264,29 @@ class NmGraph(OverlayBase):
 
         self._graph.remove_edges_from(nx_ebunch)
 
-    def add_edges(self, *args, **kwargs):
-        """Adds a set of edges. Alias for add_edges_from"""
-
-        self.add_edges_from(args, kwargs)
-
-    def add_edges_from(self, ebunch, bidirectional=False, retain=None,
-                       warn=True, **kwargs):
-        """Add edges. Unlike NetworkX, can only add an edge if both
-        src and dst in graph already.
-        If they are not, then they will not be added (silently ignored)
-        #TODO: raise exception if try to add and nodes not in graph
-
-
-        Retains interface mappings if they are present (this is why ANK
-            stores the interface reference on the edges, as it simplifies
-            cross-layer access, as well as split, aggregate, etc retaining the
-            interface bindings)_
-
-        Bidirectional will add edge in both directions. Useful if going
-        from an undirected graph to a
-        directed, eg G_in to G_bgp
-        #TODO: explain "retain" and ["retain"] logic
-
-        if user wants to add from another overlay, first go g_x.edges()
-        then add from the result
-
-        allow (src, dst, ekey), (src, dst, ekey, data) for the ank utils
-        """
-
-        if not retain:
-            retain = []
-        try:
-            retain.lower()
-            retain = [retain]  # was a string, put into list
-        except AttributeError:
-            pass  # already a list
-
-        if self.is_multigraph():
-            #used_keys = self._graph.adj[u][v]
-            from collections import defaultdict
-            used_keys = defaultdict(dict)
-
-        all_edges = []
+    def create_edges_from(self, ebunch, bidirectional=False, **kwargs):
+        edges = []
         for in_edge in ebunch:
-            """Edge could be one of:
-            - NmEdge
-            - (NmPort, NmPort)
-            - (string, string)
-            """
-            # This is less efficient than nx add_edges_from, but cleaner logic
-            # TODO: could put the interface data into retain?
-            data = {'_ports': {}}  # to retain
-            ekey = None  # default is None (nx auto-allocates next int)
+            new_edge = self.create_edge(in_edge[0], in_edge[1], **kwargs)
+            if new_edge:
+                edges.append(new_edge)
+            if bidirectional:
+                new_edge = self.create_edge(in_edge[1], in_edge[0], **kwargs)
+                if new_edge:
+                    edges.append(new_edge)
+        return edges
 
-            # convert input to a NmEdge
-            src = dst = None
-            if isinstance(in_edge, NmEdge):
-                edge = in_edge  # simple case
-                ekey = edge.ekey  # explictly set ekey
-                src = edge.src.node_id
-                dst = edge.dst.node_id
-
-                # and copy retain data
-                data = dict((key, edge.get(key)) for key in retain)
-                ports = {k: v for k, v in edge.raw_interfaces.items()
-                         if k in self._graph}  # only if exists in this overlay
-                # TODO: debug log if skipping a binding?
-                data['_ports'] = ports
-
-                # this is the only case where copy across data
-                # but want to copy attributes for all cases
-
-            elif len(in_edge) == 2:
-                in_a, in_b = in_edge[0], in_edge[1]
-                if isinstance(in_a, NmNode) and isinstance(in_b, NmNode):
-                    src = in_a.node_id
-                    dst = in_b.node_id
-
-                elif isinstance(in_a, NmPort) and isinstance(in_b, NmPort):
-                    src = in_a.node.node_id
-                    dst = in_b.node.node_id
-                    ports = {}
-                    if src in self:
-                        ports[src] = in_a.interface_id
-                    if dst in self:
-                        ports[dst] = in_b.interface_id
-                    data['_ports'] = ports
-
-                elif in_a in self and in_b in self:
-                    src = in_a
-                    dst = in_b
-
-
-            # TODO: if edge not set at this point, give error/warn
-
-            # TODO: add check that edge.src and edge.dst exist
-            if (src is None or dst is None) and warn:
-                log.warning("Unsupported edge %s" % str(in_edge))
-            if not(src in self and dst in self):
-                if warn:
-                    self.log.debug("Not adding edge %s, src/dst not in overlay"
-                                   % str(in_edge))
-                continue
-
-            # TODO: warn if not multigraph and edge already exists - don't
-            # add/clobber
-            #TODO: double check this logic + add test case
-            data.update(**kwargs)
-            if self.is_multigraph() and ekey is None:
-                # specifically allocate a key
-                if src in used_keys and dst in used_keys[src]:
-                    pass # already established
-                else:
-                    try:
-                        used_keys[src][dst] = self._graph.adj[src][dst].keys()
-                    except KeyError:
-                        # no edges exist
-                        used_keys[src][dst] = []
-
-                # now have the keys mapping
-                ekey=len(used_keys[src][dst])
-                while ekey in used_keys[src][dst]:
-                    ekey+=1
-
-                used_keys[src][dst].append(ekey)
-
-            edges_to_add = []
-            if self.is_multigraph():
-                edges_to_add.append((src, dst, ekey, dict(data)))
-                if bidirectional:
-                    edges_to_add.append((dst, src, ekey, dict(data)))
-            else:
-                edges_to_add.append((src, dst, dict(data)))
-                if bidirectional:
-                    edges_to_add.append((dst, src, dict(data)))
-
-
-            #TODO: warn if not multigraph
-
-            self._graph.add_edges_from(edges_to_add)
-            all_edges += edges_to_add
-
-        if self.is_multigraph():
-            return [
-            NmEdge(self.anm, self._overlay_id, src, dst, ekey) if ekey
-            else NmEdge(self.anm, self._overlay_id, src, dst) # default no ekey set
-            for src, dst, ekey, _ in all_edges]
-        else:
-            return [NmEdge(self.anm, self._overlay_id, src, dst)
-            for src, dst, _ in all_edges]
+    def copy_edges_from(self, ebunch, bidirectional=False, **kwargs):
+        edges = []
+        for in_edge in ebunch:
+            new_edge = self.copy_edge(in_edge, **kwargs)
+            if new_edge:
+                edges.append(new_edge)
+            if bidirectional:
+                new_edge = self.copy_edge(in_edge, reverse=True, **kwargs)
+                if new_edge:
+                    edges.append(new_edge)
+        return edges
 
     def update(self, nbunch=None, **kwargs):
         """Sets property defined in kwargs to all nodes in nbunch"""

@@ -28,7 +28,7 @@ def test():
     g_in.update(device_type="router", asn=1)
     g_in.update("r3", asn=2)
     g_in.update("r2", device_type="switch")
-    g_in.add_edges_from(input_interface_edges)
+    g_in.create_edges_from(input_interface_edges)
 
     g_phy = anm['phy']
     g_phy.copy_nodes_from(g_in)
@@ -36,7 +36,7 @@ def test():
     for attr in retain:
         ank_utils.copy_node_attr_from(g_in, g_phy, attr)
 
-    g_phy.add_edges_from(g_in.edges())
+    g_phy.copy_edges_from(g_in.edges())
 
     autonetkit.update_http(anm)
     # Should already work without adding the nodes

@@ -21,7 +21,7 @@ def build_ip(anm):
     g_ip.copy_nodes_from(g_l2)
     ank_utils.copy_node_attr_from(g_l2, g_ip, "broadcast_domain")
     ank_utils.copy_node_attr_from(g_l2, g_ip, "asn")
-    g_ip.add_edges_from(g_l2.edges())
+    g_ip.copy_edges_from(g_l2.edges())
 
     #TODO:
     for bc in g_ip.nodes("broadcast_domain"):

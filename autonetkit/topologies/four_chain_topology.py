@@ -23,13 +23,13 @@ def four_chain():
     # node->node edges
     input_edges = [("r1", "r2"), ("r2", "r4"), ("r3", "r4")]
     input_interface_edges = [(g_in.node(src).interface(1), g_in.node(dst).interface(1)) for src, dst in input_edges]
-    g_in.add_edges_from(input_interface_edges)
+    g_in.create_edges_from(input_interface_edges)
 
     g_phy = anm['phy']
     g_phy.copy_nodes_from(g_in)
     retain = ["device_type", "x", "y", "asn"]
     for attr in retain:
         ank_utils.copy_node_attr_from(g_in, g_phy, attr)
-    g_phy.add_edges_from(g_in.edges())
+    g_phy.copy_edges_from(g_in.edges())
 
     return anm

@@ -16,11 +16,12 @@ for node in g_phy:
         node.add_interface()
 
 sw = g_phy.create_node("sw1")
-sw.device_type = "switch"
+sw.set('device_type', "switch")
+dummy_iface = sw.add_interface()
 
 for node in g_phy:
     for iface in node:
-        g_phy.add_edge(sw, iface)
+        g_phy.create_edge(dummy_iface, iface)
         print sw.edges()
 
 

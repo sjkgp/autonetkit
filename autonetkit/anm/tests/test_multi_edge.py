@@ -1,5 +1,6 @@
 import autonetkit
 import autonetkit.log as log
+import autonetkit.ank as ank_utils
 
 log.info("Testing ANM")
 
@@ -22,35 +23,49 @@ def test():
     g_phy.node("r5").set('x', 600)
     g_phy.node("r5").set('y', 300)
 
-    g_phy.add_edges_from(([("r1", "r2")]))
-    g_phy.add_edges_from(([("r1", "r3")]))
+    r1 = g_phy.node('r1')
+    r2 = g_phy.node('r2')
+    r3 = g_phy.node('r3')
+    iface_r1 = r1.add_interface(description='test')
+    iface2_r1 = r1.add_interface(description='test2')
+    iface_r2 = r2.add_interface()
+    iface_r3 = r3.add_interface()
+
+    g_phy.create_edge(iface_r1, iface_r2)
+    g_phy.create_edge(iface2_r1, iface_r3)
     #g_phy.add_edges_from(([("r2", "r3")]))
     #g_phy.add_edges_from(([("r2", "r4")]))
     #g_phy.add_edges_from(([("r4", "r3")]))
     #g_phy.add_edges_from(([("r4", "r5")]))
-
     g_simple = anm.add_overlay("simple")
     g_simple.copy_nodes_from(g_phy)
-    g_simple.add_edges_from(([("r1", "r2")]))
-    g_simple.add_edges_from(([("r4", "r3")]))
+    r1 = g_simple.node('r1')
+    r2 = g_simple.node('r2')
+    g_simple.create_edge(r1.interface(iface_r1), r2.interface(iface_r2))
+    r4 = g_simple.node('r4')
+    r3 = g_simple.node('r3')
+    g_simple.create_edge(r4.add_interface(), r3.interface(iface_r3))
 
 
     g_me = anm.add_overlay("multi", multi_edge = True)
     graph = g_me._graph
 
     g_me.copy_nodes_from(g_phy)
-
+    r1 = g_me.node('r1')
+    r2 = g_me.node('r2')
+    r3 = g_me.node('r3')
+    iface_r1 = r1.add_interface(description='multi')
+    iface_r2 = r2.add_interface(description='multi')
+    iface_r3 = r3.add_interface(description='multi')
     # add two edges
-    g_me.add_edges_from(([("r1", "r2")]))
-    g_me.add_edges_from(([("r1", "r2")]))
-    g_me.add_edges_from(([("r1", "r2")]))
-    g_me.add_edges_from(([("r1", "r2")]))
-    g_me.add_edges_from(([("r1", "r2")]))
-    g_me.add_edges_from(([("r1", "r3")]))
-    g_me.add_edges_from(([("r2", "r3")]))
-    g_me.add_edges_from(([("r2", "r3")]))
-
-    r1 = g_me.node("r1")
+    g_me.create_edge(iface_r1, iface_r2)
+    g_me.create_edge(iface_r1, iface_r2)
+    g_me.create_edge(iface_r1, iface_r2)
+    g_me.create_edge(iface_r1, iface_r2)
+    g_me.create_edge(iface_r1, iface_r2)
+    g_me.create_edge(iface_r1, iface_r3)
+    g_me.create_edge(iface_r2, iface_r3)
+    g_me.create_edge(iface_r2, iface_r3)
 
     for index, edge in enumerate(g_me.edges()):
         #print index, edge
@@ -88,7 +103,8 @@ def test():
     g_me2 = anm.add_overlay("multi2", multi_edge = True)
     g_me2.copy_nodes_from(g_me)
     print "add", len(g_me.edges())
-    g_me2.add_edges_from(g_me.edges(), retain = "index")
+    g_me2.copy_edges_from(g_me.edges())
+    ank_utils.copy_edge_attr_from(g_me, g_me2, 'index')
     for edge in g_me2.edges():
         print edge, edge.get('index')
 
@@ -106,22 +122,34 @@ def test():
 
     g_dir = anm.add_overlay("dir", directed=True)
     g_dir.copy_nodes_from(g_phy)
-    g_dir.add_edges_from(([("r1", "r2")]))
-    g_dir.add_edges_from(([("r2", "r1")]))
-    g_dir.add_edges_from(([("r1", "r3")]))
+    r1 = g_dir.node('r1')
+    r2 = g_dir.node('r2')
+    r3 = g_dir.node('r3')
+    iface_r1 = r1.add_interface()
+    iface_r2 = r2.add_interface()
+    iface_r3 = r3.add_interface()
+    g_dir.create_edge(iface_r1, iface_r2)
+    g_dir.create_edge(iface_r2, iface_r1)
+    g_dir.create_edge(iface_r1, iface_r3)
 
     g_dir_multi = anm.add_overlay("dir_multi", directed = True, multi_edge = True)
     g_dir_multi.copy_nodes_from(g_phy)
-    g_dir_multi.add_edges_from(([("r1", "r2")]))
-    g_dir_multi.add_edges_from(([("r1", "r2")]))
-    g_dir_multi.add_edges_from(([("r1", "r2")]))
-    g_dir_multi.add_edges_from(([("r1", "r2")]))
-    g_dir_multi.add_edges_from(([("r2", "r1")]))
-    g_dir_multi.add_edges_from(([("r2", "r1")]))
-    g_dir_multi.add_edges_from(([("r2", "r1")]))
-    g_dir_multi.add_edges_from(([("r2", "r1")]))
-    g_dir_multi.add_edges_from(([("r2", "r1")]))
-    g_dir_multi.add_edges_from(([("r1", "r3")]))
+    r1 = g_dir_multi.node('r1')
+    r2 = g_dir_multi.node('r2')
+    r3 = g_dir_multi.node('r3')
+    iface_r1 = r1.add_interface()
+    iface_r2 = r2.add_interface()
+    iface_r3 = r3.add_interface()
+    g_dir_multi.create_edge(iface_r1, iface_r2)
+    g_dir_multi.create_edge(iface_r1, iface_r2)
+    g_dir_multi.create_edge(iface_r1, iface_r2)
+    g_dir_multi.create_edge(iface_r1, iface_r2)
+    g_dir_multi.create_edge(iface_r2, iface_r1)
+    g_dir_multi.create_edge(iface_r2, iface_r1)
+    g_dir_multi.create_edge(iface_r2, iface_r1)
+    g_dir_multi.create_edge(iface_r2, iface_r1)
+    g_dir_multi.create_edge(iface_r2, iface_r1)
+    g_dir_multi.create_edge(iface_r1, iface_r3)
 
     for index, edge in enumerate(g_dir_multi.edges()):
         #print index, edge

@@ -230,7 +230,7 @@ def build_ipv6(anm):
     retain=['label', 'asn', 'allocate', 'broadcast_domain']
     for attr in retain:
         copy_node_attr_from(g_ip, g_ipv6, attr)
-    g_ipv6.add_edges_from(g_ip.edges())
+    g_ipv6.copy_edges_from(g_ip.edges())
 
     # TODO: tidy up naming consitency of secondary_loopback_block and
     # vrf_loopback_block

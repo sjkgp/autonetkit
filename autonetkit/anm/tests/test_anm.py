@@ -21,24 +21,24 @@ def test():
     positions = {'r3': (107, 250), 'r5': (380, 290), 'r1': (
         22, 50), 'r2': (377, 9), 'r4': (571, 229)}
     for node in g_in:
-        node.x = positions[node][0]
-        node.y = positions[node][1]
+        node.set('x', positions[node][0])
+        node.set('y', positions[node][1])
         eth0 = node.add_interface("eth0")
-        eth0.speed = 100
+        eth0.set('speed', 100)
 
     # node->node edges
     input_edges = [
         ("r1", "r2"), ("r2", "r4"), ("r3", "r4"), ("r3", "r5"), ("r1", "r3")]
     input_interface_edges = [(g_in.node(src).interface(
         1), g_in.node(dst).interface(1)) for src, dst in input_edges]
-    g_in.add_edges_from(input_interface_edges)
+    g_in.create_edges_from(input_interface_edges)
 
     g_phy = anm['phy']
     g_phy.copy_nodes_from(g_in)
     retain=["device_type", "x", "y", "asn"]
     for attr in retain:
         ank_utils.copy_node_attr_from(g_in, g_phy, attr)
-    g_phy.add_edges_from(g_in.edges())
+    g_phy.copy_edges_from(g_in.edges())
 
     g_test = anm.add_overlay("test")
     g_test.create_node("test_node")
@@ -163,7 +163,8 @@ def test():
     assert(g_phy.node("r1").degree() == 2)
     assert(g_phy.node("r3").degree() == 3)
 
-    g_phy.add_edge("r1", "r4")
+    g_phy.create_edge(g_phy.node('r1').add_interface(),
+                      g_phy.node('r4').add_interface())
     assert(g_phy.edge("r1", "r4") is not None)
 
     edges_to_remove = g_phy.edge("r1", "r4")
@@ -173,7 +174,7 @@ def test():
 
     src_int = g_phy.node("r1").add_interface("eth1")
     dst_int = g_phy.node("r5").add_interface("eth1")
-    g_phy.add_edges_from([(src_int, dst_int)])
+    g_phy.create_edges_from([(src_int, dst_int)])
     edge = g_phy.edge("r1", "r5")
     assert((edge.src_int, edge.dst_int) == (src_int, dst_int))
 

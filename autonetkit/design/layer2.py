@@ -20,7 +20,7 @@ class Layer2Builder(object):
         g_l1 = anm['layer1']
 
         g_l2.copy_nodes_from(g_l1)
-        g_l2.add_edges_from(g_l1.edges())
+        g_l2.copy_edges_from(g_l1.edges())
         # Don't aggregate managed switches
         for node in g_l2:
             if node['layer1'].get('collision_domain') == True:
@@ -34,7 +34,7 @@ class Layer2Builder(object):
         g_l2_conn = anm.add_overlay('layer2_conn')
         g_l2_conn.copy_nodes_from(g_l2)
         ank_utils.copy_node_attr_from(g_l2, g_l2_conn, "broadcast_domain")
-        g_l2_conn.add_edges_from(g_l2.edges())
+        g_l2_conn.copy_edges_from(g_l2.edges())
 
         broadcast_domains = g_l2_conn.nodes(broadcast_domain=True)
         exploded_edges = ank_utils.explode_nodes(g_l2_conn, broadcast_domains)
@@ -87,7 +87,7 @@ class Layer2Builder(object):
         g_l2_bc = anm.add_overlay('layer2_bc')
         g_l2_bc.copy_nodes_from(g_l2.l3devices())
         g_l2_bc.copy_nodes_from(g_l2.switches())
-        g_l2_bc.add_edges_from(g_l2.edges())
+        g_l2_bc.copy_edges_from(g_l2.edges())
 
         # remove external connectors
 
@@ -291,7 +291,7 @@ class Layer2Builder(object):
                             if n.get('device_subtype') == "managed"]
 
         g_vtp.copy_nodes_from(g_l1_conn)
-        g_vtp.add_edges_from(g_l1_conn.edges())
+        g_vtp.copy_edges_from(g_l1_conn.edges())
 
         # remove anything not a managed_switch or connected to a managed_switch
         keep = set()
@@ -377,7 +377,7 @@ class Layer2Builder(object):
 
                 # and connect from vswitch to the interfaces
                 edges_to_add = [(vlan_tp, iface) for iface in interfaces]
-                g_l2.add_edges_from(edges_to_add)
+                g_l2.create_edges_from(edges_to_add)
 
             # remove the physical switches
             g_l2.remove_nodes_from(bcs_to_trim)
@@ -402,7 +402,7 @@ class Layer2Builder(object):
 
             # TODO: ensure only once
             # TODO: filter so only one direction
-            g_vtp.add_edges_from(edges_to_add, trunk=True)
+            g_vtp.create_edges_from(edges_to_add, trunk=True)
 
         for node in g_vtp:
             node.set('vlans_by_domain', defaultdict(list))

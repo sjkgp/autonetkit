@@ -34,7 +34,7 @@ def mpls_te(anm):
                  % ', '.join(str(e) for e in multipoint_edges))
 
     edges_to_add = set(g_l3.edges()) - set(multipoint_edges)
-    g_mpls_te.add_edges_from(edges_to_add)
+    g_mpls_te.copy_edges_from(edges_to_add)
 
 
 #@call_log
@@ -171,7 +171,8 @@ def build_ibgp_vpn_v4(anm):
     g_ibgp_vpn_v4.copy_nodes_from(ibgp_vpn_v4_nodes)
     retain=["ibgp_role"]
     ank_utils.copy_node_attr_from(g_ibgp_v4, g_ibgp_vpn_v4, "ibgp_role", nbunch=ibgp_vpn_v4_nodes)
-    g_ibgp_vpn_v4.add_edges_from(g_ibgp_v4.edges(), retain="direction")
+    g_ibgp_vpn_v4.copy_edges_from(g_ibgp_v4.edges())
+    ank_utils.copy_edge_attr_from(g_ibgp_v4, g_ibgp_vpn_v4, 'direction')
 
     for node in g_ibgp_vpn_v4:
         if node.get('ibgp_role') in ("HRR", "RR"):
@@ -198,10 +199,18 @@ def build_ibgp_vpn_v4(anm):
     g_ibgpv6 = anm['ibgp_v6']
     g_ibgpv4.remove_edges_from(ce_edges)
     g_ibgpv6.remove_edges_from(ce_edges)
-    g_ibgpv4.add_edges_from(ce_pe_edges, retain=["direction", "vrf"])
-    g_ibgpv4.add_edges_from(pe_ce_edges, retain=["direction", "vrf"])
-    g_ibgpv6.add_edges_from(ce_pe_edges, retain=["direction", "vrf"])
-    g_ibgpv6.add_edges_from(pe_ce_edges, retain=["direction", "vrf"])
+    g_ibgpv4.copy_edges_from(ce_pe_edges)
+    ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_ibgpv4, 'direction', ebunch=ce_pe_edges)
+    ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_ibgpv4, 'vrf', ebunch=ce_pe_edges)
+    g_ibgpv4.copy_edges_from(pe_ce_edges)
+    ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_ibgpv4, 'direction', ebunch=pe_ce_edges)
+    ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_ibgpv4, 'vrf', ebunch=pe_ce_edges)
+    g_ibgpv6.copy_edges_from(ce_pe_edges)
+    ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_ibgpv6, 'direction', ebunch=ce_pe_edges)
+    ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_ibgpv6, 'vrf', ebunch=ce_pe_edges)
+    g_ibgpv6.copy_edges_from(pe_ce_edges)
+    ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_ibgpv6, 'direction', ebunch=pe_ce_edges)
+    ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_ibgpv6, 'vrf', ebunch=pe_ce_edges)
     for edge in pe_ce_edges:
         # mark as exclude so don't include in standard ibgp config stanzas
         if g_ibgpv4.has_edge(edge):
@@ -212,9 +221,12 @@ def build_ibgp_vpn_v4(anm):
 # legacy
     g_bgp = anm['bgp']
     g_bgp.remove_edges_from(ce_edges)
-    g_bgp.add_edges_from(ce_pe_edges, retain=["direction", "vrf", "type"])
-    g_bgp.add_edges_from(pe_ce_edges, retain=["direction", "vrf", "type"])
-
+    g_bgp.copy_edges_from(ce_pe_edges)
+    g_bgp.copy_edges_from(pe_ce_edges)
+    retain=["direction", "vrf", "type"]
+    for attr in retain:
+        ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_bgp, attr, ce_pe_edges)
+        ank_utils.copy_edge_attr_from(g_ibgp_vpn_v4, g_bgp, attr, pe_ce_edges)
     # also need to modify the ibgp_v4 and ibgp_v6 graphs
 
 #@call_log
@@ -243,16 +255,16 @@ def build_mpls_ldp(anm):
 
     pe_to_pe_edges = (e for e in g_layer3.edges()
                       if e.src in pe_nodes and e.dst in pe_nodes)
-    g_mpls_ldp.add_edges_from(pe_to_pe_edges)
+    g_mpls_ldp.copy_edges_from(pe_to_pe_edges)
 
     pe_to_p_edges = (e for e in g_layer3.edges()
                      if e.src in pe_nodes and e.dst in p_nodes
                      or e.src in p_nodes and e.dst in pe_nodes)
-    g_mpls_ldp.add_edges_from(pe_to_p_edges)
+    g_mpls_ldp.copy_edges_from(pe_to_p_edges)
 
     p_to_p_edges = (e for e in g_layer3.edges()
                     if e.src in p_nodes and e.dst in p_nodes)
-    g_mpls_ldp.add_edges_from(p_to_p_edges)
+    g_mpls_ldp.copy_edges_from(p_to_p_edges)
 
 #@call_log
 
@@ -311,7 +323,7 @@ def build_vrf(anm):
     vrf_add_edges = (e for e in g_layer3.edges()
                      if is_pe_ce_edge(e))
     # TODO: should mark as being towards PE or CE
-    g_vrf.add_edges_from(vrf_add_edges)
+    g_vrf.copy_edges_from(vrf_add_edges)
 
     def is_pe_p_edge(edge_to_check):
         if not(edge_to_check.src in g_vrf and edge_to_check.dst in g_vrf):
@@ -321,7 +333,7 @@ def build_vrf(anm):
         return (src_vrf_role, dst_vrf_role) in (("PE", "P"), ("P", "PE"))
     vrf_add_edges = (e for e in g_layer3.edges()
                      if is_pe_p_edge(e))
-    g_vrf.add_edges_from(vrf_add_edges)
+    g_vrf.copy_edges_from(vrf_add_edges)
 
     # add PE to P edges
 

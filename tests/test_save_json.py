@@ -18,7 +18,7 @@ def setup_input():
     r1_eth0 = r1.add_interface("eth0", id="eth0")
     r2_eth0 = r2.add_interface("eth0", id="eth0")
 
-    g_in.add_edge(r1_eth0, r2_eth0, type="physical")
+    g_in.create_edge(r1_eth0, r2_eth0, type="physical")
 
     print g_in.edges()
 
@@ -45,7 +45,7 @@ def test():
 
     g_phy_live = anm.add_overlay("phy_live", multi_edge=True)
     g_phy_live.copy_nodes_from(anm['phy'])
-    g_phy_live.add_edges_from(anm['phy'].edges())
+    g_phy_live.copy_edges_from(anm['phy'].edges())
     g_phy_live.data.paths = []  # to store paths onto
     ank_utils.copy_int_attr_from(anm['phy'], anm['phy_live'], "id")
 
@@ -66,7 +66,7 @@ def test():
     r2_ospf = g_ospf_live.node("r2")
     r1_eth0_ospf = r1_ospf.interface("eth0")
     r2_eth0_ospf = r2_ospf.interface("eth0")
-    g_ospf_live.add_edge(r1_eth0_ospf, r2_eth0_ospf)
+    g_ospf_live.create_edge(r1_eth0_ospf, r2_eth0_ospf)
 
     r1_ospf_lo101 = r1_ospf.add_interface(
         "Loopback102", category="logical")
