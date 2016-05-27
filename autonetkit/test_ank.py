@@ -259,7 +259,9 @@ class TestAnk(unittest.TestCase):
         result = ank_utils.connected_subgraphs(g_phy)
         expected_result = [[r4, r5, r1, r2, r3]]
         self.assertListEqual(expected_result, result)
-        edges = [("r2", "r4"), ("r3", "r5")]
+        edge_1 = g_phy.edge(r2, r4)
+        edge_2 = g_phy.edge(r3, r5)
+        edges = [edge_1, edge_2]
         g_phy.remove_edges_from(edges)
         result = ank_utils.connected_subgraphs(g_phy)
         expected_result = [[r1, r2, r3], [r4, r5]]

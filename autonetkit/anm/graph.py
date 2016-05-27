@@ -183,21 +183,19 @@ class NmGraph(OverlayBase):
         self.remove_node(key)
 
     def remove_nodes_from(self, nbunch):
-        """Removes set of nodes from nbunch"""
+        """Removes set of nodes from nbunch. Node in nbunch has to be
+        instance of NmNode class.
+        """
+        for n in nbunch:
+            self.remove_node(n)
 
-        try:
-            nbunch = unwrap_nodes(nbunch)
-        except AttributeError:
-            pass  # don't need to unwrap
-
-        self._graph.remove_nodes_from(nbunch)
-
-    def remove_node(self, node_id):
-        """Removes a node from the overlay"""
-        if isinstance(node_id, NmNode):
-            node_id = node_id.node_id
-
-        self._graph.remove_node(node_id)
+    def remove_node(self, node):
+        """Removes a NmNode instance from the overlay"""
+        node_id = node.node_id
+        if node_id in self:
+            self._graph.remove_node(node_id)
+        else:
+            log.debug('Node %s not present in graph', node_id)
 
     def create_edge(self, src, dst, **kwargs):
         data = {'_ports': {}}
@@ -250,19 +248,14 @@ class NmGraph(OverlayBase):
         return NmEdge(self.anm, self._overlay_id, src, dst)
 
     def remove_edge(self, edge):
+        """Removes NmEdge instance from overlay"""
         nx_edge = unwrap_edge(edge)
         self._graph.remove_edge(*nx_edge)
 
     def remove_edges_from(self, ebunch):
         """Removes set of edges from ebunch"""
-
-        try:
-            nx_ebunch = unwrap_edges(ebunch)
-        except AttributeError:
-            pass  # don't need to unwrap
-            nx_ebunch = ebunch
-
-        self._graph.remove_edges_from(nx_ebunch)
+        for edge in ebunch:
+            self.remove_edge(edge)
 
     def create_edges_from(self, ebunch, bidirectional=False, **kwargs):
         edges = []
