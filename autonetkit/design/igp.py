@@ -15,8 +15,12 @@ def build_igp(anm):
     igp_protocols = ["ospf", "eigrp", "isis", "rip"]
     for protocol in igp_protocols:
         g_protocol = anm[protocol]
-        g_igp.copy_nodes_from(g_protocol, igp=protocol)
-        g_igp.copy_edges_from(g_protocol.edges(), igp=protocol)
+        new_nodes = g_igp.copy_nodes_from(g_protocol)
+        for n in new_nodes:
+            n.set('igp', protocol)
+        new_edges = g_igp.copy_edges_from(g_protocol.edges())
+        for e in new_edges:
+            e.set('igp', protocol)
 
 #@call_log
 

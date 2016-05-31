@@ -45,17 +45,17 @@ class NmGraph(OverlayBase):
             edge = (overlay_id, self._overlay_id)
             g_deps.add_edges_from([edge])
 
-    def create_nodes_from(self, nbunch, **kwargs):
+    def create_nodes_from(self, nbunch):
         nbunch = [n for n in nbunch if n not in self._graph]
-
         for n in nbunch:
-            self.create_node(n, **kwargs)
+            self.create_node(n)
 
-    def copy_nodes_from(self, nbunch, **kwargs):
+    def copy_nodes_from(self, nbunch):
         nbunch = [n for n in nbunch if n not in self._graph]
-
+        new_nodes = []
         for n in nbunch:
-            self.copy_node(n, **kwargs)
+            new_nodes.append(self.copy_node(n))
+        return new_nodes
 
     def _copy_interfaces(self, node):
         """Copies ports from one overlay to another"""
@@ -124,16 +124,16 @@ class NmGraph(OverlayBase):
                         phy_interfaces)
             self._graph.node[node]['_ports'] = data
 
-    def create_node(self, node, **kwargs):
-        return self._add_node(node, **kwargs)
+    def create_node(self, node):
+        return self._add_node(node)
 
-    def copy_node(self, node, **kwargs):
-        return self._add_node(node.node_id, **kwargs)
+    def copy_node(self, node):
+        return self._add_node(node.node_id)
 
-    def _add_node(self, node, **kwargs):
+    def _add_node(self, node):
         # TODO: label workaround
         data = {'label': node}
-        self._graph.add_nodes_from([(node, data)], **kwargs)
+        self._graph.add_nodes_from([(node, data)])
         self._copy_interfaces(node)
         return NmNode(self.anm, self._overlay_id, node)
 
@@ -197,7 +197,7 @@ class NmGraph(OverlayBase):
         else:
             log.debug('Node %s not present in graph', node_id)
 
-    def create_edge(self, src, dst, **kwargs):
+    def create_edge(self, src, dst):
         data = {'_ports': {}}
         src_id = src.node.node_id
         dst_id = dst.node.node_id
@@ -207,11 +207,10 @@ class NmGraph(OverlayBase):
         if dst in self:
             ports[dst_id] = dst.interface_id
         data['_ports'] = ports
-        data.update(**kwargs)
 
         return self._add_edge(src_id, dst_id, data=data)
 
-    def copy_edge(self, edge, reverse=False, **kwargs):
+    def copy_edge(self, edge, reverse=False):
         ekey = edge.ekey  # explictly set ekey
         src = edge.src.node_id
         dst = edge.dst.node_id
@@ -220,7 +219,6 @@ class NmGraph(OverlayBase):
                  if k in self._graph}  # only if exists in this overlay
         # TODO: debug log if skipping a binding?
         data = {'_ports': ports}
-        data.update(**kwargs)
         if reverse:
             return self._add_edge(dst, src, data, ekey)
         return self._add_edge(src, dst, data, ekey)
@@ -257,26 +255,26 @@ class NmGraph(OverlayBase):
         for edge in ebunch:
             self.remove_edge(edge)
 
-    def create_edges_from(self, ebunch, bidirectional=False, **kwargs):
+    def create_edges_from(self, ebunch, bidirectional=False):
         edges = []
         for in_edge in ebunch:
-            new_edge = self.create_edge(in_edge[0], in_edge[1], **kwargs)
+            new_edge = self.create_edge(in_edge[0], in_edge[1])
             if new_edge:
                 edges.append(new_edge)
             if bidirectional:
-                new_edge = self.create_edge(in_edge[1], in_edge[0], **kwargs)
+                new_edge = self.create_edge(in_edge[1], in_edge[0])
                 if new_edge:
                     edges.append(new_edge)
         return edges
 
-    def copy_edges_from(self, ebunch, bidirectional=False, **kwargs):
+    def copy_edges_from(self, ebunch, bidirectional=False):
         edges = []
         for in_edge in ebunch:
-            new_edge = self.copy_edge(in_edge, **kwargs)
+            new_edge = self.copy_edge(in_edge)
             if new_edge:
                 edges.append(new_edge)
             if bidirectional:
-                new_edge = self.copy_edge(in_edge, reverse=True, **kwargs)
+                new_edge = self.copy_edge(in_edge, reverse=True)
                 if new_edge:
                     edges.append(new_edge)
         return edges

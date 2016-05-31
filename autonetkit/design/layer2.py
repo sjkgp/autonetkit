@@ -402,7 +402,9 @@ class Layer2Builder(object):
 
             # TODO: ensure only once
             # TODO: filter so only one direction
-            g_vtp.create_edges_from(edges_to_add, trunk=True)
+            new_edges = g_vtp.create_edges_from(edges_to_add)
+            for e in new_edges:
+                e.set('trunk', True)
 
         for node in g_vtp:
             node.set('vlans_by_domain', defaultdict(list))

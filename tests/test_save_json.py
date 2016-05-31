@@ -9,16 +9,20 @@ def setup_input():
 
     g_in = anm.add_overlay("input")
 
-    r1 = g_in.create_node("r1", x=100, y=100)
-    r2 = g_in.create_node("r2", x=250, y=250)
-
+    r1 = g_in.create_node("r1")
+    r2 = g_in.create_node("r2")
+    r1.set('x', 100)
+    r1.set('y', 100)
+    r2.set('x', 250)
+    r2.set('y', 250)
     g_in.update(device_type="router")
     g_in.update(asn=1)
 
     r1_eth0 = r1.add_interface("eth0", id="eth0")
     r2_eth0 = r2.add_interface("eth0", id="eth0")
 
-    g_in.create_edge(r1_eth0, r2_eth0, type="physical")
+    new_edge = g_in.create_edge(r1_eth0, r2_eth0)
+    new_edge.set('type', 'physical')
 
     print g_in.edges()
 

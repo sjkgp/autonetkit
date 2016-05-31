@@ -82,7 +82,9 @@ def build_ebgp(anm):
     ank_utils.copy_int_attr_from(g_l3, g_ebgp, "multipoint")
 
     ebgp_edges = [e for e in g_l3.edges() if e.src.get('asn') != e.dst.get('asn')]
-    g_ebgp.copy_edges_from(ebgp_edges, bidirectional=True, type='ebgp')
+    new_edges = g_ebgp.copy_edges_from(ebgp_edges, bidirectional=True)
+    for e in new_edges:
+        e.set('type', 'ebgp')
 
 def build_ibgp(anm):
     g_in = anm['input']
@@ -199,9 +201,18 @@ def build_ibgp(anm):
         up_links = [(s.loopback_zero, t.loopback_zero) for s, t in up_links if s != t]
         down_links = [(s.loopback_zero, t.loopback_zero) for s, t in down_links if s != t]
 
-        g_bgp.create_edges_from(over_links, type='ibgp', direction='over')
-        g_bgp.create_edges_from(up_links, type='ibgp', direction='up')
-        g_bgp.create_edges_from(down_links, type='ibgp', direction='down')
+        new_edges = g_bgp.create_edges_from(over_links)
+        for e in new_edges:
+            e.set('type', 'ibgp')
+            e.set('direction', 'over')
+        new_edges = g_bgp.create_edges_from(up_links)
+        for e in new_edges:
+            e.set('type', 'ibgp')
+            e.set('direction', 'up')
+        new_edges = g_bgp.create_edges_from(down_links)
+        for e in new_edges:
+            e.set('type', 'ibgp')
+            e.set('direction', 'down')
 
 def build_bgp(anm):
     """Build iBGP end eBGP overlays"""
