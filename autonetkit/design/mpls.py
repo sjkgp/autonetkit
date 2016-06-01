@@ -123,8 +123,8 @@ def add_vrf_loopbacks(g_vrf):
         node.set('rd_indices', {})
         for index, vrf_name in enumerate(node_vrf_names, 1):
             node.get('rd_indices')[vrf_name] = index
-            node.add_loopback(vrf_name=vrf_name,
-                              description="loopback for vrf %s" % vrf_name)
+            iface = node.add_loopback(description="loopback for vrf %s" % vrf_name)
+            iface.set('vrf_name', vrf_name)
 
 #@call_log
 

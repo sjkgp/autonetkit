@@ -163,12 +163,12 @@ class NmPort(AnkElement):
     def is_loopback(self):
         return self.category == 'loopback' or self.phy.category == 'loopback'
 
+
     @property
     def is_physical(self):
         """ Check if interface is physical """
 
         return self.category == 'physical' or self.phy.category == 'physical'
-
     @property
     def description(self):
         """Returns description of interface

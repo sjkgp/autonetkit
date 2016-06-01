@@ -147,15 +147,12 @@ class NmNode(AnkElement):
 
     # TODO: interface function access needs to be cleaned up
 
-    def _add_interface(self, description=None, category='physical',
-                       **kwargs):
-
-        data = dict(kwargs)
+    def _add_interface(self, description=None, category='physical'):
+        data = {}
 
         if self.overlay_id != 'phy' and self['phy']:
-            next_id = self['phy']._next_int_id()
-            self['phy']._ports[next_id] = {'category': category,
-                                           'description': description}
+            next_id = self['phy']._add_interface(category=category,
+                                              description=description)
 
             # TODO: fix this workaround for not returning description from phy
             # graph
@@ -202,22 +199,24 @@ class NmNode(AnkElement):
 
             o_node._ports[interface_id] = {"category": "loopback"}
 
-    def add_loopback(self, *args, **kwargs):
+    def add_loopback(self, description=None):
         '''Public function to add a loopback interface'''
-        interface_id = self._add_interface(category='loopback', *args,
-                                           **kwargs)
+        interface_id = self._add_interface(category='loopback',
+                                           description=description)
 
         # TODO: want to add loopbacks to all overlays the node is in
         self._sync_loopbacks(interface_id)
         return NmPort(self.anm, self.overlay_id,
                       self.node_id, interface_id)
 
-    def add_interface(self, *args, **kwargs):
+    def add_interface(self, description=None, category='physical', id=None):
         """Public function to add interface"""
-
-        interface_id = self._add_interface(*args, **kwargs)
-        return NmPort(self.anm, self.overlay_id,
-                      self.node_id, interface_id)
+        interface_id = self._add_interface(description, category)
+        interface = NmPort(self.anm, self.overlay_id,
+                           self.node_id, interface_id)
+        if id is not None:
+            interface.set('id', id)
+        return interface
 
     def interfaces(self, *args, **kwargs):
         """Public function to view interfaces"""
