@@ -55,6 +55,7 @@ class MyWebHandler(tornado.web.RequestHandler):
             logging.info("Updating listeners")
             for listener in uuid_socket_listeners:
                 listener.update_overlay()
+                listener.update_metadata()
 
         elif data_type == "highlight":
             body_parsed = json.loads(data)
@@ -113,12 +114,19 @@ class MyWebSocketHandler(websocket.WebSocketHandler):
                 pass  # TODO: send error code to websocket
             else:
                 self.write_message(body)
+
+        elif "metadata" in message:
+            metadata = self.ank_accessor.get_metadata(self.uuid)
+            body = json.dumps(metadata)
+            self.write_message(body)
         elif "ip_allocations" in message:
             pass
 
     def update_overlay(self):
+        print "ipdate overlau"
         try:
-            body = self.ank_accessor.get_overlay(self.uuid, self.overlay_id) or {}
+            body = self.ank_accessor.get_overlay(
+                self.uuid, self.overlay_id) or {}
         except OverlayNotFound:
             body = {"nodes": [],
                     "links": [],
@@ -136,6 +144,12 @@ class MyWebSocketHandler(websocket.WebSocketHandler):
         else:
             self.write_message(body)
 
+    def update_metadata(self):
+        print "UPDATE META"
+        metadata = self.ank_accessor.get_metadata(self.uuid)
+        body = json.dumps(metadata)
+        self.write_message(body)
+
 
 class AnkAccessor():
 
@@ -144,6 +158,7 @@ class AnkAccessor():
     def __init__(self, maxlen=25, simplified_overlays=False, singleuser_data=None):
         from collections import deque
         self.anm_index = {}
+        self.metadata_index = {}
         self.uuid_list = deque(maxlen=maxlen)  # use for circular buffer
         self.anm = {}
         self.ip_allocation = {}
@@ -175,6 +190,10 @@ class AnkAccessor():
         logging.info("Storing overlay_input with UUID %s" % uuid)
 
         # TODO: move the labels handling to client side now?
+        metadata = overlay_input["_metadata"]
+        self.metadata_index[uuid] = {"metadata": metadata}
+
+        del overlay_input["_metadata"]
 
         if self.simplified_overlays:
             overlays_tidied = {}
@@ -246,6 +265,9 @@ class AnkAccessor():
         self.uuid_list.append(uuid)
         logging.info("Stored overlay with UUID %s" % uuid)
         self.anm_index[uuid] = overlays_tidied
+
+    def get_metadata(self, uuid):
+        return self.metadata_index.get(uuid, {})
 
     def get_overlay(self, uuid, overlay_id):
         logging.info("Getting overlay %s with UUID %s" % (overlay_id, uuid))
@@ -344,7 +366,8 @@ class ThreeDHandler(tornado.web.RequestHandler):
     def get(self):
         # if not set, use default uuid of "singleuser"
         uuid = self.get_argument("uuid", "singleuser")
-        overlays_to_load = ['phy', 'layer1', 'layer2', "igp", "ibgp_v4", "ebgp_v4"]
+        overlays_to_load = ['phy', 'layer1',
+                            'layer2', "igp", "ibgp_v4", "ebgp_v4"]
         uuid = self.get_argument("uuid", "singleuser")
 
         logging.info("Rendering template with uuid %s" % uuid)
@@ -450,7 +473,7 @@ def main():
 
     logging.getLogger().setLevel(logging.INFO)
     application.vis_engine_version = VIS_ENGINE_VERSION
-    #TODO: refactor to remove this from needing to be passed to each handler
+    # TODO: refactor to remove this from needing to be passed to each handler
     application.ank_accessor = ank_accessor
 
     from collections import defaultdict

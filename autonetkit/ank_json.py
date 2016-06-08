@@ -31,7 +31,7 @@ class AnkEncoder(json.JSONEncoder):
         if isinstance(obj, netaddr.IPNetwork):
             return str(obj)
         if isinstance(obj, netaddr.EUI):
-            #TODO: also want to restore MAC addresses when parsing (regex)
+            # TODO: also want to restore MAC addresses when parsing (regex)
             return str(obj)
         if isinstance(obj, autonetkit.nidb.node.DmNode):
             # TODO: need to unserialize nidb nodes...
@@ -210,6 +210,8 @@ def prepare_json_anm_nidb(anm, nidb=None):
     graphics_graph = anm["graphics"]._graph.copy()
     phy_graph = anm["phy"]._graph  # to access ASNs
 
+    annotations = anm["input"].data.annotations
+
     """simple layout of deps - more advanced layout could
     export to dot and import to omnigraffle, etc
     """
@@ -281,9 +283,10 @@ def prepare_json_anm_nidb(anm, nidb=None):
     for node in anm['phy']:
         phy_int_ids[node.node_id] = {}
         for interface in node.interfaces():
-            int_name = interface.get("id") or interface.get("description") #TODO: handle loopbacks here
+            int_name = interface.get("id") or interface.get(
+                "description")  # TODO: handle loopbacks here
             phy_int_ids[node.node_id][interface.interface_id] = {"id": int_name,
-                                        "id_brief": shortened_interface(int_name)}
+                                                                 "id_brief": shortened_interface(int_name)}
 
     for overlay_id in overlay_ids:
         try:
@@ -370,26 +373,30 @@ def prepare_json_anm_nidb(anm, nidb=None):
                     try:
                         ports = dict(nm_graph.node[node]["_ports"])
                     except KeyError:
-                        pass #TODO: log to debug
+                        pass  # TODO: log to debug
                     else:
                         for index in ports:
                             pass
-                            #TODO: check what this code was used for - and if still needed using new repr formats relates to VIRLDEV-3247
+                            # TODO: check what this code was used for - and if
+                            # still needed using new repr formats relates to
+                            # VIRLDEV-3247
                             ports[index].update(phy_int_ids[node][index])
 
                 elif overlay_id == "graphics":
-                    pass #TODO: remove this workaround once retire graphics overlay
+                    pass  # TODO: remove this workaround once retire graphics overlay
                 else:
                     anm_node = anm[overlay_id].node(node)
                     ports = nm_graph.node[node]["_ports"]
                     for interface in anm_node.interfaces():
-                        int_name = interface.get("id") or "" #TODO: handle loopbacks here
-                        data = {"id": int_name, "id_brief": shortened_interface(int_name)}
+                        # TODO: handle loopbacks here
+                        int_name = interface.get("id") or ""
+                        data = {"id": int_name,
+                                "id_brief": shortened_interface(int_name)}
                         try:
                             # ports[index].update(data)
-                            pass # needs to be port index?
+                            pass  # needs to be port index?
                         except KeyError:
-                            pass #TODO warn
+                            pass  # TODO warn
 
             else:
                 nidb_graph = nidb.raw_graph()
@@ -422,6 +429,9 @@ def prepare_json_anm_nidb(anm, nidb=None):
 
     if nidb:
         test_anm_data['nidb'] = prepare_nidb(nidb)
+
+    # add in annotations
+    test_anm_data["_metadata"] = {"annotations": annotations}
 
     return test_anm_data
 
