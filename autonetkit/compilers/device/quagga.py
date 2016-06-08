@@ -1,11 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from autonetkit.compilers.device.router_base import RouterCompiler
-from autonetkit.nidb import ConfigStanza
 
 
 class QuaggaCompiler(RouterCompiler):
-
     """Base Quagga compiler"""
 
     lo_interface = 'lo:1'
@@ -27,7 +25,7 @@ class QuaggaCompiler(RouterCompiler):
         if phy_node.is_l3device():
             node.loopback_zero.id = self.lo_interface
             node.loopback_zero.description = 'Loopback'
-            node.loopback_zero.ipv4_address = ipv4_node.loopback
+            node.loopback_zero.ipv4_address = ipv4_node.get('loopback')
             node.loopback_zero.ipv4_subnet = node.loopback_subnet
 
     def ospf(self, node):
@@ -37,7 +35,7 @@ class QuaggaCompiler(RouterCompiler):
 
         # add eBGP link subnets
 
-        node.ospf.passive_interfaces = []
+        node.ospf['passive_interfaces'] = []
 
         for interface in node.physical_interfaces():
             if interface.exclude_igp:
@@ -46,13 +44,11 @@ class QuaggaCompiler(RouterCompiler):
             if self.anm.has_overlay('ebgp_v4'):
                 bgp_int = self.anm['ebgp_v4'].interface(interface)
                 if bgp_int.is_bound:  # ebgp interface
-                    node.ospf.passive_interfaces.append(
-                        ConfigStanza(id=interface.id))
-                    subnet = bgp_int['ipv4'].subnet
+                    node.ospf['passive_interfaces'].append({'id': interface.id})
+                    subnet = bgp_int['ipv4'].get('subnet')
                     default_ebgp_area = 0
-                    node.ospf.ospf_links.append(
-                        ConfigStanza(network=subnet,
-                                     area=default_ebgp_area))
+                    node.ospf['ospf_links'].append({'network': subnet,
+                                                    'area': default_ebgp_area})
 
     def isis(self, node):
         """Sets ISIS links
@@ -60,5 +56,5 @@ class QuaggaCompiler(RouterCompiler):
 
         g_isis = self.anm['isis']
         isis_node = g_isis.node(node)
-        node.isis.net = isis_node.net
-        node.isis.process_id = isis_node.process_id
+        node.isis['net'] = isis_node.get('net')
+        node.isis['process_id'] = isis_node.get('process_id')

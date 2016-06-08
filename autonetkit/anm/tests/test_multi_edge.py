@@ -54,7 +54,7 @@ def test():
 
     for index, edge in enumerate(g_me.edges()):
         #print index, edge
-        edge.index = "i_%s" % index
+        edge.set('index', "i_%s" % index)
 
     for edge in r1.edges():
         #print edge, edge.index
@@ -90,7 +90,7 @@ def test():
     print "add", len(g_me.edges())
     g_me2.add_edges_from(g_me.edges(), retain = "index")
     for edge in g_me2.edges():
-        print edge, edge.index
+        print edge, edge.get('index')
 
     # examine underlying nx structure
 
@@ -125,7 +125,7 @@ def test():
 
     for index, edge in enumerate(g_dir_multi.edges()):
         #print index, edge
-        edge.index = "i_%s" % index
+        edge.set('index', "i_%s" % index)
 
     from networkx.readwrite import json_graph
     import json

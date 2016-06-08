@@ -3,8 +3,6 @@
 import json
 
 import autonetkit.ank as ank_utils
-import autonetkit.ank_json
-import autonetkit.ank_messaging
 import autonetkit.log as log
 import netaddr
 
@@ -58,7 +56,7 @@ def allocate_loopbacks(g_ip, address_block=None):
         loopback_hosts.next()
         l3hosts = set(d for d in devices if d.is_l3device())
         for host in sorted(l3hosts, key=lambda x: x.label):
-            host.loopback = loopback_hosts.next()
+            host.set('loopback', loopback_hosts.next())
 
     g_ip.data.loopback_blocks = dict((asn, [subnet]) for (asn,
                                                           subnet) in loopback_blocks.items())
@@ -69,8 +67,8 @@ def allocate_infra(g_ip, address_block=None):
     if not address_block:
         address_block = netaddr.IPNetwork('2001:DB8:a::')
 
-# TODO: check if need to do network address... possibly only for
-# loopback_pool and infra_pool so maps to asn
+    # TODO: check if need to do network address... possibly only for
+    # loopback_pool and infra_pool so maps to asn
 
     infra_pool = address_block.subnet(80)
 
@@ -87,8 +85,8 @@ def allocate_infra(g_ip, address_block=None):
         subnets.next()  # network address
         ptp_subnet = subnets.next().subnet(126)
         ptp_subnet.next()  # network address
-        all_bcs = set(d for d in devices if d.broadcast_domain
-                      and d.allocate)
+        all_bcs = set(d for d in devices if d.get('broadcast_domain')
+                      and d.get('allocate'))
         ptp_bcs = [bc for bc in all_bcs if bc.degree() == 2]
 
         for bc in sorted(ptp_bcs):
@@ -99,8 +97,8 @@ def allocate_infra(g_ip, address_block=None):
             bc.subnet = subnet
             # TODO: check: should sort by default on dst as tie-breaker
             for iface in sorted(bc.neighbor_interfaces()):
-                iface.ip_address = hosts.next()
-                iface.subnet = subnet
+                iface.set('ip_address', hosts.next())
+                iface.set('subnet', subnet)
 
         non_ptp_cds = all_bcs - set(ptp_bcs)
 
@@ -111,11 +109,11 @@ def allocate_infra(g_ip, address_block=None):
             hosts = subnet.iter_hosts()
             # drop .0 as a host address (valid but can be confusing)
             hosts.next()
-            bc.subnet = subnet
+            bc.set('subnet', subnet)
             # for edge in sorted(bc.edges(), key=lambda x: x.dst.label):
             for iface in sorted(bc.neighbor_interfaces()):
-                iface.ip_address = hosts.next()
-                iface.subnet = subnet
+                iface.set('ip_address', hosts.next())
+                iface.set('subnet', subnet)
 
     g_ip.data.infra_blocks = dict((asn, [subnet]) for (asn, subnet) in
                                   infra_blocks.items())
@@ -147,8 +145,8 @@ def allocate_secondary_loopbacks(g_ip, address_block=None):
         # drop .0 as a host address (valid but can be confusing)
         secondary_loopback_hosts.next()
         for interface in sorted(secondary_loopbacks):
-            interface.loopback = secondary_loopback_hosts.next()
-            interface.subnet = netaddr.IPNetwork("%s/128" % interface.loopback)
+            interface.set('loopback', secondary_loopback_hosts.next())
+            interface.set('subnet', netaddr.IPNetwork("%s/128" % interface.get('loopback')))
 
 
 def allocate_ips(G_ip, infra_block=None, loopback_block=None, secondary_loopback_block=None):

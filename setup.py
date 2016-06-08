@@ -4,7 +4,7 @@ import sys
 
 setup (
      name = "autonetkit",
-     version = "0.21.4",
+     version = "0.22.4",
      description = 'Automatic configuration generation for emulated networks',
      long_description = 'Automatic configuration generation for emulated networks',
 
@@ -34,6 +34,7 @@ setup (
          'networkx==1.7',
          'configobj==4.7.1',
          'tornado',
+         "jinja2==2.8"
          #'textfsm', 'pika',
          # 'exscript==0.0.1'
          ],

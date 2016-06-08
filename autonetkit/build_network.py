@@ -109,7 +109,7 @@ def check_server_asns(anm):
 
     for server in g_phy.servers():
         # TODO: remove now have external_connector device_type?
-        if server.device_subtype in ("SNAT", "FLAT"):
+        if server.get('device_subtype') in ("SNAT", "FLAT"):
             continue  # Don't warn on ASN for NAT elements
         l3_neighbors = list(server['layer3'].neighbors())
         l3_neighbor_asns = set(n.asn for n in l3_neighbors)
@@ -122,14 +122,14 @@ def check_server_asns(anm):
 
             if len(l3_neighbors) == 1:
                 # single ASN of neighbor -> auto correct
-                if server['input'].default_asn:
+                if server['input'].get('default_asn'):
                     neigh_asn = l3_neighbor_asns.pop()
                     log.warning("Updating server %s AS from %s"
-                                " to %s", server, server.asn, neigh_asn)
-                    server.asn = neigh_asn
+                                " to %s", server, server.get('asn'), neigh_asn)
+                    server.set('asn', neigh_asn)
                 else:
                     log.info("Server %s ASN %s explictly set by user, "
-                             "not auto-correcting", server, server.asn)
+                             "not auto-correcting", server, server.get('asn'))
 
 
 class DesignRulesApplicator(object):
@@ -277,24 +277,24 @@ def build_phy(anm):
     g_phy.data.infrastructure_only = g_in.data.infrastructure_only
 
     for node in g_phy:
-        if node['input'].custom_config_loopback_zero:
-            lo_zero_config = node['input'].custom_config_loopback_zero
+        if node['input'].get('custom_config_loopback_zero'):
+            lo_zero_config = node['input'].get('custom_config_loopback_zero')
             node.loopback_zero.custom_config = lo_zero_config
-        custom_config_phy_ints = node['input'].custom_config_phy_ints
+        custom_config_phy_ints = node['input'].get('custom_config_phy_ints')
         for interface in node:
             if custom_config_phy_ints:
-                interface.custom_config = custom_config_phy_ints
+                interface.set('custom_config', custom_config_phy_ints)
             specified_id = interface['input'].get("specified_id")
             if specified_id:
-                interface.specified_id = specified_id  # map across
+                interface.set('specified_id', specified_id) # map across
 
     # TODO: tidy this code up
     for node in g_phy:
         for interface in node:
             remote_edges = interface.edges()
             if len(remote_edges):
-                interface.description = 'to %s' \
-                    % remote_edges[0].dst.label
+                interface.set('description', 'to %s' \
+                    % remote_edges[0].dst.label)
 
 
 def build_conn(anm):

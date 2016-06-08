@@ -2,7 +2,7 @@
 AutoNetkit Utilities
 """
 
-#from anm import overlay_node, overlay_edge
+# from anm import overlay_node, overlay_edge
 import autonetkit
 
 
@@ -13,6 +13,8 @@ def call_log(fn, *args, **kwargs):
 
     return decorator
 
+
+#TODO: add an unwrap node for consistency
 
 def unwrap_nodes(nodes):
     """Unwrap nodes"""
@@ -28,16 +30,17 @@ def unwrap_nodes(nodes):
                 else node
                 for node in nodes]  # treat as list
 
+def unwrap_edge(edge):
+    if edge.is_multigraph():
+        return (edge.src_id, edge.dst_id, edge.ekey)
+    else:
+        return (edge.src_id, edge.dst_id)
 
 def unwrap_edges(edges):
     """Unwrap edges"""
     retval = []
     for edge in edges:
-        if edge.is_multigraph():
-            retval.append((edge.src_id, edge.dst_id, edge.ekey))
-        else:
-            retval.append((edge.src_id, edge.dst_id))
-
+        retval.append(unwrap_edge(edge))
     return retval
 
 
@@ -48,7 +51,7 @@ def unwrap_graph(nm_graph):
 
 def alphabetical_sort(l):
     """From http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python"""
-# TODO: fix as currently only handles strings - not objects with repr?
+    # TODO: fix as currently only handles strings - not objects with repr?
     import re
     """ Sort the given iterable in the way that humans expect."""
     convert = lambda text: int(text) if text.isdigit() else text
@@ -58,8 +61,8 @@ def alphabetical_sort(l):
 
 def wrap_nodes(nm_graph, nodes):
     """ wraps node id into node overlay """
-# TODO: remove duplicate of this in ank.py
-    return (autonetkit.anm.overlay_node(nm_graph._anm, nm_graph._overlay_id, node)
+    # TODO: remove duplicate of this in ank.py
+    return (autonetkit.anm.NmNode(nm_graph._anm, nm_graph._overlay_id, node)
             for node in nodes)
 
 

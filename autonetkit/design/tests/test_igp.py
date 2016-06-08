@@ -1,8 +1,18 @@
+import unittest
+from netaddr import IPAddress
 import autonetkit
 import autonetkit.design.igp
 from mock import patch
 from autonetkit.build_network import DesignRulesApplicator
 
+
+class TestIgp(unittest.TestCase):
+    def test_ip_to_net_ent_title_ios(self):
+        fun = autonetkit.design.igp.ip_to_net_ent_title_ios
+        result = fun(IPAddress("192.168.19.1"))
+        expected_result = '49.1921.6801.9001.00'
+        self.assertEqual(expected_result, result)
+    # TODO: move all function to unittest
 
 def build_layer3():
     anm = autonetkit.topos.house()
@@ -18,7 +28,7 @@ def test_ospf():
     anm['phy'].data.enable_routing = True
 
     for node in anm['phy']:
-        node.igp = "ospf"
+        node.set('igp',"ospf")
 
     autonetkit.design.igp.build_ospf(anm)
 
@@ -38,7 +48,7 @@ def test_rip():
     anm['phy'].data.enable_routing = True
 
     for node in anm['phy']:
-        node.igp = "rip-v2"
+        node.set('igp', "rip-v2")
 
     autonetkit.design.igp.build_rip(anm)
 
@@ -58,7 +68,7 @@ def test_eigrp():
     anm['phy'].data.enable_routing = True
 
     for node in anm['phy']:
-        node.igp = "eigrp"
+        node.set('igp', "eigrp")
 
     autonetkit.design.igp.build_eigrp(anm)
 
@@ -78,7 +88,6 @@ def test_eigrp_no_isis_set():
     autonetkit.design.igp.build_eigrp(anm)
 
 def net_side_effect(anm):
-    import netaddr
     g_isis = anm['isis']
     #Note: this only mocks up to 255
     import itertools
@@ -94,7 +103,7 @@ def test_isis():
     # isis also needs ipv4 to allocate the OSI addresses
 
     for node in anm['phy']:
-        node.igp = "isis"
+        node.set('igp', "isis")
 
 #@patch("", side_effect=net_side_effect)
     with patch("autonetkit.design.igp.build_network_entity_title",
@@ -123,7 +132,7 @@ def test_multi_igp():
 
     igps = {"r1": "ospf", "r2": "ospf", "r3": "ospf", "r4": "isis", "r5": "isis"}
     for label, igp in igps.items():
-        g_phy.node(label).igp = igp
+        g_phy.node(label).set('igp', igp)
 
     with patch("autonetkit.design.igp.build_network_entity_title",
         side_effect = net_side_effect):

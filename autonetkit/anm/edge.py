@@ -16,16 +16,16 @@ class NmEdge(AnkElement):
 
     def __init__(self, anm, overlay_id, src_id, dst_id, ekey=0):
 
-        object.__setattr__(self, 'anm', anm)
-        object.__setattr__(self, 'overlay_id', overlay_id)
-        object.__setattr__(self, 'src_id', src_id)
-        object.__setattr__(self, 'dst_id', dst_id)
-        object.__setattr__(self, 'ekey', ekey)  # for multigraphs
+        self.anm = anm
+        self.overlay_id = overlay_id
+        self.src_id = src_id
+        self.dst_id = dst_id
+        self.ekey = ekey  # for multigraphs
         #logger = logging.getLogger("ANK")
         #logstring = "Interface: %s" % str(self)
         #logger = CustomAdapter(logger, {'item': logstring})
         logger = log
-        object.__setattr__(self, 'log', logger)
+        self.log = logger
         self.init_logging("edge")
 
 
@@ -37,79 +37,19 @@ class NmEdge(AnkElement):
         return (self.src_id, self.dst_id)
 
     def __hash__(self):
-        """Return a hash of a key
-        #TODO: check if we care to check the hash value
-
-        >>> anm = autonetkit.topos.multi_edge()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> hash(edge)
-        -5246091905943233080
-        """
-
+        """Return a hash of a key"""
         return hash(self.__key())
 
     def is_multigraph(self):
-        """Returns graph that is multigraph
-
-        >>> anm = autonetkit.topos.multi_edge()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.is_multigraph()
-        True
-        >>> edge = anm['phy'].edge("r2", "r3")
-        >>> edge.is_multigraph()
-        True
-        >>> anm = autonetkit.topos.house()
-        >>> e1 = anm['phy'].edge("r1", "r2")
-        >>> e1.is_multigraph()
-        False
-
-        """
+        """Returns graph that is multigraph"""
         return self._graph.is_multigraph()
 
     def is_parallel(self):
-        """If there is more than one edge between the src, dst of this edge
-
-        >>> anm = autonetkit.topos.multi_edge()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.is_parallel()
-        True
-        >>> edge = anm['phy'].edge("r2", "r3")
-        >>> edge.is_parallel()
-        False
-
-
-        """
+        """If there is more than one edge between the src, dst of this edge"""
         # TODO: check this for digraph, multiidigraph
         return self._overlay().number_of_edges(self.src, self.dst) > 1
 
     def __eq__(self, other):
-        """
-
-        >>> anm = autonetkit.topos.house()
-        >>> e1 = anm['phy'].edge("r1", "r2")
-        >>> e2 = anm['phy'].edge("r1", "r2")
-        >>> e1 == e2
-        True
-
-        Can also compare across layers
-        >>> e2 = anm['input'].edge("r1", "r2")
-        >>> e2
-        (r1, r2)
-        >>> e1 == e2
-        True
-
-        For multi-edge graphs can specify the key
-
-        >>> anm = autonetkit.topos.multi_edge()
-        >>> e1 = anm['phy'].edge("r1", "r2", 0)
-        >>> e2 = anm['phy'].edge("r1", "r2", 1)
-        >>> e1 == e2
-        False
-
-        #TODO: compare single-edge overlays to multi-edge
-
-
-        """
         if self.is_multigraph():
             try:
                 if other.is_multigraph():
@@ -146,36 +86,17 @@ class NmEdge(AnkElement):
 
     def __getitem__(self, key):
         """"""
-
         from autonetkit.anm.graph import NmGraph
         overlay = NmGraph(self.anm, key)
         return overlay.edge(self)
 
     def _overlay(self):
-        """Return overlay and overlayid
-
-        >>> anm = autonetkit.topos.house()
-        >>> e1 = anm['phy'].edge("r1", "r2")
-        >>> e1._overlay()
-        phy
-
-
-        """
+        """Return overlay and overlayid"""
         from autonetkit.anm import NmGraph
         return NmGraph(self.anm, self.overlay_id)
 
     def __lt__(self, other):
-        """Comparison operator
-
-        >>> anm = autonetkit.topos.house()
-        >>> e1 = anm['phy'].edge("r1", "r2")
-        >>> e2 = anm['phy'].edge("r1", "r3")
-        >>> e1 < e2
-        True
-        >>> e2 < e1
-        False
-
-        """
+        """Comparison operator"""
         if self.is_multigraph() and other.is_multigraph():
             return (self.src.node_id, self.dst.node_id, self.ekey) \
                 < (other.src.node_id, other.dst.node_id, other.ekey)
@@ -185,44 +106,19 @@ class NmEdge(AnkElement):
 
     # Internal properties
     def __nonzero__(self):
-        """Allows for checking if edge exists
-
-        >>> anm = autonetkit.topos.house()
-        >>> e1 = anm['phy'].edge("r1", "r2")
-        >>> bool(e1)
-        True
-
-        For a non-existent link, will return False
-        (NOTE: doesn't throw exception)
-        >>> e2 = anm['phy'].edge("r1", "r5")
-        >>> bool(e2)
-        False
-
-
-
-        """
+        """Allows for checking if edge exists"""
         if self.is_multigraph():
             return self._graph.has_edge(self.src_id, self.dst_id, key=self.ekey)
-
         return self._graph.has_edge(self.src_id, self.dst_id)
 
     @property
     def raw_interfaces(self):
-        """Direct access to the interfaces dictionary, used by ANK modules
-
-        >>> anm = autonetkit.topos.house()
-        >>> e1 = anm['phy'].edge("r1", "r2")
-        >>> e1.raw_interfaces
-        {'r1': 1, 'r2': 1}
-        >>> e2 = anm['phy'].edge("r1", "r3")
-        >>> e2.raw_interfaces
-        {'r1': 2, 'r3': 1}
-        """
-        return self._ports
+        """Direct access to the interfaces dictionary, used by ANK modules"""
+        return self.get('_ports')
 
     @raw_interfaces.setter
     def raw_interfaces(self, value):
-        self._ports = value
+        self.set('_ports', value)
 
     @property
     def _graph(self):
@@ -232,16 +128,7 @@ class NmEdge(AnkElement):
 
     @property
     def _data(self):
-        """Return data the edge belongs to
-
-        >>> anm = autonetkit.topos.house()
-        >>> e1 = anm['phy'].edge("r1", "r2")
-        >>> e1._data
-        {'_ports': {'r1': 1, 'r2': 1}, 'raw_interfaces': {}}
-        >>> e2 = anm['phy'].edge("r1", "r3")
-        >>> e2._data
-        {'_ports': {'r1': 2, 'r3': 1}, 'raw_interfaces': {}}
-        """
+        """Return data the edge belongs to"""
         if self.is_multigraph():
             return self._graph[self.src_id][self.dst_id][self.ekey]
 
@@ -251,77 +138,38 @@ class NmEdge(AnkElement):
 
     @property
     def src(self):
-        """Source node of edge
-
-        >>> anm = autonetkit.topos.house()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.src
-        r1
-
-        """
+        """Source node of edge"""
 
         return NmNode(self.anm, self.overlay_id, self.src_id)
 
     @property
     def dst(self):
-        """Destination node of edge
-
-        >>> anm = autonetkit.topos.house()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.dst
-        r2
-
-        """
+        """Destination node of edge"""
 
         return NmNode(self.anm, self.overlay_id, self.dst_id)
 
     # Interfaces
 
     def apply_to_interfaces(self, attribute):
-        """"Applying and setting various attributes to interfaces
+        """"Applying and setting various attributes to interfaces"""
 
-        >>> anm = autonetkit.topos.house()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.src_int.color = edge.dst_int.color = "blue"
-        >>> (edge.src_int.color, edge.dst_int.color)
-        ('blue', 'blue')
-        >>> edge.color = "red"
-        >>> edge.apply_to_interfaces("color")
-        >>> (edge.src_int.color, edge.dst_int.color)
-        ('red', 'red')
-        """
-
-        val = self.__getattr__(attribute)
-        self.src_int.__setattr__(attribute, val)
-        self.dst_int.__setattr__(attribute, val)
+        val = self.get(attribute)
+        self.src_int.set(attribute, val)
+        self.dst_int.set(attribute, val)
 
     @property
     def src_int(self):
-        """Interface bound to source node of edge
+        """Interface bound to source node of edge"""
 
-        >>> anm = autonetkit.topos.house()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.src_int
-        eth0.r1
-
-        """
-
-        src_int_id = self._ports[self.src_id]
+        src_int_id = self.get('_ports')[self.src_id]
         return NmPort(self.anm, self.overlay_id,
                       self.src_id, src_int_id)
 
     @property
     def dst_int(self):
-        """Interface bound to destination node of edge
+        """Interface bound to destination node of edge"""
 
-        >>> anm = autonetkit.topos.house()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.dst_int
-        eth0.r2
-
-        """
-
-        dst_int_id = self._ports[self.dst_id]
+        dst_int_id = self.get('_ports')[self.dst_id]
         return NmPort(self.anm, self.overlay_id,
                       self.dst_id, dst_int_id)
 
@@ -331,74 +179,35 @@ class NmEdge(AnkElement):
         self._ports[node.id] = interface
 
     def interfaces(self):
-        """Returning interfaces
-
-        >>> anm = autonetkit.topos.house()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> list(edge.interfaces())
-        [eth0.r1, eth0.r2]
-
-        """
+        """Returning interfaces"""
 
         # TODO: warn if interface doesn't exist on node
 
         return [NmPort(self.anm, self.overlay_id,
                        node_id, interface_id) for (node_id,
-                                                   interface_id) in self._ports.items()]
+                                                   interface_id) in self.get('_ports').items()]
 
     #
 
     def dump(self):
         """Returns dump data
-
-        >>> anm = autonetkit.topos.house()
-        >>> e2 = anm['phy'].edge("r1", "r3")
-        >>> e2.dump()
-        "{'_ports': {'r1': 2, 'r3': 1}, 'raw_interfaces': {}}"
         """
         return str(self._graph[self.src_id][self.dst_id])
 
     def get(self, key):
         """For consistency, edge.get(key) is neater than getattr(edge, key)
-
-        >>> anm = autonetkit.topos.house()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.color = "red"
-        >>> edge.get("color")
-        'red'
-
         """
+        if hasattr(self,key):
+            return getattr(self, key)
 
-        return self.__getattr__(key)
+        return self._data.get(key)
 
     def set(self, key, val):
         """For consistency, edge.set(key, value) is neater than
         setattr(edge, key, value)
-
-        >>> anm = autonetkit.topos.house()
-        >>> edge = anm['phy'].edge("r1", "r2")
-        >>> edge.color = "blue"
-        >>> edge.color
-        'blue'
-        >>> edge.set("color", "red")
-        >>> edge.color
-        'red'
-
-
         """
 
-        return self.__setattr__(key, val)
-
-    def __getattr__(self, key):
-        """Returns edge property"""
-        return self._data.get(key)
-
-    def __setattr__(self, key, val):
-        """Sets edge property"""
-
         if key == 'raw_interfaces':
-            # TODO: fix workaround for
-            # http://docs.python.org/2/reference/datamodel.html#customizing-attribute-access
-            object.__setattr__(self, 'raw_interfaces', val)
+            self.raw_interfaces = val
 
         self._data[key] = val

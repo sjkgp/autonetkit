@@ -23,15 +23,6 @@ class DmEdge(object):
         object.__setattr__(self, 'log', logger)
 
     def __repr__(self):
-        """
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e1
-        (r1, r2, 0)
-
-        """
         if self.is_multigraph():
             return '(%s, %s, %s)' % (self.src,
                                      self.dst, self.ekey)
@@ -41,10 +32,7 @@ class DmEdge(object):
     @property
     def raw_interfaces(self):
         """Direct access to the interfaces dictionary, used by ANK modules
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.node("r1").raw_interfaces
-        {0: {'category': 'loopback', 'description': None}, 1: {'category': 'physical', 'description': 'r1 to sw1'}, 2: {'category': 'physical', 'description': 'r1 to r2'}, 3: {'category': 'physical', 'description': 'r1 to r3'}}"""
+        """
         return self._ports
 
     @raw_interfaces.setter
@@ -53,39 +41,18 @@ class DmEdge(object):
 
     def is_multigraph(self):
         """Return graph that is multigraph
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.is_multigraph()
-        True
         """
         return self._graph.is_multigraph()
 
     @property
     def src(self):
         """Source node of an edge
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e1.src
-        r1
-
         """
         return DmNode(self.nidb, self.src_id)
 
     @property
     def src_int(self):
         """Interface bound to source node of an edge
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e1.src_int
-        r1.r1 to r2
-
         """
         src_int_id = self._ports[self.src_id]
         return DmInterface(self.nidb, self.src_id, src_int_id)
@@ -93,51 +60,11 @@ class DmEdge(object):
     @property
     def dst_int(self):
         """Interface bound to destination node of an edge
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e1.dst_int
-        r2.r2 to r1
-
-
         """
         dst_int_id = self._ports[self.dst_id]
         return DmInterface(self.nidb, self.dst_id, dst_int_id)
 
     def __eq__(self, other):
-        """
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e2_anm = anm['phy'].edge("r2", "r3")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e2 = nidb.edge(e2_anm)
-        >>> e1 == e1
-        True
-        >>> e1 == e1_anm
-        True
-        >>> e1 == e2
-        False
-
-        And for multigraph case
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e2_anm = anm['phy'].edge("r1", "r3")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e2 = nidb.edge(e2_anm)
-        >>> e1 == e1
-        True
-        >>> e1 == e1_anm
-        True
-        >>> e1 == e2
-        False
-
-
-        """
         if self.is_multigraph():
             try:
                 if other.is_multigraph():
@@ -165,19 +92,6 @@ class DmEdge(object):
             return (self.src_id, self.dst_id) == other
 
     def __lt__(self, other):
-        """
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e2_anm = anm['phy'].edge("r2", "r3")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e2 = nidb.edge(e2_anm)
-        >>> e1 < e2
-        True
-        >>> e2 < e1
-        False
-
-        """
         if self.is_multigraph() and other.is_multigraph():
             return (self.src.node_id, self.dst.node_id, self.ekey) \
                 < (other.src.node_id, other.dst.node_id, other.ekey)
@@ -188,31 +102,6 @@ class DmEdge(object):
     # Internal properties
     def __nonzero__(self):
         """Allows for checking if edge exists
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e2_anm_nonexistent = anm['phy'].edge("r1", "r100")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e2 = nidb.edge(e2_anm_nonexistent)
-        >>> bool(e1)
-        True
-        >>> bool(e2)
-        False
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e2_anm_nonexistent = anm['phy'].edge("r1", "r100")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e2 = nidb.edge(e2_anm_nonexistent)
-        >>> e1.is_multigraph()
-        True
-        >>> bool(e1)
-        True
-        >>> bool(e2)
-        False
-
         """
         if self.is_multigraph():
             return self._graph.has_edge(self.src_id, self.dst_id,
@@ -223,16 +112,6 @@ class DmEdge(object):
     @property
     def dst(self):
         """Destination node of an edge
-
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> e1_anm = anm['phy'].edge("r1", "r2")
-        >>> e1 = nidb.edge(e1_anm)
-        >>> e1.dst
-        r2
-
-
         """
         return DmNode(self.nidb, self.dst_id)
 

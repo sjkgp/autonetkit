@@ -41,8 +41,6 @@ def load_graphml(input_data, defaults = True):
                 raise autonetkit.exception.AnkIncorrectFileFormat
             except ParseError:
                 raise autonetkit.exception.AnkIncorrectFileFormat
-            except ParseError:
-                raise autonetkit.exception.AnkIncorrectFileFormat
         else:
             raise e
 

@@ -1,4 +1,3 @@
-import logging
 import logging.handlers
 import autonetkit.config as config
 

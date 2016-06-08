@@ -101,7 +101,8 @@ class Runner(object):
 
         self.load_input()
 
-    def print_version(self):
+    @staticmethod
+    def print_version():
         log.info("AutoNetkit %s" % ANK_VERSION)
 
     def init_build_options(self):

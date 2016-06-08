@@ -4,7 +4,6 @@ import re
 import time
 
 import autonetkit.ank_messaging as ank_messaging
-import autonetkit.config as config
 import autonetkit.log as log
 
 try:

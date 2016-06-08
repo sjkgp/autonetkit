@@ -4,7 +4,6 @@ import shutil
 import time
 
 import autonetkit.log as log
-import mako
 import pkg_resources
 from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError
 
@@ -94,16 +93,16 @@ def render_node(node):
     if not node.do_render:
         node.log.debug("Rendering disabled for node")
         return
-
     try:
-        render_output_dir = node.render.dst_folder
+        render_output_dir = node.render.get('dst_folder')
         # TODO: could check if base is set, so don't put error into debug log
-        render_base = node.render.base
-        render_base_output_dir = node.render.base_dst_folder
-        render_template_file = node.render.template
-        render_custom = node.render.custom
+        render_base = node.render.get('base')
+        render_base_output_dir = node.render.get('base_dst_folder')
+        render_template_file = node.render.get('template')
+        render_custom = node.render.get('custom')
     except KeyError, error:
         # TODO: make sure allows case of just custom render
+        node.log.debug(error)
         return
 
     version_banner = format_version_banner()
@@ -126,14 +125,13 @@ def render_node(node):
     if render_template_file:
         try:
             render_template = JINJA.get_template(render_template_file)
-
         except TemplateSyntaxError, error:
             log.warning("Unable to render %s: "
                         "Syntax error in template: %s" % (node, error))
             return
 
-        if node.render.dst_file:
-            dst_file = os.path.join(render_output_dir, node.render.dst_file)
+        if node.render.get('dst_file'):
+            dst_file = os.path.join(render_output_dir, node.render['dst_file'])
             with open(dst_file, 'wb') as dst_fh:
                 try:
                     dst_fh.write(render_template.render(
@@ -152,48 +150,48 @@ def render_node(node):
                 except TypeError, error:
                     log.warning("Unable to render %s: %s." % (node, error))
 
-        if node.render.to_memory:
+        if node.render.get('to_memory'):
             # Render directly to DeviceModel
-            node.render.render_output = render_template.render(
+            node.render['render_output'] = render_template.render(
                 node=node,
                 version_banner=version_banner,
                 date=date,
             )
 
-    if render_base:
-        # TODO: revert to shutil copy
-        if render_base:
-            render_base = resource_path(render_base)
-            fs_jinja_templates = []
-            for root, _, filenames in os.walk(render_base):
-                for filename in fnmatch.filter(filenames, '*.jinja'):
-                    # relative to fs root
-                    rel_root = os.path.relpath(root, render_base)
-                    fs_jinja_templates.append(os.path.join(rel_root, filename))
 
-            try:
-                shutil.rmtree(render_base_output_dir)
-            except OSError:
-                pass  # doesn't exist
-            shutil.copytree(render_base, render_base_output_dir,
-                            ignore=shutil.ignore_patterns('*.jinja'))
-            for template_file in fs_jinja_templates:
-                template_file_path = os.path.normpath(
-                    os.path.join(render_base, template_file))
-                mytemplate = JINJA.get_template(os.path.join(
-                        os.path.sep.join(node.render.base.split(os.path.sep)[1:]), # remove leading template folder
-                        template_file))
-                dst_file = os.path.normpath(
-                    (os.path.join(render_base_output_dir, template_file)))
-                dst_file, _ = os.path.splitext(dst_file)  # remove .jinja suffix
-                log.info('dst file: %s' %dst_file)
-                with open(dst_file, 'wb') as dst_fh:
-                    dst_fh.write(mytemplate.render(
-                        node=node,
-                        version_banner=version_banner,
-                        date=date,
-                    ))
-        return
+        # TODO: revert to shutil copy
+    if render_base:
+        render_base = resource_path(render_base)
+        fs_jinja_templates = []
+        for root, _, filenames in os.walk(render_base):
+            for filename in fnmatch.filter(filenames, '*.jinja'):
+                # relative to fs root
+                rel_root = os.path.relpath(root, render_base)
+                fs_jinja_templates.append(os.path.join(rel_root, filename))
+
+        try:
+            shutil.rmtree(render_base_output_dir)
+        except OSError:
+            pass  # doesn't exist
+        shutil.copytree(render_base, render_base_output_dir,
+                        ignore=shutil.ignore_patterns('*.jinja'))
+        for template_file in fs_jinja_templates:
+            template_file_path = os.path.normpath(
+                os.path.join(render_base, template_file))
+            mytemplate = JINJA.get_template(os.path.join(
+                    os.path.sep.join(node.render['base'].split(os.path.sep)[1:]), # remove leading template folder
+                    template_file))
+            dst_file = os.path.normpath(
+                (os.path.join(render_base_output_dir, template_file)))
+            dst_file, _ = os.path.splitext(dst_file)  # remove .jinja suffix
+            log.info('dst file: %s' %dst_file)
+            with open(dst_file, 'wb') as dst_fh:
+                dst_fh.write(mytemplate.render(
+                    node=node,
+                    version_banner=version_banner,
+                    date=date,
+                ))
+    return
 
 
 def render(nidb):
@@ -221,6 +219,7 @@ def render_topology(topology):
         render_output_dir = topology.render_dst_folder
         render_template_file = topology.render_template
     except KeyError, error:
+        log.debug(error)
         return
 
     if not render_template_file:

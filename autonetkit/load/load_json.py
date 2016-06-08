@@ -1,5 +1,4 @@
 import autonetkit
-from autonetkit import example
 from collections import defaultdict
 from networkx.readwrite import json_graph
 settings = autonetkit.config.settings

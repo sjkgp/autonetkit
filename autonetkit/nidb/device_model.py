@@ -35,7 +35,6 @@ class DmGraphData(object):
 class DmLabTopology(object):
 
     """API to access lab topology in network"""
-    # TODO: replace this with ConfigStanza
 
     def __init__(self, nidb, topology_id):
         # Set using this method to bypass __setattr__

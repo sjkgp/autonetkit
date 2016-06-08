@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 import os
 
-import autonetkit
 import autonetkit.ank_json as ank_json
 import autonetkit.config as config
 import autonetkit.log as log
-import autonetkit.render as render
 import autonetkit.build_network as build_network
 from autonetkit.nidb import DeviceModel
 
@@ -99,7 +97,8 @@ class Network(object):
                 log.debug('No devices set for %s on %s' % (platform, host))
         return self.nidb
 
-    def _deploy(self, hostname, platform, platform_data):
+    @staticmethod
+    def _deploy(hostname, platform, platform_data):
         config_path = os.path.join('rendered', hostname, platform)
         username = platform_data['username']
         key_file = platform_data['key_file']

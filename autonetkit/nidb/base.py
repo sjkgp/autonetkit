@@ -25,23 +25,11 @@ class DmBase(object):
 
     def __repr__(self):
         """Return nidb
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb
-        nidb
         """
         return "nidb"
 
     def is_multigraph(self):
         """Returns graph that is multigraph
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.is_multigraph()
-        True
-        >>> anm = autonetkit.topos.multi_edge()
-        >>> nidb.is_multigraph()
-        True
         """
         return self._graph.is_multigraph()
 
@@ -49,10 +37,6 @@ class DmBase(object):
 
     def save(self, timestamp=True, use_gzip=True):
         """ Used to save
-
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.save()
         """
         import os
         import gzip
@@ -75,25 +59,12 @@ class DmBase(object):
                 json_fh.write(data)
 
     def interface(self, interface):
-        """
-        >>> anm = autonetkit.topos.house()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> test_node = nidb.node("r1")
-        >>> eth0 = test_node.interface(1)
-        >>> nidb.interface(eth0)
-        r1.r1 to r2
-        """
+
         return DmInterface(self,
                            interface.node_id, interface.interface_id)
 
     def restore_latest(self, directory=None):
-        """Restore latest saved DeviceModel
-
-        # >>> anm = autonetkit.topos.mixed()
-        # >>> nidb = autonetkit.DeviceModel(anm)
-        # >>> nidb.restore_latest()
-        # WARNING No previous DeviceModel saved. Please compile new DeviceModel
-        """
+        """Restore latest saved DeviceModel"""
         import os
         import glob
         if not directory:
@@ -126,50 +97,33 @@ class DmBase(object):
 
     @property
     def name(self):
-        """ Return name
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.name
-        'nidb'
-        """
+        """ Return name """
         return self.__repr__()
 
     def raw_graph(self):
         """Returns the underlying NetworkX graph
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.__setstate__('r1')
-        >>> nidb.raw_graph()
-        'r1'
         """
         return self._graph
 
     def copy_graphics(self, network_model):
         """Transfers graphics data from anm to nidb"""
         for node in self:
-            node.add_stanza("graphics")
+            node.add_scope("graphics")
             #TODO: deprecate g_graphics overlay, store on phy
             if (network_model.has_overlay("graphics")
                 and node in network_model['graphics']):
                 source_node = network_model['graphics'].node(node)
             else:
                 source_node = network_model['phy'].node(node)
-            node.graphics.x = source_node.x
-            node.graphics.y = source_node.y
-            node.graphics.device_type = source_node.device_type
-            node.graphics.device_subtype = source_node.device_subtype
-            node.device_type = source_node.device_type
-            node.device_subtype = source_node.device_subtype
+            node.graphics['x'] = source_node.get('x')
+            node.graphics['y'] = source_node.get('y')
+            node.graphics['device_type'] = source_node.get('device_type')
+            node.graphics['device_subtype'] = source_node.get('device_subtype')
+            node.device_type = source_node.get('device_type')
+            node.device_subtype = source_node.get('device_subtype')
 
     def __len__(self):
         """Returns length of the graph
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.__len__()
-        5
         """
         return len(self._graph)
 
@@ -194,13 +148,6 @@ class DmBase(object):
     def node(self, key):
         """Returns node based on name
         This is currently O(N). Could use a lookup table
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> test_node = nidb.node("r1")
-        >>> eth0 = test_node.interface(1)
-        >>> nidb.node(eth0)
-        r1
         """
         try:
             if key.node_id in self._graph:
@@ -228,48 +175,25 @@ class DmBase(object):
 
     def routers(self, *args, **kwargs):
         """Shortcut for nodes(), sets device_type to be router
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.routers()
-        [r1, r2, r3]
-
-
         """
 
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_router()]
 
     def switches(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be switch
+        """Shortcut for nodes(), sets device_type to be switch"""
 
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.switches()
-        [sw1]
-        """
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_switch()]
 
     def servers(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be server
+        """Shortcut for nodes(), sets device_type to be server"""
 
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.servers()
-        [s1]
-        """
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_server()]
 
     def l3devices(self, *args, **kwargs):
-        """Shortcut for nodes(), sets device_type to be server
-
-        >>> anm = autonetkit.topos.mixed()
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> nidb.l3devices()
-        [s1, r1, r2, r3]
-        """
+        """Shortcut for nodes(), sets device_type to be server"""
 
         result = self.nodes(*args, **kwargs)
         return [r for r in result if r.is_l3device()]
@@ -326,28 +250,8 @@ class DmBase(object):
     # Edges
 
     def edges(self, nbunch=None, *args, **kwargs):
-        """returns edges in the graph
+        """returns edges in the graph"""
 
-        >>> import autonetkit
-        >>> anm = autonetkit.NetworkModel()
-        >>> g_phy = anm['phy']
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> input_edges = [("r1", "r2"), ("r2", "r4"), ("r3", "r4"), ("r3", "r5"), ("r1", "r3")]
-        >>> nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
-        >>> g_in = anm.add_overlay("input")
-        >>> g_in.add_nodes_from(nodes)
-        >>> g_in.add_edges_from(input_edges)
-        [(r1, r2), (r2, r4), (r3, r4), (r3, r5), (r1, r3)]
-        >>> g_phy.add_nodes_from(g_in)
-        >>> g_phy.add_edges_from(g_in.edges())
-        [(r4, r2), (r4, r3), (r5, r3), (r1, r2), (r1, r3)]
-        >>> retain = ['label', 'host', 'platform', 'x', 'y', 'asn', 'device_type']
-        >>> nidb.add_nodes_from(g_phy, retain=retain)
-        >>> nidb.add_edges_from(g_phy.edges())
-        >>> list(nidb.edges())
-        [(r4, r2, 0), (r4, r3, 0), (r5, r3, 0), (r1, r2, 0), (r1, r3, 0)]
-
-        """
         # nbunch may be single node
         # TODO: Apply edge filters
         if nbunch:
@@ -411,28 +315,6 @@ class DmBase(object):
         To keep congruency, only allow copying edges from ANM
         can't add NIDB edges directly (node, node) or (port, port)
         workflow: if need this, create a new overlay and copy from there
-
-        >>> import autonetkit
-        >>> anm = autonetkit.NetworkModel()
-        >>> g_phy = anm['phy']
-        >>> nidb = autonetkit.DeviceModel(anm)
-        >>> input_edges = [("r1", "r2"), ("r2", "r4"), ("r3", "r4"), ("r3", "r5"), ("r1", "r3")]
-        >>> nodes = ['r1', 'r2', 'r3', 'r4', 'r5']
-        >>> g_in = anm.add_overlay("input")
-        >>> g_in.add_nodes_from(nodes)
-        >>> g_in.add_edges_from(input_edges)
-        [(r1, r2), (r2, r4), (r3, r4), (r3, r5), (r1, r3)]
-        >>> g_phy.add_nodes_from(g_in)
-        >>> g_phy.add_edges_from(g_in.edges())
-        [(r4, r2), (r4, r3), (r5, r3), (r1, r2), (r1, r3)]
-        >>> retain = ['label', 'host', 'platform', 'x', 'y', 'asn', 'device_type']
-        >>> nidb.add_nodes_from(g_phy, retain=retain)
-        >>> nidb.add_edges_from(g_phy.edges())
-        >>> list(nidb.edges())
-        [(r4, r2, 0), (r4, r3, 0), (r5, r3, 0), (r1, r2, 0), (r1, r3, 0)]
-
-        >>> list(nidb.edges())
-        [(r4, r2, 0), (r4, r3, 0), (r5, r3, 0), (r1, r2, 0), (r1, r3, 0)]
         """
         from autonetkit.anm import NmEdge
         if not retain:
