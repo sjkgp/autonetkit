@@ -59,7 +59,7 @@ def parse_options(argument_string=None):
         '--webserver', action="store_true", default=False, help="Webserver")
     parser.add_argument('--grid', type=int, help="Grid Size (n * n)")
     parser.add_argument(
-        '--target', choices=['netkit', 'cisco'], default=None)
+        '--target', choices=['netkit', 'cisco', 'brocade'], default=None)
     parser.add_argument(
         '--vis_uuid', default=None, help="UUID for multi-user visualisation")
     if argument_string:
@@ -101,6 +101,17 @@ def main(options):
         settings['Deploy Hosts']['internal'] = {'VIRL':
                                                 {'deploy': 1}}
 
+    if options.target == "brocade":
+        # output target is Brocade
+        log.info("Setting output target as Brocade")
+        settings['Graphml']['Node Defaults']['platform'] = "brocade"
+        settings['Graphml']['Node Defaults']['host'] = "internal"
+        settings['Graphml']['Node Defaults']['syntax'] = "brcd_ni"
+        settings['JSON']['Node Defaults']['syntax'] = "brcd_ni"
+        #settings['Compiler']['brocade']['to memory'] = 1
+        settings['General']['deploy'] = 1
+        settings['Deploy Hosts']['internal'] = {'brocade':
+                                                {'deploy': 1}}
     if options.debug or settings['General']['debug']:
         # TODO: fix this
         import logging

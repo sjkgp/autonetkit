@@ -169,6 +169,13 @@ def compile_network(anm):
                                                            host)
             except ImportError:
                 log.debug('Unable to load VIRL platform compiler')
+        elif platform == 'brocade':
+            try:
+                import autonetkit.compilers.platform.brocade as pl_brocade
+                platform_compiler = pl_brocade.BrocadeCompiler(nidb, anm,
+                                                           host)
+            except ImportError:
+                log.debug('Unable to load brocade platform compiler')
         elif platform == 'dynagen':
             import autonetkit.compilers.platform.dynagen as pl_dynagen
             platform_compiler = pl_dynagen.DynagenCompiler(nidb, anm,
