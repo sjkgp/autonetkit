@@ -35,6 +35,21 @@ class BrocadeBaseCompiler(RouterCompiler):
 
         node.use_fdp = phy_node.use_fdp
 
+        if node in self.anm['snmp']:
+            node.add_stanza("snmp")
+
+        if node in self.anm['mct']:
+            node.add_stanza("mct")
+
+        if node in self.anm['radius']:
+            node.add_stanza("radius")
+
+        if node in self.anm['ntp']:
+            node.add_stanza("ntp")
+
+        if node in self.anm['lag']:
+            node.add_stanza("lag")
+
         if node in self.anm['ospf']:
             node.add_stanza("ospf")
             node.ospf.use_ipv4 = phy_node.use_ipv4

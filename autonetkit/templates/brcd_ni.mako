@@ -39,10 +39,13 @@ router pim
 !
     % if node.snmp.enabled == True:
 snmp-server
+        % for community in node.snmp.communities:
+snmp-server community ${community.name} ${community.permission}
+        % endfor
         % for user in node.snmp.users:
 snmp-server user ${user.user} ${user.grp} v3
         % endfor
-        % for server in node.snmp.server:
+        % for server in node.snmp.servers:
 snmp-server host ${server.ip} version ${server.version} ${server.community} port ${server.udp_port}
         % endfor
 !
@@ -56,12 +59,29 @@ snmp-server enable traps ${trap.id}
         % endfor
     % endif
 % endif
+% if node.ntp:
+!
+ntp
+    % for server in node.ntp.servers:
+server ${server.ip} key ${server.key}
+    % endfor
+% endif
+% if node.radius:
+!
+    % for server in node.radius.servers:
+radius-server host ${server.ip} auth-port ${server.auth_port} acct-port ${server.acct_port} authentication-only key ${server.key}
+    % endfor
+% endif
 % if node.lag:
-    % for lag in node.lag.lags:
-lag ${lag.name} ${lag.type}
+!
+!
+    % for lag in node.lag:
+!
+lag ${lag.name} ${lag.type} id ${lag.id}
 ports ${lag.ports}
 primary port ${lag.primary_port}
 deploy
+!
     % endfor
 % endif
 !
@@ -74,10 +94,10 @@ interface ${interface.id}
     % if interface.comment:
   ! ${interface.comment}
     % endif
-    % if interface.id == 'lo:1':
+    % if interface.category == 'loopback':
         % if node.ospf:
-    ip ospf ${node.ospf.process_id} area 0.0.0.0
-    ip ospf passive
+  ip ospf ${node.ospf.process_id} area 0.0.0.0
+  ip ospf passive
         % endif
     % endif
     % if interface.pim:
@@ -93,7 +113,7 @@ interface ${interface.id}
   vrf forwarding ${interface.vrf}
     % endif
     % if interface.use_ipv4:
-        % if interface.id != 'Loopback0':
+        % if interface.category != "loopback":
   no switchport
         % endif
         % if interface.use_dhcp:
@@ -111,26 +131,28 @@ interface ${interface.id}
     % endif
     % if interface.rip:
         % if interface.rip.use_ipv6:
-    ipv6 rip {node.rip.process_id} enable
+  ipv6 rip {node.rip.process_id} enable
         % endif
     % endif
-    % if interface.ospf:
-        % if interface.ospf.priority:
+    % if interface.category != "loopback":
+        % if interface.ospf:
+            % if interface.ospf.priority:
   ip ospf priority ${interface.ospf.priority}
-        % endif
-        % if interface.ospf.use_ipv4:
-            % if not interface.ospf.multipoint:
-  ip ospf network point-to-point
             % endif
+            % if interface.ospf.use_ipv4:
+                % if not interface.ospf.multipoint:
+  ip ospf network point-to-point
+                % endif
   ip ospf cost ${interface.ospf.cost}
   ip ospf area ${interface.ospf.area}
-        % endif
-        % if interface.ospf.use_ipv6:
-            % if not interface.ospf.multipoint:
-  ipv6 ospfv3 network point-to-point
             % endif
+            % if interface.ospf.use_ipv6:
+                % if not interface.ospf.multipoint:
+  ipv6 ospfv3 network point-to-point
+                % endif
   ipv6 ospfv3 cost ${interface.ospf.cost}
   ipv6 ospfv3 area ${interface.ospf.area}
+            % endif
         % endif
     % endif
     % if interface.isis:
@@ -170,9 +192,24 @@ interface ${interface.id}
   mpls traffic-eng tunnels
     % endif
 !
+  % endif
 % endfor
 !
 !
+% if node.mct:
+    % for cluster in node.mct:
+!
+cluster ${cluster.name} ${cluster.id}
+rbridge ${cluster.rbridge_id}
+session-vlan ${cluster.session_vlan}
+member-vlan ${cluster.member_vlan}
+icl ${cluster.name} ${cluster.icl}
+        % for peer in node.mct_peer:
+peer ${peer.ip} rbridge-id ${peer.rbridge_id_peer} icl ${cluster.name}
+deploy
+        % endfor
+    % endfor
+% endif
 ## OSPF
 % if node.ospf:
 !

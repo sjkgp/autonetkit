@@ -126,6 +126,16 @@ class RouterCompiler(DeviceCompiler):
         ###self.rip(node)
         if self.anm.has_overlay('rip') and node in self.anm['rip']:
             self.rip(node)
+        if self.anm.has_overlay('ntp') and node in self.anm['ntp']:
+            self.ntp(node)
+        if self.anm.has_overlay('radius') and node in self.anm['radius']:
+            self.radius(node)
+        if self.anm.has_overlay('snmp') and node in self.anm['snmp']:
+            self.snmp(node)
+        if self.anm.has_overlay('lag') and node in self.anm['lag']:
+            self.lag(node)
+        if self.anm.has_overlay('mct') and node in self.anm['mct']:
+            self.mct(node)
         # TODO: drop bgp overlay
         bgp_overlays = ["bgp", "ebgp_v4", "ibgp_v4", "ebgp_v6", "ibgp_v6"]
         use_bgp = False
@@ -517,3 +527,110 @@ class RouterCompiler(DeviceCompiler):
         ipv4_networks.add(node.loopback_zero.ipv4_cidr)
 
         node.eigrp.ipv4_networks = sorted(list(ipv4_networks))
+
+    def radius(self, node):
+        g_radius = self.anm['radius']
+        radius_node = g_radius.node(node)
+        radius_stanza = node.add_stanza("radius")
+        if 'servers' in radius_node.radius:
+            node.radius.servers = []
+            for server in radius_node.radius['servers']:
+                radius_server_stanza = ConfigStanza(ip = server['ip'],
+                                                    key = server['key'],
+                                                    auth_port = server['auth_port'],
+                                                    acct_port = server['acct_port'])
+                node.radius.servers.append(radius_server_stanza)
+
+    def ntp(self, node):
+        g_ntp = self.anm['ntp']
+        ntp_node = g_ntp.node(node)
+        ntp_stanza = node.add_stanza("ntp")
+        if 'servers' in ntp_node.ntp:
+            node.ntp.servers = []
+            for server in ntp_node.ntp['servers']:
+                ntp_server_stanza = ConfigStanza(ip = server['ip'],
+                                                 key = server['key'])
+                node.ntp.servers.append(ntp_server_stanza)
+
+    def snmp(self, node):
+        g_snmp = self.anm['snmp']
+        snmp_node = g_snmp.node(node)
+        snmp_stanza = node.add_stanza("snmp")
+
+        node.snmp.enabled = snmp_node.snmp['enabled']
+
+        if 'users' in snmp_node.snmp:
+            node.snmp.users =[]
+            for user in snmp_node.snmp['users']:
+                snmp_user_stanza = ConfigStanza(user=user['user'],
+                                                grp=user['grp'])
+                node.snmp.users.append(snmp_user_stanza)
+
+        if 'communities' in snmp_node.snmp:
+            node.snmp.communities =[]
+            for community in snmp_node.snmp['communities']:
+                snmp_community_stanza = ConfigStanza(name=community['name'],
+                                                permission=community['permission'])
+                node.snmp.communities.append(snmp_community_stanza)
+
+        if 'servers' in snmp_node.snmp:
+            node.snmp.servers =[]
+            for server in snmp_node.snmp['servers']:
+                snmp_server_stanza =  ConfigStanza(ip = server['ip'],
+                                                version = server['version'],
+                                                udp_port=server['udp_port'],
+                                                community=server['community'])
+                node.snmp.servers.append(snmp_server_stanza)
+
+        if 'traps' in snmp_node.snmp:
+            node.snmp.traps=[]
+            for trap in snmp_node.snmp['traps']:
+                snmp_trap_stanza = ConfigStanza(id=trap['id'], enabled=trap['enabled'])
+                node.snmp.traps.append(snmp_trap_stanza)
+
+    def lag(self, node):
+        g_lag = self.anm['lag']
+        lag_node = g_lag.node(node)
+        lag_stanza = node.add_stanza("lag")
+
+        node.lag = []
+        for lag in lag_node.lag:
+            port_string = ""
+            for port in lag['ports']:
+                port_string = port_string + " " + port
+
+            primary_port = lag['primary_port']
+            lag_stanza = ConfigStanza(name = lag['name'],
+                                             id = lag['id'],
+                                             type = lag['type'],
+                                             primary_port = primary_port,
+                                             ports = port_string)
+            node.lag.append(lag_stanza)
+
+    def mct(self, node):
+        g_mct = self.anm['mct']
+        g_phy = self.anm['phy']
+
+        mct_node = g_mct.node(node)
+        mct_stanza = node.add_stanza("mct")
+        mct_peer_stanza = node.add_stanza("mct_peer")
+
+        node.mct = []
+        for cluster in mct_node.mct:
+            node.mct_peer = []
+            for peer in cluster['peer']:
+                for phy_node in g_phy.l3devices():
+                    if phy_node.id == peer.id:
+                        DmNode_peer = self.nidb.node(phy_node)
+                        mct_peer_stanza = ConfigStanza(ip = DmNode_peer.mgmt.ip,
+                                             rbridge_id_peer = cluster['rbridge_id_peer'])
+                        node.mct_peer.append(mct_peer_stanza)
+                        break
+
+            mct_stanza = ConfigStanza(id = cluster['id'],
+                                      name = cluster['name'],
+                                      session_vlan = cluster['session_vlan'],
+                                      member_vlan = cluster['member_vlan'],
+                                      rbridge_id = cluster['rbridge_id'],
+                                      icl = cluster['icl'])
+            node.mct.append(mct_stanza)

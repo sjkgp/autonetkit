@@ -166,6 +166,12 @@ def apply_design_rules(anm):
     # log.info("Building layer2")
     build_layer1(anm)
     build_layer2(anm)
+
+    from autonetkit.design.lag import build_lag
+    build_lag(anm)
+
+    from autonetkit.design.mct import build_mct
+    build_mct(anm)
     # autonetkit.update_http(anm)
 
     # log.info("Building layer3")
@@ -243,6 +249,15 @@ def apply_design_rules(anm):
         mark_ebgp_vrf(anm)
         build_ibgp_vpn_v4(anm)  # build after bgp as is based on
     # autonetkit.update_vis(anm)
+
+    from autonetkit.design.snmp import build_snmp
+    build_snmp(anm)
+
+    from autonetkit.design.ntp import build_ntp
+    build_ntp(anm)
+
+    from autonetkit.design.radius import build_radius
+    build_radius(anm)
 
     try:
         from autonetkit_cisco import build_network as cisco_build_network

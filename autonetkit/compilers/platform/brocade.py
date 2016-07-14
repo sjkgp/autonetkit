@@ -7,6 +7,7 @@ import autonetkit.plugins.naming as naming
 from autonetkit.compilers.platform.platform_base import PlatformCompiler
 import string
 import itertools
+import netaddr
 from autonetkit.ank_utils import alphabetical_sort as alpha_sort
 from autonetkit.compilers.device.brocade import BrocadeNICompiler
 from autonetkit.nidb import ConfigStanza
@@ -55,7 +56,8 @@ class BrocadeCompiler(PlatformCompiler):
         log.info("Compiling Brocade for %s" % self.host)
 
         g_phy = self.anm['phy']
-
+        mgmt_addr_block = netaddr.IPNetwork("192.168.0.0/24").iter_hosts()
+        mgmt_addr_mask = (netaddr.IPNetwork("192.168.0.0/24")).netmask
 
 # TODO: this should be all l3 devices not just routers
         for phy_node in g_phy.l3devices(host=self.host, syntax='brcd_ni'):
@@ -63,6 +65,14 @@ class BrocadeCompiler(PlatformCompiler):
             dm_node = self.nidb.node(phy_node)
             dm_node.add_stanza("render")
 
+            #adding management interface by default
+            dm_node.add_stanza('mgmt')
+            dm_node.mgmt.ip = mgmt_addr_block.next()
+            dm_node.mgmt.mask = mgmt_addr_mask
+
+            #enabling telnet by default
+            dm_node.add_stanza('telnet')
+            dm_node.telnet = True
             for interface in dm_node.loopback_interfaces():
                 if interface != dm_node.loopback_zero:
                     interface.id = loopback_ids.next()
