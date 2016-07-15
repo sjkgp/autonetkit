@@ -79,7 +79,8 @@ class BrocadeCompiler(PlatformCompiler):
 
             # Note this could take external data
             numeric_int_ids = self.numeric_interface_ids()
-            for interface in dm_node.physical_interfaces():
+            g_in_node = self.anm['input'].node(phy_node)
+            for interface in DmNode.physical_interfaces():
                 phy_numeric_id = phy_node.interface(interface).numeric_id
                 if phy_numeric_id is None:
                     # TODO: remove numeric ID code
@@ -90,6 +91,11 @@ class BrocadeCompiler(PlatformCompiler):
                 phy_specified_id = phy_node.interface(interface).specified_id
                 if phy_specified_id is not None:
                     interface.id = phy_specified_id
+                g_in_interface = g_in_node._ports[interface.interface_id]
+                if 'is_member_lag' in g_in_interface:
+                    interface.is_member_lag = True
+                if 'is_primary_port' in g_in_interface:
+                    interface.is_primary_port = True
 
         ni_compiler = BrocadeNICompiler(self.nidb, self.anm)
         for phy_node in g_phy.routers(host=self.host, syntax='brcd_ni'):

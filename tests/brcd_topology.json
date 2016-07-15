@@ -1,80 +1,80 @@
 {
     "links": [
-    {"dst": "Brocade-MLX2", "dst_port": "Ethernet 1/1", "src": "Brocade-MLX1", "src_port": "Ethernet 1/1"},
-    {"dst": "Brocade-MLX2", "dst_port": "Ethernet 1/2", "src": "Brocade-MLX1", "src_port": "Ethernet 1/2"},
-    {"dst": "Brocade-MLX2", "dst_port": "Ethernet 1/3", "src": "Brocade-MLX1", "src_port": "Ethernet 1/3"},
-    {"dst": "Brocade-MLX2", "dst_port": "Ethernet 1/4", "src": "Brocade-MLX1", "src_port": "Ethernet 1/4"},
-    {"dst": "Brocade-MLX3", "dst_port": "Ethernet 1/1", "src": "Brocade-MLX1", "src_port": "Ethernet 1/5"},
-    {"dst": "Brocade-MLX4", "dst_port": "Ethernet 1/7", "src": "Brocade-MLX1", "src_port": "Ethernet 1/6"},
-    {"dst": "Brocade-MLX5", "dst_port": "Ethernet 1/7", "src": "Brocade-MLX1", "src_port": "Ethernet 1/7"},
-    {"dst": "Brocade-MLX3", "dst_port": "Ethernet 1/2", "src": "Brocade-MLX2", "src_port": "Ethernet 1/5"},
-    {"dst": "Brocade-MLX2", "dst_port": "Ethernet 1/6", "src": "Brocade-MLX4", "src_port": "Ethernet 1/1"},
-    {"dst": "Brocade-MLX5", "dst_port": "Ethernet 1/1", "src": "Brocade-MLX4", "src_port": "Ethernet 1/2"},
-    {"dst": "Brocade-MLX5", "dst_port": "Ethernet 1/2", "src": "Brocade-MLX4", "src_port": "Ethernet 1/3"},
-    {"dst": "Brocade-MLX5", "dst_port": "Ethernet 1/3", "src": "Brocade-MLX4", "src_port": "Ethernet 1/4"},
-    {"dst": "Brocade-MLX5", "dst_port": "Ethernet 1/4", "src": "Brocade-MLX4", "src_port": "Ethernet 1/5"},
-    {"dst": "Brocade-MLX5", "dst_port": "Ethernet 1/5", "src": "Brocade-MLX4", "src_port": "Ethernet 1/6"},
-    {"dst": "Brocade-MLX3", "dst_port": "Ethernet 1/3", "src": "Brocade-MLX5", "src_port": "Ethernet 1/6"}
+    {"dst": "Brocade-MLX2", "dst_port": "ethernet 1/1", "src": "Brocade-MLX1", "src_port": "ethernet 1/1"},
+    {"dst": "Brocade-MLX2", "dst_port": "ethernet 1/2", "src": "Brocade-MLX1", "src_port": "ethernet 1/2"},
+    {"dst": "Brocade-MLX2", "dst_port": "ethernet 1/3", "src": "Brocade-MLX1", "src_port": "ethernet 1/3"},
+    {"dst": "Brocade-MLX2", "dst_port": "ethernet 1/4", "src": "Brocade-MLX1", "src_port": "ethernet 1/4"},
+    {"dst": "Brocade-MLX3", "dst_port": "ethernet 1/1", "src": "Brocade-MLX1", "src_port": "ethernet 1/5"},
+    {"dst": "Brocade-MLX4", "dst_port": "ethernet 1/7", "src": "Brocade-MLX1", "src_port": "ethernet 1/6"},
+    {"dst": "Brocade-MLX5", "dst_port": "ethernet 1/7", "src": "Brocade-MLX1", "src_port": "ethernet 1/7"},
+    {"dst": "Brocade-MLX3", "dst_port": "ethernet 1/2", "src": "Brocade-MLX2", "src_port": "ethernet 1/5"},
+    {"dst": "Brocade-MLX2", "dst_port": "ethernet 1/6", "src": "Brocade-MLX4", "src_port": "ethernet 1/1"},
+    {"dst": "Brocade-MLX5", "dst_port": "ethernet 1/1", "src": "Brocade-MLX4", "src_port": "ethernet 1/2"},
+    {"dst": "Brocade-MLX5", "dst_port": "ethernet 1/2", "src": "Brocade-MLX4", "src_port": "ethernet 1/3"},
+    {"dst": "Brocade-MLX5", "dst_port": "ethernet 1/3", "src": "Brocade-MLX4", "src_port": "ethernet 1/4"},
+    {"dst": "Brocade-MLX5", "dst_port": "ethernet 1/4", "src": "Brocade-MLX4", "src_port": "ethernet 1/5"},
+    {"dst": "Brocade-MLX5", "dst_port": "ethernet 1/5", "src": "Brocade-MLX4", "src_port": "ethernet 1/6"},
+    {"dst": "Brocade-MLX3", "dst_port": "ethernet 1/3", "src": "Brocade-MLX5", "src_port": "ethernet 1/6"}
     ],
     "nodes": [
     {
         "asn": 1, "device_type": "router", "id": "Brocade-MLX1", "x": 350, "y": 400,
         "ports": [
         {"category": "loopback", "description": null, "id": "Loopback0"},
-        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX2", "id": "Ethernet 1/1"},
-        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX2", "id": "Ethernet 1/2"},
-        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX2", "id": "Ethernet 1/3"},
-        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX2", "id": "Ethernet 1/4"},
-        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX3", "id": "Ethernet 1/5"},
-        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX4", "id": "Ethernet 1/6"},
-        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX5", "id": "Ethernet 1/7"}
+        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX2", "id": "ethernet 1/1"},
+        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX2", "id": "ethernet 1/2"},
+        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX2", "id": "ethernet 1/3"},
+        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX2", "id": "ethernet 1/4"},
+        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX3", "id": "ethernet 1/5"},
+        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX4", "id": "ethernet 1/6"},
+        {"category": "physical", "description": "Brocade-MLX1 to Brocade-MLX5", "id": "ethernet 1/7"}
         ]
     },
     {
         "asn": 1, "device_type": "router", "id": "Brocade-MLX2", "x": 500, "y": 300,
         "ports": [
         {"category": "loopback", "description": null, "id": "Loopback0"},
-        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX1", "id": "Ethernet 1/1"},
-        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX1", "id": "Ethernet 1/2"},
-        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX1", "id": "Ethernet 1/3"},
-        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX1", "id": "Ethernet 1/4"},
-        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX3", "id": "Ethernet 1/5"},
-        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX4", "id": "Ethernet 1/6"}
+        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX1", "id": "ethernet 1/1"},
+        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX1", "id": "ethernet 1/2"},
+        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX1", "id": "ethernet 1/3"},
+        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX1", "id": "ethernet 1/4"},
+        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX3", "id": "ethernet 1/5"},
+        {"category": "physical", "description": "Brocade-MLX2 to Brocade-MLX4", "id": "ethernet 1/6"}
         ]
     },
     {
         "asn": 1, "device_type": "router", "id": "Brocade-MLX3", "x": 500, "y": 500,
         "ports": [
         {"category": "loopback", "description": null, "id": "Loopback0"},
-        {"category": "physical", "description": "Brocade-MLX3 to Brocade-MLX1", "id": "Ethernet 1/1"},
-        {"category": "physical", "description": "Brocade-MLX3 to Brocade-MLX2", "id": "Ethernet 1/2"},
-        {"category": "physical", "description": "Brocade-MLX3 to Brocade-MLX5", "id": "Ethernet 1/3"}
+        {"category": "physical", "description": "Brocade-MLX3 to Brocade-MLX1", "id": "ethernet 1/1"},
+        {"category": "physical", "description": "Brocade-MLX3 to Brocade-MLX2", "id": "ethernet 1/2"},
+        {"category": "physical", "description": "Brocade-MLX3 to Brocade-MLX5", "id": "ethernet 1/3"}
         ]
     },
     {
         "asn": 2, "device_type": "router", "id": "Brocade-MLX4", "x": 675, "y": 300,
         "ports": [
         {"category": "loopback", "description": null, "id": "Loopback0"},
-        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX2", "id": "Ethernet 1/1"},
-        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "Ethernet 1/2"},
-        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "Ethernet 1/3"},
-        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "Ethernet 1/4"},
-        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "Ethernet 1/5"},
-        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "Ethernet 1/6"},
-        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX1", "id": "Ethernet 1/7"}
+        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX2", "id": "ethernet 1/1"},
+        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "ethernet 1/2"},
+        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "ethernet 1/3"},
+        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "ethernet 1/4"},
+        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "ethernet 1/5"},
+        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX5", "id": "ethernet 1/6"},
+        {"category": "physical", "description": "Brocade-MLX4 to Brocade-MLX1", "id": "ethernet 1/7"}
         ]
     },
     {
         "asn": 2, "device_type": "router", "id": "Brocade-MLX5", "x": 675, "y": 500,
         "ports": [
         {"category": "loopback", "description": null, "id": "Loopback0"},
-        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "Ethernet 1/1"},
-        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "Ethernet 1/2"},
-        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "Ethernet 1/3"},
-        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "Ethernet 1/4"},
-        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "Ethernet 1/5"},
-        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX3", "id": "Ethernet 1/6"},
-        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX1", "id": "Ethernet 1/7"}
+        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "ethernet 1/1"},
+        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "ethernet 1/2"},
+        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "ethernet 1/3"},
+        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "ethernet 1/4"},
+        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX4", "id": "ethernet 1/5"},
+        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX3", "id": "ethernet 1/6"},
+        {"category": "physical", "description": "Brocade-MLX5 to Brocade-MLX1", "id": "ethernet 1/7"}
         ]
     }
     ]

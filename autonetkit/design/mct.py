@@ -4,7 +4,7 @@ import random
 from autonetkit.ank_utils import call_log
 from lag import configure_lag, default_lag_cfg, fill_lag_data
 
-def fill_cluster_data(node1, node2):
+def fill_cluster_data(node1, node2, primary_port_node1, primary_port_node2):
 
     cluster_data_node1 = {}
     cluster_data_node1['id'] = random.randint(1, 65535)
@@ -16,7 +16,7 @@ def fill_cluster_data(node1, node2):
     rbridge_id_node2 = random.randint(1, 35535)
     cluster_data_node1['rbridge_id'] = rbridge_id_node1
     cluster_data_node1['rbridge_id_peer'] = rbridge_id_node2
-    cluster_data_node1['icl'] = node1.lag[0]['primary_port']
+    cluster_data_node1['icl'] = primary_port_node1
     cluster_data_node1['peer'] = []
     cluster_data_node1['peer'].append(node2)
     node1.mct.append(cluster_data_node1)
@@ -28,7 +28,7 @@ def fill_cluster_data(node1, node2):
     cluster_data_node2['member_vlan'] = cluster_data_node1['member_vlan']
     cluster_data_node2['rbridge_id'] = rbridge_id_node2
     cluster_data_node2['rbridge_id_peer'] = rbridge_id_node1
-    cluster_data_node2['icl'] = node2.lag[0]['primary_port']
+    cluster_data_node2['icl'] = primary_port_node2
     cluster_data_node2['peer'] = []
     cluster_data_node2['peer'].append(node1)
     node2.mct.append(cluster_data_node2)
@@ -51,11 +51,14 @@ def default_mct_cfg(anm):
                     if neighbor.lag is None:
                         neighbor.lag = []
                     #icl link
-                    fill_lag_data(node, neighbor, lag_type="dynamic")
+                    lag_dict = fill_lag_data(node, neighbor, lag_type="dynamic")
                     #cluster data
                     node.mct = []
                     neighbor.mct = []
-                    fill_cluster_data(node, neighbor)
+                    if lag_dict is None:
+                        print "Error"
+                        return
+                    fill_cluster_data(node, neighbor, lag_dict[0]['primary_port'], lag_dict[1]['primary_port'])
                     #client lag
                     fill_lag_data(node, None, lag_type="dynamic")
                     fill_lag_data(neighbor, None, lag_type="dynamic")
@@ -114,5 +117,6 @@ def build_mct(anm):
     if not mct_nodes:
         mct_nodes = default_mct_cfg(anm)
 
-    g_mct = anm.add_overlay("mct")
-    g_mct.add_nodes_from(mct_nodes, retain=['mct'])
+    if mct_nodes is not None:
+        g_mct = anm.add_overlay("mct")
+        g_mct.add_nodes_from(mct_nodes, retain=['mct'])

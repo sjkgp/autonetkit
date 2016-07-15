@@ -89,10 +89,16 @@ deploy
 !
 ## Physical Interfaces
 % for interface in node.interfaces:
+!
 interface ${interface.id}
-  description ${interface.description}
     % if interface.comment:
   ! ${interface.comment}
+    % endif
+    % if interface.is_member_lag:
+        % if interface.is_primary_port != True:
+no shutdown
+<% continue %>:
+        % endif
     % endif
     % if interface.category == 'loopback':
         % if node.ospf:
@@ -113,9 +119,6 @@ interface ${interface.id}
   vrf forwarding ${interface.vrf}
     % endif
     % if interface.use_ipv4:
-        % if interface.category != "loopback":
-  no switchport
-        % endif
         % if interface.use_dhcp:
   ip address dhcp
         % else:
@@ -126,7 +129,6 @@ interface ${interface.id}
   ##no ip address
     % endif
     % if interface.use_ipv6:
-  no switchport
   ipv6 address ${interface.ipv6_address}
     % endif
     % if interface.rip:

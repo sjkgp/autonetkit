@@ -33,16 +33,22 @@ def fill_single_node_lag_data(node,lag_id = None, lag_name = None, lag_type = No
             port_count = port_count + 1
             if port_count >=lag_max_num_port:
                 break
+    if port is not None:
+        interface.is_primary_port = True
     lag['primary_port'] = port
     node.lag.append(lag)
+    lag_dict = []
+    lag_dict.append(lag)
+    return lag
 
 def fill_lag_data(node1, node2, lag_id = None, lag_name = None, lag_type = None, lag_max_num_port = None):
 
     if node2 is None:
-        fill_single_node_lag_data(node1, lag_id = None, lag_name = None, lag_type = None, lag_max_num_port = None)
-        return
+        lag_dict = fill_single_node_lag_data(node1, lag_id = None, lag_name = None, lag_type = None, lag_max_num_port = None)
+        return lag_dict
 
-    lag = {}
+    lag1 = {}
+    lag2 = {}
 
     if lag_id is None:
         lag_id = random.randint(0, 500)
@@ -55,41 +61,50 @@ def fill_lag_data(node1, node2, lag_id = None, lag_name = None, lag_type = None,
     if lag_max_num_port is None:
         lag_max_num_port = 2
 
-    lag['name'] = lag_name
-    lag['id'] = lag_id
-    lag['type'] = lag_type
+    lag1['name'] = lag2['name'] = lag_name
+    lag1['id'] = lag2['id'] = lag_id
+    lag1['type'] = lag2['type'] = lag_type
 
     port = None
     port_count = 0
-    lag['ports'] = []
+    lag1['ports'] = []
     neighbor_interfaces = node2.neighbor_interfaces()
     for interface in neighbor_interfaces:
         if not interface.is_member_lag:
             if interface.node_id == node1.id:
                 port = str(interface.id)
-                lag['ports'].append(port)
+                lag1['ports'].append(port)
                 interface.is_member_lag = True
                 port_count = port_count + 1
                 if port_count >=lag_max_num_port:
                     break
-    lag['primary_port'] = port
-    node1.lag.append(lag)
+    if port is not None:
+        interface.is_primary_port = True
+    lag1['primary_port'] = port
+    node1.lag.append(lag1)
 
     port = None
-    lag['ports'] = []
+    lag2['ports'] = []
     port_count = 0
     neighbor_interfaces = node1.neighbor_interfaces()
     for interface in neighbor_interfaces:
         if not interface.is_member_lag:
             if interface.node_id == node2.id:
                 port = str(interface.id)
-                lag['ports'].append(port)
+                lag2['ports'].append(port)
                 interface.is_member_lag = True
                 port_count = port_count + 1
                 if port_count >=lag_max_num_port:
                     break
-    lag['primary_port'] = port
-    node2.lag.append(lag)
+    if port is not None:
+        interface.is_primary_port = True
+    lag2['primary_port'] = port
+
+    node2.lag.append(lag2)
+    lag_dict = []
+    lag_dict.append(lag1)
+    lag_dict.append(lag2)
+    return lag_dict
 
 def default_lag_cfg(anm):
     g_in = anm['input']
