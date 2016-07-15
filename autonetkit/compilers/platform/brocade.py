@@ -80,7 +80,7 @@ class BrocadeCompiler(PlatformCompiler):
             # Note this could take external data
             numeric_int_ids = self.numeric_interface_ids()
             g_in_node = self.anm['input'].node(phy_node)
-            for interface in DmNode.physical_interfaces():
+            for interface in dm_node.physical_interfaces():
                 phy_numeric_id = phy_node.interface(interface).numeric_id
                 if phy_numeric_id is None:
                     # TODO: remove numeric ID code
