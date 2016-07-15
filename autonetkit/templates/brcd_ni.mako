@@ -192,7 +192,6 @@ interface ${interface.id}
   mpls traffic-eng tunnels
     % endif
 !
-  % endif
 % endfor
 !
 !
